@@ -39,6 +39,4 @@ class PgEntity
      * @ORM\Column(name="updated_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
      */
     private $updated_at = 'CURRENT_TIMESTAMP';
-
-
 }
