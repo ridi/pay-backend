@@ -2,13 +2,18 @@ doctrine:
     dbal:
         # configure these for your database server
         driver: 'pdo_mysql'
-        server_version: '5.7'
         charset: utf8
         default_table_options:
             charset: utf8
             collate: utf8_unicode_ci
+        mapping_types:
+            enum: string
 
-        url: '%env(resolve:DATABASE_URL)%'
+        dbname: '%env(resolve:DB_NAME)%'
+        host: '%env(resolve:DB_HOST)%'
+        port: '%env(resolve:DB_PORT)%'
+        user: '%env(resolve:DB_USER)%'
+        password: '%env(resolve:DB_PASSWORD)%'
     orm:
         auto_generate_proxy_classes: '%kernel.debug%'
         naming_strategy: doctrine.orm.naming_strategy.underscore
