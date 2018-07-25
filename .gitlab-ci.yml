@@ -1,0 +1,55 @@
+variables:
+  COMPOSER_HOME: $CI_PROJECT_DIR/.composer
+  GIT_SUBMODULE_STRATEGY: normal
+
+cache:
+  key: composer
+  paths:
+    - .composer/cache/
+
+before_script:
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo "$SSH_SERVER_HOSTKEYS" > ~/.ssh/known_hosts'
+
+stages:
+  - test
+  - build
+  - deploy
+  - notify
+
+.php-test: &php-test
+  image: ridibooks/store-php-test:7.2
+
+composer:
+  <<: *php-test
+  stage: test
+  script:
+    - composer validate
+    - composer install
+  except:
+    - schedules
+    - triggers
+
+phpunit:
+  <<: *php-test
+  stage: test
+  script:
+    - composer install
+    - vendor/bin/simple-phpunit --colors=never
+  except:
+    - schedules
+    - triggers
+
+phpcs:
+  <<: *php-test
+  stage: test
+  script:
+    - composer install
+    - vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml
+  except:
+    - schedules
+    - triggers
+
+
