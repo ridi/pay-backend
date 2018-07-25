@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+  apache:
+    image: ridi/pay:${TAG}
+    container_name: apache
+    build:
+      context: .
+      args:
+        SITE: pay.ridibooks.com
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - .:/app
