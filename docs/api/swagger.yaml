@@ -1,0 +1,759 @@
+openapi: 3.0.1
+info:
+  version: 0.0.1
+  title: RIDI Pay API
+  description: RIDI Pay API
+servers:
+  - url: https://pay.dev.ridi.com/api
+    description: Local Server
+  - url: https://pay.ridibooks.com/api
+    description: Production Server
+tags:
+  - name: Payment
+    description: 결제
+  - name: User
+    description: 사용자 정보
+paths:
+  /payments/reserve:
+    post:
+      tags:
+        - Payment
+      summary: 결제 예약 (Public API)
+      parameters:
+        - $ref: '#/components/parameters/X-Partner-ID'
+        - $ref: '#/components/parameters/X-Partner-Secret'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservePaymentRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/ReservePaymentResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/{transaction_id}/approve:
+    post:
+      tags:
+        - Payment
+      summary: 결제 승인 (Public API)
+      parameters:
+        - $ref: '#/components/parameters/X-Partner-ID'
+        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        200:
+          $ref: '#/components/responses/ApprovePaymentResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/{transaction_id}/cancel:
+      post:
+        tags:
+          - Payment
+        summary: 결제 취소 (Public API)
+        parameters:
+          - $ref: '#/components/parameters/X-Partner-ID'
+          - $ref: '#/components/parameters/X-Partner-Secret'
+          - $ref: '#/components/parameters/TransactionId'
+        responses:
+          200:
+            $ref: '#/components/responses/CancelPaymentResponse'
+          401:
+            $ref: '#/components/responses/Unauthorized'
+          500:
+            $ref: '#/components/responses/InternalServerError'
+  /payments/{transaction_id}/status:
+      post:
+        tags:
+          - Payment
+        summary: 결제 상태 조회 (Public API)
+        parameters:
+          - $ref: '#/components/parameters/X-Partner-ID'
+          - $ref: '#/components/parameters/X-Partner-Secret'
+          - $ref: '#/components/parameters/TransactionId'
+        responses:
+          200:
+            $ref: '#/components/responses/PaymentStatusResponse'
+          401:
+            $ref: '#/components/responses/Unauthorized'
+          500:
+            $ref: '#/components/responses/InternalServerError'
+  /payments/subscriptions:
+    post:
+      tags:
+        - Payment
+      summary: 정기 결제 등록 (Public API)
+      parameters:
+        - $ref: '#/components/parameters/X-Partner-ID'
+        - $ref: '#/components/parameters/X-Partner-Secret'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscriptionRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/SubscriptionResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/subscriptions/{subscription_id}:
+    delete:
+      tags:
+        - Payment
+      summary: 정기 결제 해지 (Public API)
+      parameters:
+        - $ref: '#/components/parameters/X-Partner-ID'
+        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/SubscriptionId'
+      responses:
+        200:
+          $ref: '#/components/responses/UnsubscriptionResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/subscriptions/{subscription_id}/approve:
+    post:
+      tags:
+        - Payment
+      summary: 정기 결제 승인 (Public API)
+      parameters:
+        - $ref: '#/components/parameters/X-Partner-ID'
+        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/SubscriptionId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveSubscriptionPaymentRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/ApproveSubscriptionPaymentResponse'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me:
+    get:
+      summary: RIDI Pay 유저 정보 조회 (Private API)
+      tags:
+        - User
+      responses:
+        200:
+          $ref: '#/components/responses/getUserResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/payment-methods:
+    get:
+      tags:
+        - User
+      summary: 등록된 결제 수단 목록 조회 (Private API, For first-party)
+      responses:
+        200:
+          $ref: '#/components/responses/getPaymentMethodsResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/payment-methods/credit-cards:
+    post:
+      tags:
+        - User
+      summary: 신용 카드 등록 (Private API)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCreditCardRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/payment-methods/{payment_method_id}:
+    delete:
+      tags:
+        - User
+      summary: 결제 수단 삭제 (Private API)
+      parameters:
+        - $ref: '#/components/parameters/PaymentMethodId'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/pin:
+    put:
+      summary: 결제 비밀번호 변경 (Private API)
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pin:
+                  type: string
+                  description: 결제 비밀번호
+                  example: 123456
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/pin/validation:
+    post:
+      summary: 입력한 결제 비밀번호 검증 (Private API)
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pin:
+                  type: string
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/password/validation:
+    post:
+      summary: 입력한 계정 비밀번호 검증 (Private API)
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/onetouch-pay:
+    put:
+      summary: 원터치 결제 이용 여부 변경 (Private API)
+      tags:
+        - User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                uses_onetouch_pay:
+                  type: boolean
+                  description: 원터치 결제 이용 여부
+                  example: true
+      responses:
+        200:
+          description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  is_using_onetouch_pay:
+                    type: boolean
+                    description: 원터치 결제 이용 여부
+                    example: true
+        400:
+          $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/me/leave:
+    post:
+      summary: 서점 회원 탈퇴 시, RIDI Pay 탈퇴 처리 (Private API, For first-party)
+      tags:
+        - User
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+components:
+  schemas:
+    PaymentMethods:
+      type: object
+      properties:
+        credit_cards:
+          type: array
+          description: 등록된 신용 카드
+          items:
+            $ref: '#/components/schemas/RegisteredCreditCard'
+    RegisteredCreditCard:
+      type: object
+      properties:
+        payment_method_id:
+          type: string
+          description: 결제 수단 ID
+          example: 550E8400-E29B-41D4-A716-446655440000
+        iin:
+          type: string
+          description: 발급자 식별 번호(카드 번호 앞 6자리)
+          example: 541654
+        issuer_name:
+          type: string
+          description: 카드 발급사명
+          example: 신한
+        color:
+          type: string
+          description: 카드 플레이트 색상
+          example: 00FF00
+        logo_image_url:
+          type: string
+          description: 카드 발급사 로고 이미지 URL
+        subscriptions:
+          type: array
+          description: 연결된 정기 결제 서비스명
+          items:
+            type: string
+          example: [리디캐시 자동충전, 리디셀렉트]
+      required:
+        - payment_method_id
+        - iin
+        - issuer_name
+        - color
+        - logo_image_url
+        - subscriptions
+    RegisteredCreditCardSimple:
+      type: object
+      properties:
+        payment_method_id:
+          type: string
+          description: 결제 수단 ID
+          example: 550E8400-E29B-41D4-A716-446655440000
+        iin:
+          type: string
+          description: 발급자 식별 번호(카드 번호 앞 6자리)
+          example: 541654
+        issuer_name:
+          type: string
+          description: 카드 발급사명
+          example: 신한
+      required:
+        - payment_method_id
+        - iin
+        - issuer_name
+    ReservePaymentRequest:
+      type: object
+      properties:
+        payment_method_id:
+          type: string
+          description: 결제 수단 ID
+          example: 550E8400-E29B-41D4-A716-446655440000
+        partner_transaction_id:
+          type: string
+          description: 가맹점 결제 고유 번호
+          example: 2018010112345612
+        amount:
+          type: integer
+          description: 결제 금액
+          example: 10000
+        return_url:
+          type: string
+          description: RIDI Pay 결제 인증 성공/실패 후, 본 승인 요청을 전송할 가맹점 URL
+          example: https://ridibooks.com/payment/callback/ridi-pay
+      required:
+        - payment_method_id
+        - partner_transaction_id
+        - amount
+        - return_url
+    SubscriptionRequest:
+      type: object
+      properties:
+        payment_method_id:
+          type: string
+          description: 결제 수단 ID
+          example: 550E8400-E29B-41D4-A716-446655440000
+        purpose:
+          type: string
+          description: 정기 결제 목적
+          example: 리디캐시 자동충전
+        amount:
+          type: integer
+          description: 정기 결제 금액
+          example: 10000
+      required:
+        - payment_method_id
+        - purpose
+        - amount
+    ApproveSubscriptionPaymentRequest:
+      type: object
+      properties:
+        partner_transaction_id:
+          type: string
+          description: 가맹점 결제 고유 번호
+          example: 2018010112345612
+      required:
+        - partner_transaction_id
+    RegisterCreditCardRequest:
+      type: object
+      properties:
+        number:
+          type: string
+          description: 신용 카드 번호
+          example: 5416543210231427
+        password:
+          type: string
+          description: 신용 카드 비밀번호 앞 2자리
+          example: 12
+        expiration_date:
+          type: string
+          description: 신용 카드 유효 기한(MMYY)
+          example: 1121
+        birth_date:
+          type: string
+          description: 생년월일(YYMMDD)
+          example: 940101
+      required:
+        - number
+        - password
+        - expiration_date
+        - birth_date
+    FailureResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: 에러 코드
+        message:
+          type: string
+          description: 사람이 읽을 수 있는 에러 메시지
+      required:
+        - code
+        - message
+  parameters:
+    X-Partner-ID:
+      name: X-Partner-ID
+      in: header
+      required: true
+      description: 가맹점 구별을 위한 ID, RIDI Pay에서 발급한 값
+      schema:
+        type: string
+    X-Partner-Secret:
+      name: X-Partner-Secret
+      in: header
+      required: true
+      description: 가맹점의 RIDI Pay 연동을 위한 Secret, RIDI Pay에서 발급한 값
+      schema:
+        type: string
+    TransactionId:
+      name: transaction_id
+      in: path
+      required: true
+      description: RIDI Pay 결제 고유 번호
+      schema:
+        type: string
+    SubscriptionId:
+      name: subscription_id
+      in: path
+      required: true
+      description: RIDI Pay 정기 결제 고유 번호
+      schema:
+        type: string
+    PaymentMethodId:
+      name: payment_method_id
+      in: path
+      required: true
+      description: 결제 수단 UUID
+      schema:
+        type: string
+  responses:
+    Success:
+      description: OK(200)
+      content:
+        application/json:
+          schema:
+            type: object
+    BadRequest:
+      description: Bad Request(400)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponse'
+    Unauthorized:
+      description: Unauthorized(401)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponse'
+    NotFound:
+      description: Not Found(404)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponse'
+    InternalServerError:
+      description: Internal Server Error(500)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponse'
+    ReservePaymentResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reservation_id:
+                type: string
+                description: RIDI Pay 결제 예약 번호
+                example: 880E8200-A29B-24B2-8716-42B65544A000
+            required:
+              - reservation_id
+    ApprovePaymentResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              transaction_id:
+                type: string
+                description: RIDI Pay 결제 고유 번호
+              partner_transaction_id:
+                type: string
+                description: 가맹점 결제 고유 번호
+                example: 2018010112345612
+              amount:
+                type: integer
+                description: 승인 금액
+                example: 10000
+              approved_at:
+                type: string
+                description: 승인 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+            required:
+              - transaction_id
+              - partner_transaction_id
+              - amount
+              - approved_at
+    CancelPaymentResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              transaction_id:
+                type: string
+                description: RIDI Pay 결제 고유 번호
+              partner_transaction_id:
+                type: string
+                description: 가맹점 결제 고유 번호
+                example: 2018010112345612
+              amount:
+                type: integer
+                description: 취소 금액
+                example: 10000
+              approved_at:
+                type: string
+                description: 승인 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+              canceled_at:
+                type: string
+                description: 취소 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+            required:
+              - transaction_id
+              - partner_transaction_id
+              - amount
+              - approved_at
+              - canceled_at
+    PaymentStatusResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              transaction_id:
+                type: string
+                description: RIDI Pay 결제 고유 번호
+              partner_transaction_id:
+                type: string
+                description: 가맹점 결제 고유 번호
+                example: 2018010112345612
+              is_subscription:
+                type: boolean
+                description: 정기 결제 여부
+                example: true
+              subscription_id:
+                type: string
+                description: RIDI Pay 정기 결제 고유 번호
+                example: 28F02410-A29D-BD34-80A3-FBA2BC113200
+              status:
+                type: string
+                enum: [RESERVED, APPROVED, CANCELED]
+                description: 결제 건 상태
+                example: CANCELED
+              amount:
+                type: integer
+                description: 승인/취소 금액
+                example: 10000
+              approved_at:
+                type: string
+                description: 승인 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+              canceled_at:
+                type: string
+                description: 승인/취소 일시 (ISO 8601 Format)
+                example: '2018-06-09T01:59:59+09:00'
+            required:
+              - transaction_id
+              - partner_transaction_id
+              - is_subscription
+              - status
+              - amount
+    SubscriptionResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              subscription_id:
+                type: string
+                description: RIDI Pay 정기 결제 고유 번호
+                example: 28F02410-A29D-BD34-80A3-FBA2BC113200
+              subscribed_at:
+                type: string
+                description: 정기 결제 등록 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+            required:
+              - subscription_id
+              - subscribed_at
+    UnsubscriptionResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              subscription_id:
+                type: string
+                description: RIDI Pay 정기 결제 고유 번호
+                example: 28F02410-A29D-BD34-80A3-FBA2BC113200
+              subscribed_at:
+                type: string
+                description: 정기 결제 등록 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+              unsubscribed_at:
+                type: string
+                description: 정기 결제 해지 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+            required:
+              - subscription_id
+              - subscribed_at
+              - unsubscribed_at
+    ApproveSubscriptionPaymentResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              transaction_id:
+                type: string
+                description: RIDI Pay 결제 고유 번호
+              partner_transaction_id:
+                type: string
+                description: 가맹점 결제 고유 번호
+                example: 2018010112345612
+              subscription_id:
+                type: string
+                description: RIDI Pay 정기 결제 고유 번호
+                example: 28F02410-A29D-BD34-80A3-FBA2BC113200
+              amount:
+                type: integer
+                description: 승인 금액
+                example: 10000
+              approved_at:
+                type: string
+                description: 승인 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:59+09:00'
+    getUserResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              payment_methods:
+                type: object
+                description: 등록된 결제 수단 목록
+                $ref: '#/components/schemas/PaymentMethods'
+              has_pin:
+                type: boolean
+                description: 결제 비밀번호 소유 여부
+                example: true
+              is_using_onetouch_pay:
+                type: boolean
+                description: 원터치 결제 이용 여부
+                example: true
+            required:
+              - payment_methods
+              - has_pin
+              - is_using_onetouch_pay
+    getPaymentMethodsResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              credit_cards:
+                type: array
+                description: 등록된 신용 카드
+                items:
+                  $ref: '#/components/schemas/RegisteredCreditCardSimple'
