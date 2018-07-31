@@ -22,4 +22,4 @@ docker-compose up [--build]
 #### 4. pay.dev.ridi.com 접속
 
 ## API 문서
-`docs/api/swagger.yaml`의 내용을 `https://editor.swagger.io/`에 붙여넣기하면 API 문서가 렌더링 됩니다.
+`https://gitlab.ridi.io/pay/ridi-pay/raw/master/docs/api/swagger.yaml`의 내용을 `https://editor.swagger.io/`에 붙여넣기하면 API 문서가 렌더링 됩니다.
