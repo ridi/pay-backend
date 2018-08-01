@@ -6,7 +6,7 @@ info:
 servers:
   - url: https://pay.dev.ridi.com/api
     description: Local Server
-  - url: https://pay.ridibooks.com/api
+  - url: https://pay.ridi.com/api
     description: Production Server
 tags:
   - name: Payment
