@@ -217,11 +217,13 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/me:
+  /users/{u_id}:
     get:
       summary: RIDI Pay 유저 정보 조회
       tags:
         - Private API
+      parameters:
+        - $ref: '#/components/parameters/Uid'
       responses:
         200:
           $ref: '#/components/responses/getUserResponse'
@@ -229,7 +231,20 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/me/cards:
+    delete:
+      summary: 서점 회원 탈퇴 시, RIDI Pay 탈퇴 처리
+      tags:
+        - Private API (Only First-party)
+      parameters:
+        - $ref: '#/components/parameters/Uid'
+      responses:
+        200:
+          $ref: '#/components/responses/Success'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /users/{u_id}/cards:
     post:
       tags:
         - Private API
@@ -239,6 +254,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/RegisterCardRequest'
+      parameters:
+        - $ref: '#/components/parameters/Uid'
       responses:
         200:
           $ref: '#/components/responses/Success'
@@ -248,12 +265,13 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/me/card/{payment_method_id}:
+  /users/{u_id}/cards/{payment_method_id}:
     delete:
       tags:
         - Private API
       summary: 카드 삭제
       parameters:
+        - $ref: '#/components/parameters/Uid'
         - $ref: '#/components/parameters/PaymentMethodId'
       responses:
         200:
@@ -264,7 +282,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/me/onetouch:
+  /users/{u_id}/onetouch:
     put:
       summary: 원터치 결제 이용 여부 변경
       tags:
@@ -279,6 +297,8 @@ paths:
                   type: boolean
                   description: 원터치 결제 이용 여부
                   example: true
+      parameters:
+        - $ref: '#/components/parameters/Uid'
       responses:
         200:
           description: 'OK'
@@ -297,7 +317,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/me/password/validate:
+  /users/{u_id}/password/validate:
     post:
       summary: 입력한 계정 비밀번호 검증
       tags:
@@ -310,6 +330,8 @@ paths:
               properties:
                 password:
                   type: string
+      parameters:
+        - $ref: '#/components/parameters/Uid'
       responses:
         200:
           $ref: '#/components/responses/Success'
@@ -319,7 +341,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/me/pin:
+  /users/{u_id}/pin:
     put:
       summary: 결제 비밀번호 변경
       tags:
@@ -334,6 +356,8 @@ paths:
                   type: string
                   description: 결제 비밀번호
                   example: 123456
+      parameters:
+        - $ref: '#/components/parameters/Uid'
       responses:
         200:
           $ref: '#/components/responses/Success'
@@ -343,7 +367,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/me/pin/validate:
+  /users/{u_id}/pin/validate:
     post:
       summary: 입력한 결제 비밀번호 검증
       tags:
@@ -356,25 +380,13 @@ paths:
               properties:
                 pin:
                   type: string
-      responses:
-        200:
-          $ref: '#/components/responses/Success'
-        400:
-          $ref: '#/components/responses/BadRequest'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-  /users/{u_id}:
-    delete:
-      summary: 서점 회원 탈퇴 시, RIDI Pay 탈퇴 처리
-      tags:
-        - Private API (Only First-party)
       parameters:
         - $ref: '#/components/parameters/Uid'
       responses:
         200:
           $ref: '#/components/responses/Success'
+        400:
+          $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
         500:
@@ -526,7 +538,7 @@ components:
           example: 1121
         tax_number:
           type: string
-          description: 개인: 생년월일(YYMMDD) / 법인: 사업자 번호 10자리
+          description: 개인 - 생년월일(YYMMDD) / 법인 - 사업자 번호 10자리
           example: 940101
       required:
         - number
