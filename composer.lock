@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "689cd93405af831b3c360ea7cba628bb",
+    "content-hash": "90bb5a6b0a7c302bfdbfa58015fb499f",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1865,45 +1865,6 @@
             ],
             "description": "Ridibooks OAuth2",
             "time": "2018-05-09T02:04:15+00:00"
-        },
-        {
-            "name": "ridibooks/payment",
-            "version": "0.2.1",
-            "source": {
-                "type": "git",
-                "url": "git@gitlab.ridi.io:store/payment-php.git",
-                "reference": "9c4d77db5415c7185d45e884e8f03d0d47378274"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^7.2",
-                "ramsey/uuid": "^3.8"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Ridibooks\\Payment\\": "src/Ridibooks/Payment"
-                }
-            },
-            "autoload-dev": {
-                "psr-4": {
-                    "Ridibooks\\Payment\\Tests\\": "tests"
-                }
-            },
-            "license": [
-                "proprietary"
-            ],
-            "authors": [
-                {
-                    "name": "서지혁",
-                    "email": "limeburst@ridi.com"
-                },
-                {
-                    "name": "스토어팀 결제 스쿼드",
-                    "email": "store.payment@ridi.com"
-                }
-            ],
-            "description": "Ridibooks Payment Library",
-            "time": "2018-08-10T09:19:40+00:00"
         },
         {
             "name": "sensio/framework-extra-bundle",
@@ -4273,16 +4234,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "7.3.4",
+            "version": "7.3.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "0356331bf62896dc56e3a15030b23b73f38b2935"
+                "reference": "7b331efabbb628c518c408fdfcaf571156775de2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0356331bf62896dc56e3a15030b23b73f38b2935",
-                "reference": "0356331bf62896dc56e3a15030b23b73f38b2935",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/7b331efabbb628c518c408fdfcaf571156775de2",
+                "reference": "7b331efabbb628c518c408fdfcaf571156775de2",
                 "shasum": ""
             },
             "require": {
@@ -4353,7 +4314,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2018-09-05T09:58:53+00:00"
+            "time": "2018-09-08T15:14:29+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",

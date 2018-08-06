@@ -6,7 +6,7 @@ namespace RidiPay\Tests;
 use AspectMock\Test as test;
 use Doctrine\ORM\Tools\SchemaTool;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
-use Ridibooks\Payment\Kcp\Company;
+use RidiPay\Library\Pg\Kcp\Company;
 use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Jwt\JwtAuthorizationMiddleware;
