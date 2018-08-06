@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Infrastructure;
 
-use Ridibooks\Payment\Kcp\Card;
-use Ridibooks\Payment\Kcp\Client;
-use Ridibooks\Payment\Kcp\Order;
-use Ridibooks\Payment\Kcp\Util;
+use RidiPay\Library\Pg\Kcp\Card;
+use RidiPay\Library\Pg\Kcp\Client;
+use RidiPay\Library\Pg\Kcp\Order;
+use RidiPay\Library\Pg\Kcp\Util;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Pg\Domain\Exception\PgException;
 use RidiPay\Pg\Domain\Service\ApproveTransactionResponse;

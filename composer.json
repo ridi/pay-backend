@@ -1,8 +1,18 @@
 {
     "name": "ridi/pay",
-    "description": "RIDI Pay",
+    "description": "RIDI Pay Web Backend",
     "type": "project",
     "license": "proprietary",
+    "authors": [
+        {
+            "name": "Gyu Kang",
+            "email": "me@amolorsy.me"
+        },
+        {
+            "name": "Jihyeok Seo",
+            "email": "limeburst@ridi.com"
+        }
+    ],
     "repositories": [
         {
             "type": "composer",
@@ -21,7 +31,6 @@
         "ridibooks/core": "^0.9.6",
         "ridibooks/crm": "^0.4.4",
         "ridibooks/oauth2": "^0.1.3",
-        "ridibooks/payment": "^0.2.1",
         "sensio/framework-extra-bundle": "^5.2",
         "sentry/sentry": "^1.9.1",
         "symfony/console": "^4.1",
