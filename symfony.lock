@@ -95,6 +95,9 @@
     "ridibooks/crm": {
         "version": "0.4.1"
     },
+    "ridibooks/payment": {
+        "version": "0.1.0"
+    },
     "sensio/framework-extra-bundle": {
         "version": "5.2",
         "recipe": {
