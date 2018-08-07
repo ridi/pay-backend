@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Library;
+namespace RidiPay\Library;
 
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;

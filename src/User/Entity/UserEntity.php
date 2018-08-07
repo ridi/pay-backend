@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Entity;
+namespace RidiPay\User\Entity;
 
 /**
  * @Table(name="user")
- * @Entity
+ * @Entity(repositoryClass="RidiPay\User\Repository\UserRepository")
  */
 class UserEntity
 {
@@ -35,7 +35,7 @@ class UserEntity
      *
      * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP","comment"="RIDI PAY 가입 시각(최초 결제 수단 등록일)"})
      */
-    private $created_at = 'CURRENT_TIMESTAMP';
+    private $created_at;
 
     /**
      * @var \DateTime|null
@@ -43,4 +43,13 @@ class UserEntity
      * @Column(name="leaved_at", type="datetime", nullable=true, options={"comment"="회원 탈퇴로 인한 RIDI PAY 해지 시각"})
      */
     private $leaved_at;
+
+    /**
+     * @param int $u_idx
+     */
+    public function __construct(int $u_idx)
+    {
+        $this->u_idx = $u_idx;
+        $this->created_at = new \DateTime();
+    }
 }

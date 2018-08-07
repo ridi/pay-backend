@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Entity;
+namespace RidiPay\Transaction\Entity;
 
 /**
- * @Table(name="subscription", indexes={@Index(name="idx_pay_method_id", columns={"pay_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"})})
+ * @Table(name="subscription", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"})})
  * @Entity
  */
 class SubscriptionEntity
@@ -44,4 +44,16 @@ class SubscriptionEntity
      * @Column(name="deleted_at", type="datetime", nullable=true)
      */
     private $deleted_at;
+
+    /** @var int
+     *
+     * @Column(name="payment_method_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="payment_method.id"})
+     */
+    private $payment_method_id;
+
+    /** @var int
+     *
+     * @Column(name="partner_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="partner.id"})
+     */
+    private $partner_id;
 }

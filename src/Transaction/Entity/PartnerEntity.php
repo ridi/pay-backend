@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace RidiPay\Transaction\Entity;
 
 /**
  * @Table(name="partner", uniqueConstraints={@UniqueConstraint(name="uniq_secret", columns={"secret"}), @UniqueConstraint(name="uniq_name", columns={"name"})})

@@ -1,6 +1,6 @@
 <?php
 
-use App\Kernel;
+use RidiPay\Kernel;
 use Doctrine\DBAL\Types\Type;
 use Ramsey\Uuid\Doctrine\UuidBinaryType;
 use Symfony\Component\Debug\Debug;

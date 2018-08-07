@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace RidiPay\Transaction\Entity;
 
 /**
  * @Table(name="transaction_history", indexes={@Index(name="idx_transaction_id", columns={"transaction_id"})})
@@ -51,4 +51,10 @@ class TransactionHistoryEntity
      * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
      */
     private $created_at = 'CURRENT_TIMESTAMP';
+
+    /** @var int
+     *
+     * @Column(name="transaction_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="transaction.id"})
+     */
+    private $transaction_id;
 }
