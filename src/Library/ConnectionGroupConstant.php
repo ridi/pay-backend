@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Library;
+namespace RidiPay\Library;
 
 abstract class ConnectionGroupConstant
 {

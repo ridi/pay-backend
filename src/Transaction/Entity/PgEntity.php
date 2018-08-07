@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 
-namespace App\Entity;
+namespace RidiPay\Transaction\Entity;
 
 /**
  * @Table(name="pg")
- * @Entity
+ * @Entity(repositoryClass="RidiPay\Transaction\Repository\PgRepository")
  */
 class PgEntity
 {
@@ -37,4 +38,12 @@ class PgEntity
      * @Column(name="updated_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
      */
     private $updated_at = 'CURRENT_TIMESTAMP';
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
 }

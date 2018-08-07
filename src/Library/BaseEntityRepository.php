@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Repository;
+namespace RidiPay\Library;
 
 use Doctrine\ORM\EntityRepository;
 
-class BaseRepository extends EntityRepository
+class BaseEntityRepository extends EntityRepository
 {
     /**
      * @return \Doctrine\DBAL\Connection

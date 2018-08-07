@@ -1,12 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Library;
+namespace RidiPay\Library;
 
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Proxy\ProxyFactory;
 use Doctrine\ORM\Tools\Setup;
-use Ridibooks\Library\AdaptableCache;
 
 class EntityManagerProvider
 {
@@ -36,12 +35,7 @@ class EntityManagerProvider
     protected static function createEntityManager(string $connection_group): EntityManager
     {
         $is_dev_mode = getenv('APP_ENV') !== 'prod';
-        $config = Setup::createAnnotationMetadataConfiguration(
-            [__DIR__ . '/../src'],
-            $is_dev_mode,
-            null,
-            new AdaptableCache()
-        );
+        $config = Setup::createAnnotationMetadataConfiguration([__DIR__ . '/..'], $is_dev_mode);
 
         if (!$is_dev_mode) {
             $entity_version = getenv('GIT_REVISION');

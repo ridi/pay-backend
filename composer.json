@@ -33,8 +33,9 @@
         "symfony/yaml": "^4.1"
     },
     "require-dev": {
-        "squizlabs/php_codesniffer": "^3.1.0",
-        "symfony/phpunit-bridge": "^4.1"
+        "codeception/aspect-mock": "^3.0",
+        "phpunit/phpunit": "^7.3",
+        "squizlabs/php_codesniffer": "^3.1.0"
     },
     "config": {
         "preferred-install": {
@@ -44,12 +45,12 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "RidiPay\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Ridibooks\\Tests\\": "tests/Ridibooks"
+            "RidiPay\\Tests\\": "tests/src"
         }
     },
     "replace": {
