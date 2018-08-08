@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use RidiPay\User\Exception\AlreadyCardAddedException;
+use RidiPay\User\Exception\LeavedUserException;
+use RidiPay\User\Exception\NonUserException;
+use RidiPay\User\Exception\UnknownPaymentMethodException;
 use RidiPay\User\Service\CardService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -40,7 +44,9 @@ class CardController extends Controller
                 $body->card_password,
                 $body->tax_id
             );
-        } catch (\Exception $e) {
+        } catch (LeavedUserException | AlreadyCardAddedException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+        } catch (\Throwable $t) {
             return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
@@ -59,7 +65,9 @@ class CardController extends Controller
 
         try {
             CardService::deleteCard($u_idx, $payment_method_id);
-        } catch (\Exception $e) {
+        } catch (NonUserException | LeavedUserException | UnknownPaymentMethodException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (\Throwable $t) {
             return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 

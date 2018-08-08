@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Exception;
 
-class AlreadyCardAddedException extends \Exception
+class UnknownPaymentMethodException extends \Exception
 {
     /**
      * @param string $message
      */
-    public function __construct(string $message = '카드는 하나만 등록할 수 있습니다.')
+    public function __construct(string $message = '등록되지 않은 결제 수단입니다.')
     {
         parent::__construct($message);
     }
