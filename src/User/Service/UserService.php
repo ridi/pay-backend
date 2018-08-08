@@ -10,22 +10,22 @@ class UserService
 {
     /**
      * @param int $u_idx
-     * @return bool
+     * @return null|UserEntity
      */
-    public static function isUser(int $u_idx): bool
+    public static function getUser(int $u_idx): ?UserEntity
     {
-        $user = UserRepository::getRepository()->findOneByUidx($u_idx);
-
-        return !is_null($user);
+        return UserRepository::getRepository()->findOneByUidx($u_idx);
     }
 
     /**
      * @param int $u_idx
+     * @return UserEntity
      */
-    public static function createUser(int $u_idx): void
+    public static function createUser(int $u_idx): UserEntity
     {
         $user = new UserEntity($u_idx);
-
         UserRepository::getRepository()->save($user);
+
+        return $user;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace RidiPay\Transaction\Entity;
 
+use RidiPay\User\Entity\PaymentMethodEntity;
+
 /**
  * @Table(name="subscription", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"})})
  * @Entity
@@ -18,11 +20,27 @@ class SubscriptionEntity
     private $id;
 
     /**
+     * @var PaymentMethodEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\PaymentMethodEntity")
+     * @JoinColumn(name="payment_method_id", referencedColumnName="id", nullable=false)
+     */
+    private $payment_method;
+
+    /**
+     * @var PartnerEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\Transaction\Entity\PartnerEntity")
+     * @JoinColumn(name="partner_id", referencedColumnName="id", nullable=false)
+     */
+    private $partner;
+
+    /**
      * @var string
      *
      * @Column(name="bill_key", type="string", length=255, nullable=false, options={"comment"="정기 결제 Bill Key"})
      */
-    private $bill_key = '';
+    private $bill_key;
 
     /**
      * @var string
@@ -36,7 +54,7 @@ class SubscriptionEntity
      *
      * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
      */
-    private $created_at = 'CURRENT_TIMESTAMP';
+    private $created_at;
 
     /**
      * @var \DateTime|null
@@ -44,16 +62,4 @@ class SubscriptionEntity
      * @Column(name="deleted_at", type="datetime", nullable=true)
      */
     private $deleted_at;
-
-    /** @var int
-     *
-     * @Column(name="payment_method_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="payment_method.id"})
-     */
-    private $payment_method_id;
-
-    /** @var int
-     *
-     * @Column(name="partner_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="partner.id"})
-     */
-    private $partner_id;
 }

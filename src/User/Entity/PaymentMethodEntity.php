@@ -29,9 +29,17 @@ class PaymentMethodEntity
     private $uuid;
 
     /**
+     * @var UserEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\UserEntity")
+     * @JoinColumn(name="u_idx", referencedColumnName="u_idx", nullable=false)
+     */
+    private $user;
+
+    /**
      * @var int
      *
-     * @Column(name="u_idx", type="integer", nullable=false, options={"comment"="user.u_idx"})
+     * @Column(name="u_idx", type="integer", nullable=false)
      */
     private $u_idx;
 
@@ -64,13 +72,13 @@ class PaymentMethodEntity
     private $cards;
 
     /**
-     * @param int $u_idx
+     * @param UserEntity $user
      * @param string $type
      */
-    public function __construct(int $u_idx, string $type)
+    public function __construct(UserEntity $user, string $type)
     {
         $this->uuid = Uuid::uuid4();
-        $this->u_idx = $u_idx;
+        $this->user = $user;
         $this->type = $type;
         $this->created_at = new \DateTime();
         $this->deleted_at = null;
@@ -133,14 +141,14 @@ class PaymentMethodEntity
     /**
      * @return null|CardEntity
      */
-    public function getCardForSubscriptionPayment(): ?CardEntity
+    public function getCardForBillingPayment(): ?CardEntity
     {
         if (!$this->isCard()) {
             return null;
         }
 
         foreach ($this->cards as $card) {
-            if ($card->isAvailableOnSubscriptionPayment()) {
+            if ($card->isAvailableOnBillingPayment()) {
                 return $card;
             }
         }

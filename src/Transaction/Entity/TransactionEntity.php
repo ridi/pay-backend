@@ -2,6 +2,9 @@
 
 namespace RidiPay\Transaction\Entity;
 
+use RidiPay\User\Entity\PaymentMethodEntity;
+use RidiPay\User\Entity\UserEntity;
+
 /**
  * @Table(name="transaction", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"}), @Index(name="idx_pg_id", columns={"pg_id"}), @Index(name="idx_u_idx", columns={"u_idx"})})
  * @Entity
@@ -18,11 +21,42 @@ class TransactionEntity
     private $id;
 
     /**
+     * @var UserEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\UserEntity")
+     * @JoinColumn(name="u_idx", referencedColumnName="u_idx", nullable=false)
+     */
+    private $user;
+
+    /**
+     * @var PaymentMethodEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\PaymentMethodEntity")
+     * @JoinColumn(name="payment_method_id", referencedColumnName="id", nullable=false)
+     */
+    private $payment_method;
+
+    /**
+     * @var PartnerEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\Transaction\Entity\PartnerEntity")
+     * @JoinColumn(name="partner_id", referencedColumnName="id", nullable=false)
+     */
+    private $partner;
+
+    /**
+     * @var PgEntity
+     * @ManyToOne(targetEntity="RidiPay\Transaction\Entity\PgEntity")
+     * @JoinColumn(name="pg_id", referencedColumnName="id", nullable=false)
+     */
+    private $pg;
+
+    /**
      * @var string
      *
-     * @Column(name="partner_order_id", type="string", length=64, nullable=false, options={"comment"="Partner 주문 번호"})
+     * @Column(name="partner_transaction_id", type="string", length=64, nullable=false, options={"comment"="Partner 주문 번호"})
      */
-    private $partner_order_id = '';
+    private $partner_transaction_id = '';
 
     /**
      * @var string|null
@@ -58,28 +92,4 @@ class TransactionEntity
      * @Column(name="canceled_at", type="datetime", nullable=true, options={"comment"="Transaction 취소 시각"})
      */
     private $canceled_at;
-
-    /** @var int
-     *
-     * @Column(name="payment_method_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="payment_method.id"})
-     */
-    private $payment_method_id;
-
-    /** @var int
-     *
-     * @Column(name="partner_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="parnter.id"})
-     */
-    private $partner_id;
-
-    /** @var int
-     *
-     * @Column(name="pg_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="pg.id"})
-     */
-    private $pg_id;
-
-    /** @var int
-     *
-     * @Column(name="u_idx", type="integer", nullable=false, options={"comment"="user.u_idx"})
-     */
-    private $u_idx;
 }

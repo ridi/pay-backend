@@ -22,14 +22,14 @@ class PartnerEntity
      *
      * @Column(name="name", type="string", length=16, nullable=false, options={"comment"="가맹점 식별을 위한 가맹점명"})
      */
-    private $name = '';
+    private $name;
 
     /**
      * @var string
      *
      * @Column(name="secret", type="string", length=255, nullable=false, options={"comment"="가맹점 연동을 위한 Secret"})
      */
-    private $secret = '';
+    private $secret;
 
     /**
      * @var bool
@@ -48,7 +48,20 @@ class PartnerEntity
     /**
      * @var \DateTime
      *
-     * @Column(name="updated_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
+     * @Column(name="updated_at", type="datetime", columnDefinition="DATETIME on update CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"))
      */
-    private $updated_at = 'CURRENT_TIMESTAMP';
+    private $updated_at;
+
+    /**
+     * @param string $name
+     * @param bool $is_first_party
+     */
+    public function __construct(string $name, bool $is_first_party)
+    {
+        $this->name = $name;
+        $this->secret = ''; // TODO: 구현
+        $this->is_valid = true;
+        $this->is_first_party = $is_first_party;
+        $this->updated_at = new \DateTime();
+    }
 }
