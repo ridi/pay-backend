@@ -39,7 +39,8 @@ class CardService
     ) {
         self::assertNotHavingCard($u_idx);
 
-        $response = self::requestBillKey($card_number, $card_password, $card_expiration_date, $tax_id, $is_test);
+        $response = self::requestBillKey($card_number, $card_expiration_date, $card_password, $tax_id, $is_test);
+        var_dump($response);
         $pg_bill_key = $response['batch_key'];
         $card_issuer_code = $response['card_cd'];
 
@@ -142,7 +143,7 @@ class CardService
         $site_code = '';
         $site_key = '';
         $group_id = '';
-        $log_dir = '/app/var/log';
+        $log_dir = '/tmp/kcp';
 
         if ($is_test) {
             $kcp = Client::getTestClient($log_dir);
