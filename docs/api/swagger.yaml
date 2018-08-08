@@ -534,8 +534,8 @@ components:
           example: 12
         expiration_date:
           type: string
-          description: 카드 유효 기한(MMYY)
-          example: 1121
+          description: 카드 유효 기한(YYMM)
+          example: 2111
         tax_id:
           type: string
           description: 개인 - 생년월일(YYMMDD) / 법인 - 사업자 번호 10자리
