@@ -29,14 +29,14 @@ class CardIssuerEntity
      *
      * @Column(name="code", type="string", length=16, nullable=false, options={"comment"="카드 발급사 코드"})
      */
-    private $code = '';
+    private $code;
 
     /**
      * @var string
      *
      * @Column(name="name", type="string", length=16, nullable=false, options={"comment"="카드 발급사 이름"})
      */
-    private $name = '';
+    private $name;
 
     /**
      * @var string
@@ -51,6 +51,22 @@ class CardIssuerEntity
      * @Column(name="logo_image_url", type="string", length=128, nullable=false, options={"comment"="카드 발급사 로고 이미지 URL"})
     */
     private $logo_image_url;
+
+    /**
+     * @param int $pg_id
+     * @param string $code
+     * @param string $name
+     * @param string $color
+     * @param string $logo_image_url
+     */
+    public function __construct(int $pg_id, string $code, string $name, string $color, string $logo_image_url)
+    {
+        $this->pg_id = $pg_id;
+        $this->code = $code;
+        $this->name = $name;
+        $this->color = $color;
+        $this->logo_image_url = $logo_image_url;
+    }
 
     /**
      * @return string
