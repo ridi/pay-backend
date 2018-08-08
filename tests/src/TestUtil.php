@@ -10,8 +10,10 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
 use Doctrine\ORM\Tools\Setup;
 use Ridibooks\Library\AdaptableCache;
+use Ridibooks\Payment\Kcp\Company;
 use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Transaction\Constant\PgConstant;
 use RidiPay\Transaction\Entity\PartnerEntity;
 use RidiPay\Transaction\Entity\PgEntity;
 use RidiPay\Transaction\Entity\SubscriptionEntity;
@@ -65,6 +67,19 @@ class TestUtil
             ]
         );
         $schemaTool->createSchema($classes);
+
+        // Pg Fixture 생성
+        $pg = new PgEntity(PgConstant::KCP);
+        $em->persist($pg);
+
+        // CardIssuer Fixture 생성
+        foreach (Company::COMPANY_NAME_MAPPING_KO as $code => $name) {
+            // TODO: 색상, 로고 Image URL 채우기
+            $card_issuer = new CardIssuerEntity($pg->getId(), $code, $name, '000000', '');
+            $em->persist($card_issuer);
+        }
+
+        $em->flush($pg);
     }
 
     /**
