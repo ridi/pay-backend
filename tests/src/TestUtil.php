@@ -111,7 +111,7 @@ class TestUtil
      */
     public static function getEntityManager(): EntityManager
     {
-        if (self::$em === null) {
+        if (self::$em === null || !self::$em->isOpen()) {
             $config = Setup::createAnnotationMetadataConfiguration(
                 [__DIR__ . "/../../src"]
             );
@@ -130,7 +130,7 @@ class TestUtil
      */
     public static function getConnection(): Connection
     {
-        if (self::$conn === null) {
+        if (self::$conn === null || !self::$conn->isConnected()) {
             self::$conn = DriverManager::getConnection([
                 'url' => \getenv('PHPUNIT_DATABASE_URL')
             ]);

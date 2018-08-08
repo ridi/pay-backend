@@ -7,6 +7,8 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Entity\UserEntity;
 use RidiPay\User\Exception\NonUserException;
 use RidiPay\User\Exception\LeavedUserException;
+use RidiPay\User\Exception\UnmatchedPinException;
+use RidiPay\User\Exception\WrongPinException;
 use RidiPay\User\Repository\UserRepository;
 
 class UserService
@@ -76,7 +78,7 @@ class UserService
         $em->beginTransaction();
 
         try {
-            $user->setPin($pin);
+            $user->updatePin($pin);
             UserRepository::getRepository()->save($user);
 
             UserActionHistoryService::logUpdatePin($user);
@@ -87,6 +89,22 @@ class UserService
             $em->close();
 
             throw $t;
+        }
+    }
+
+    /**
+     * @param int $u_idx
+     * @param string $pin
+     * @throws LeavedUserException
+     * @throws NonUserException
+     * @throws UnmatchedPinException
+     */
+    public static function validatePin(int $u_idx, string $pin)
+    {
+        $user = self::getUser($u_idx);
+
+        if (!$user->isPinMatched($pin)) {
+            throw new UnmatchedPinException(); // TODO: 비밀번호 오입력 제한 -> 제한 도달 시 다른 Exception throw
         }
     }
 }

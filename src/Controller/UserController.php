@@ -5,6 +5,8 @@ namespace RidiPay\Controller;
 
 use RidiPay\User\Exception\LeavedUserException;
 use RidiPay\User\Exception\NonUserException;
+use RidiPay\User\Exception\UnmatchedPinException;
+use RidiPay\User\Exception\WrongPinException;
 use RidiPay\User\Service\PaymentMethodService;
 use RidiPay\User\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -34,10 +36,11 @@ class UserController extends Controller
     }
 
     /**
-     * @Route("/users/{u_id}/pin", methods={'PUT"})
+     * @Route("/users/{u_id}/pin", methods={"PUT"})
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
+     * @throws \Throwable
      */
     public function updatePin(Request $request, string $u_id)
     {
@@ -54,6 +57,38 @@ class UserController extends Controller
             UserService::updatePin($u_idx, $body->pin);
         } catch (NonUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (WrongPinException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (\Exception $e) {
+            return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse();
+    }
+
+    /**
+     * @Route("/users/{u_id}/pin/validate", methods={"POST"})
+     * @param Request $request
+     * @param string $u_id
+     * @return JsonResponse
+     */
+    public function validatePin(Request $request, string $u_id)
+    {
+        $u_idx = 0; // TODO: u_idx 값 얻기
+
+        $body = json_decode($request->getContent());
+        if (is_null($body)
+            || !property_exists($body, 'pin')
+        ) {
+            return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            UserService::validatePin($u_idx, $body->pin);
+        } catch (NonUserException | LeavedUserException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (UnmatchedPinException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
         }

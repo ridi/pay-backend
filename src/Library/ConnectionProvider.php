@@ -14,22 +14,27 @@ class ConnectionProvider
     private static $connection_pool = [];
 
     /**
-     * @param $connection_group
-     * @return \Doctrine\DBAL\Connection
+     * @param string $connection_group
+     * @return Connection
      * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
      */
     public static function getConnection(string $connection_group = ConnectionGroupConstant::WRITE): Connection
     {
-        if (!isset(self::$connection_pool[$connection_group])) {
+        if (!isset(self::$connection_pool[$connection_group])
+            || !self::$connection_pool[$connection_group]->isConnected()
+        ) {
             self::$connection_pool[$connection_group] = self::createConnection($connection_group);
         }
+
         return self::$connection_pool[$connection_group];
     }
 
     /**
      * @param string $connection_group
-     * @return \Doctrine\DBAL\Connection
+     * @return Connection
      * @throws \Doctrine\DBAL\DBALException
+     * @throws \Exception
      */
     private static function createConnection(string $connection_group): Connection
     {
