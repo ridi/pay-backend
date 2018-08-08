@@ -20,6 +20,9 @@ class UserRepository extends BaseEntityRepository
 
     /**
      * @return UserRepository
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public static function getRepository()
     {

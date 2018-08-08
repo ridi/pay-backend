@@ -15,6 +15,9 @@ class EntityManagerProvider
     /**
      * @param string $connection_group
      * @return EntityManager
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public static function getEntityManager(string $connection_group = ConnectionGroupConstant::WRITE): EntityManager
     {
@@ -23,6 +26,7 @@ class EntityManagerProvider
         ) {
             self::$entity_manager_pool[$connection_group] = self::createEntityManager($connection_group);
         }
+
         return self::$entity_manager_pool[$connection_group];
     }
 
@@ -31,6 +35,7 @@ class EntityManagerProvider
      * @return EntityManager
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     protected static function createEntityManager(string $connection_group): EntityManager
     {

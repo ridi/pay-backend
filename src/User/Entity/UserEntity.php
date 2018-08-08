@@ -2,6 +2,8 @@
 
 namespace RidiPay\User\Entity;
 
+use RidiPay\User\Exception\WrongPinException;
+
 /**
  * @Table(name="user")
  * @Entity(repositoryClass="RidiPay\User\Repository\UserRepository")
@@ -57,10 +59,23 @@ class UserEntity
 
     /**
      * @param string $pin
+     * @throws WrongPinException
      */
-    public function setPin(string $pin)
+    public function updatePin(string $pin)
     {
+        self::assertValidPin($pin);
         $this->pin = self::generateHashedPin($pin);
+    }
+
+    /**
+     * @param string $pin
+     * @throws WrongPinException
+     */
+    private static function assertValidPin(string $pin)
+    {
+        if (!preg_match('/[0-9]{6}/', $pin)) {
+            throw new WrongPinException();
+        }
     }
 
     /**
