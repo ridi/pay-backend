@@ -2,12 +2,12 @@ version: "3"
 
 services:
   apache:
-    image: ridibooks/pay:${TAG}
+    image: ridi/pay:${TAG}
     container_name: apache
     build:
       context: .
       args:
-        SITE: pay.ridibooks.com
+        SITE: pay.ridi.com
     ports:
       - 80:80
       - 443:443
