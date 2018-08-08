@@ -11,6 +11,9 @@ use RidiPay\User\Constant\PaymentMethodTypeConstant;
 use RidiPay\User\Entity\CardEntity;
 use RidiPay\User\Entity\PaymentMethodEntity;
 use RidiPay\User\Exception\AlreadyCardAddedException;
+use RidiPay\User\Exception\LeavedUserException;
+use RidiPay\User\Exception\NonUserException;
+use RidiPay\User\Exception\UnknownPaymentMethodException;
 use RidiPay\User\Repository\CardIssuerRepository;
 use RidiPay\User\Repository\CardRepository;
 use RidiPay\User\Repository\PaymentMethodRepository;
@@ -50,10 +53,7 @@ class CardService
         $em->beginTransaction();
 
         try {
-            $user = UserService::getUser($u_idx);
-            if (is_null($user)) {
-                $user = UserService::createUser($u_idx);
-            }
+            $user = UserService::createUserIfNotExists($u_idx);
 
             $payment_method = new PaymentMethodEntity($user, PaymentMethodTypeConstant::CARD);
             PaymentMethodRepository::getRepository()->save($payment_method);
@@ -90,7 +90,9 @@ class CardService
     /**
      * @param int $u_idx
      * @param string $payment_method_id
-     * @throws \Exception
+     * @throws LeavedUserException
+     * @throws NonUserException
+     * @throws UnknownPaymentMethodException
      * @throws \Throwable
      */
     public static function deleteCard(
@@ -98,16 +100,11 @@ class CardService
         string $payment_method_id
     ) {
         $user = UserService::getUser($u_idx);
-        if (is_null($user)) {
-            // TODO: 별도 Exception 클래스 throw
-            throw new \Exception('등록되지 않은 유저입니다.');
-        }
 
         $payment_method_repo = PaymentMethodRepository::getRepository();
         $payment_method = $payment_method_repo->findOneByUuid($payment_method_id);
         if (is_null($payment_method)) {
-            // TODO: 별도 Exception 클래스 throw
-            throw new \Exception('등록되지 않은 결제 수단입니다.');
+            throw new UnknownPaymentMethodException();
         }
 
         $em = EntityManagerProvider::getEntityManager();
@@ -181,7 +178,7 @@ class CardService
                 return $payment_method->isCard();
             }
         ))) {
-            throw new AlreadyCardAddedException('카드는 하나만 등록할 수 있습니다.');
+            throw new AlreadyCardAddedException();
         }
     }
 }

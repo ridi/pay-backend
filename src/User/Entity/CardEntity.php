@@ -4,6 +4,7 @@ namespace RidiPay\User\Entity;
 
 use RidiPay\User\Constant\CardPurposeConstant;
 use RidiPay\Transaction\Entity\PgEntity;
+use RidiPay\User\Exception\UnavailableCardPurposeException;
 
 /**
  * @Table(name="card", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_pg_id", columns={"pg_id"}), @Index(name="idx_card_issuer_id", columns={"card_issuer_id"})})
@@ -72,11 +73,11 @@ class CardEntity
     private $pg_bill_key;
 
     /**
-     * @param string $card_number
-     * @param string $pg_bill_key
      * @param PaymentMethodEntity $payment_method
      * @param PgEntity $pg
      * @param CardIssuerEntity $card_issuer
+     * @param string $card_number
+     * @param string $pg_bill_key
      * @return CardEntity
      */
     public static function createForOneTimePayment(
@@ -114,6 +115,7 @@ class CardEntity
      * @param string $purpose
      * @param string $card_number
      * @param string $pg_bill_key
+     * @throws UnavailableCardPurposeException
      */
     private function __construct(
         PaymentMethodEntity $payment_method,
@@ -201,11 +203,14 @@ class CardEntity
         return $this->pg;
     }
 
+    /**
+     * @param string $purpose
+     * @throws UnavailableCardPurposeException
+     */
     private static function assertValidPurpose(string $purpose)
     {
         if (!in_array($purpose, CardPurposeConstant::AVAILABLE_PURPOSE)) {
-            // TODO: 별도 Exception 클래스 throw
-            throw new \Exception('단건 또는 정기 결제 용도가 아닌 카드는 등록할 수 없습니다.');
+            throw new UnavailableCardPurposeException();
         }
     }
 }

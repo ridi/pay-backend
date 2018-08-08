@@ -50,6 +50,16 @@ class UserEntity
     public function __construct(int $u_idx)
     {
         $this->u_idx = $u_idx;
+        $this->pin = null;
+        $this->is_using_onetouch_pay = null;
         $this->created_at = new \DateTime();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isLeaved(): bool
+    {
+        return !is_null($this->leaved_at);
     }
 }
