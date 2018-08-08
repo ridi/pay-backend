@@ -7,4 +7,5 @@ abstract class UserActionConstant
 {
     const ADD_CARD = 'ADD_CARD';
     const REMOVE_CARD = 'REMOVE_CARD';
+    const UPDATE_PIN = 'UPDATE_PIN';
 }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Service;
 
+use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Entity\UserEntity;
 use RidiPay\User\Exception\NonUserException;
 use RidiPay\User\Exception\LeavedUserException;
@@ -58,5 +59,34 @@ class UserService
         UserRepository::getRepository()->save($user);
 
         return $user;
+    }
+
+    /**
+     * @param int $u_idx
+     * @param string $pin
+     * @throws LeavedUserException
+     * @throws NonUserException
+     * @throws \Throwable
+     */
+    public static function updatePin(int $u_idx, string $pin)
+    {
+        $user = self::getUser($u_idx);
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $user->setPin($pin);
+            UserRepository::getRepository()->save($user);
+
+            UserActionHistoryService::logUpdatePin($user);
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
     }
 }
