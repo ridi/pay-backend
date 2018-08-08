@@ -22,13 +22,24 @@ class CardController extends Controller
     {
         $u_idx = 0; // TODO: u_idx 값 얻기
 
-        $card_number = $request->get('card_number');
-        $card_expiration_date = $request->get('card_expiration_date');
-        $card_password = $request->get('card_password');
-        $tax_id = $request->get('tax_id');
+        $body = json_decode($request->getContent());
+        if (is_null($body)
+            || !property_exists($body, 'card_number')
+            || !property_exists($body, 'card_expiration_date')
+            || !property_exists($body, 'card_password')
+            || !property_exists($body, 'tax_id')
+        ) {
+            return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
+        }
 
         try {
-            CardService::addCard($u_idx, $card_number, $card_expiration_date, $card_password, $tax_id);
+            CardService::addCard(
+                $u_idx,
+                $body->card_number,
+                $body->card_expiration_date,
+                $body->card_password,
+                $body->tax_id
+            );
         } catch (\Exception $e) {
             return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
         }
