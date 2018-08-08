@@ -50,32 +50,33 @@ class CardService
         $em->beginTransaction();
 
         try {
-            if (!UserService::isUser($u_idx)) {
-                UserService::createUser($u_idx);
+            $user = UserService::getUser($u_idx);
+            if (is_null($user)) {
+                $user = UserService::createUser($u_idx);
             }
 
-            $payment_method = new PaymentMethodEntity($u_idx, PaymentMethodTypeConstant::CARD);
+            $payment_method = new PaymentMethodEntity($user, PaymentMethodTypeConstant::CARD);
             PaymentMethodRepository::getRepository()->save($payment_method);
 
             $card_for_one_time_payment = CardEntity::createForOneTimePayment(
-                $card_number,
-                $pg_bill_key,
                 $payment_method,
                 $pg,
-                $card_issuer
+                $card_issuer,
+                $card_number,
+                $pg_bill_key
             );
-            $card_for_subscription_payment = CardEntity::createForSubscriptionPayment(
-                $card_number,
-                $pg_bill_key,
+            $card_for_billing_payment = CardEntity::createForBillingPayment(
                 $payment_method,
                 $pg,
-                $card_issuer
+                $card_issuer,
+                $card_number,
+                $pg_bill_key
             );
             $card_repo = CardRepository::getRepository();
             $card_repo->save($card_for_one_time_payment);
-            $card_repo->save($card_for_subscription_payment);
+            $card_repo->save($card_for_billing_payment);
 
-            UserActionHistoryService::logAddCard($u_idx);
+            UserActionHistoryService::logAddCard($user);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -96,6 +97,12 @@ class CardService
         int $u_idx,
         string $payment_method_id
     ) {
+        $user = UserService::getUser($u_idx);
+        if (is_null($user)) {
+            // TODO: 별도 Exception 클래스 throw
+            throw new \Exception('등록되지 않은 유저입니다.');
+        }
+
         $payment_method_repo = PaymentMethodRepository::getRepository();
         $payment_method = $payment_method_repo->findOneByUuid($payment_method_id);
         if (is_null($payment_method)) {
@@ -110,7 +117,7 @@ class CardService
             $payment_method->delete();
             $payment_method_repo->save($payment_method);
 
-            UserActionHistoryService::logRemoveCard($u_idx);
+            UserActionHistoryService::logRemoveCard($user);
             // TODO: first-party 정기 결제 해지 요청
 
             $em->commit();

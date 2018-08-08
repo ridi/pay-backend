@@ -5,33 +5,34 @@ namespace RidiPay\User\Service;
 
 use RidiPay\User\Constant\UserActionConstant;
 use RidiPay\User\Entity\UserActionHistoryEntity;
+use RidiPay\User\Entity\UserEntity;
 use RidiPay\User\Repository\UserActionHistoryRepository;
 
 class UserActionHistoryService
 {
     /**
-     * @param int $u_idx
+     * @param UserEntity $user
      */
-    public static function logAddCard(int $u_idx)
+    public static function logAddCard(UserEntity $user)
     {
-        self::logUserAction($u_idx, UserActionConstant::ADD_CARD);
+        self::logUserAction($user, UserActionConstant::ADD_CARD);
     }
 
     /**
-     * @param int $u_idx
+     * @param UserEntity $user
      */
-    public static function logRemoveCard(int $u_idx)
+    public static function logRemoveCard(UserEntity $user)
     {
-        self::logUserAction($u_idx, UserActionConstant::REMOVE_CARD);
+        self::logUserAction($user, UserActionConstant::REMOVE_CARD);
     }
 
     /**
-     * @param int $u_idx
+     * @param UserEntity $user
      * @param string $action
      */
-    private static function logUserAction(int $u_idx, string $action)
+    private static function logUserAction(UserEntity $user, string $action)
     {
-        $user_action_history = new UserActionHistoryEntity($u_idx, $action);
+        $user_action_history = new UserActionHistoryEntity($user, $action);
         UserActionHistoryRepository::getRepository()->save($user_action_history);
     }
 }

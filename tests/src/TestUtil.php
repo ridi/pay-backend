@@ -76,7 +76,7 @@ class TestUtil
         // CardIssuer Fixture 생성
         foreach (Company::COMPANY_NAME_MAPPING_KO as $code => $name) {
             // TODO: 색상, 로고 Image URL 채우기
-            $card_issuer = new CardIssuerEntity($pg->getId(), $code, $name, '000000', '');
+            $card_issuer = new CardIssuerEntity($pg, $code, $name, '000000', '');
             $em->persist($card_issuer);
         }
         $em->flush();

@@ -19,11 +19,12 @@ class UserActionHistoryEntity
     private $id;
 
     /**
-     * @var int
+     * @var UserEntity
      *
-     * @Column(name="u_idx", type="integer", nullable=false)
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\UserEntity")
+     * @JoinColumn(name="u_idx", referencedColumnName="u_idx", nullable=false)
      */
-    private $u_idx;
+    private $user;
 
     /**
      * @var string
@@ -40,11 +41,12 @@ class UserActionHistoryEntity
     private $created_at;
 
     /**
+     * @param UserEntity $user
      * @param string $action
      */
-    public function __construct(int $u_idx, string $action)
+    public function __construct(UserEntity $user, string $action)
     {
-        $this->u_idx = $u_idx;
+        $this->user = $user;
         $this->action = $action;
         $this->created_at = new \DateTime();
     }

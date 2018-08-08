@@ -2,6 +2,8 @@
 
 namespace RidiPay\User\Entity;
 
+use RidiPay\Transaction\Entity\PgEntity;
+
 /**
  * @Table(name="card_issuer", indexes={@Index(name="idx_pg_id_code", columns={"pg_id", "code"})})
  * @Entity(repositoryClass="RidiPay\User\Repository\CardIssuerRepository")
@@ -18,23 +20,30 @@ class CardIssuerEntity
     private $id;
 
     /**
+     * @var PgEntity
+     * @ManyToOne(targetEntity="RidiPay\Transaction\Entity\PgEntity")
+     * @JoinColumn(name="pg_id", referencedColumnName="id", nullable=false)
+     */
+    private $pg;
+
+    /**
      * @var int
      *
-     * @Column(name="pg_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="pg.id"})
+     * @Column(name="pg_id", type="integer", nullable=false, options={"unsigned"=true})
      */
     private $pg_id;
 
     /**
      * @var string
      *
-     * @Column(name="code", type="string", length=16, nullable=false, options={"comment"="카드 발급사 코드"})
+     * @Column(name="code", type="string", length=32, nullable=false, options={"comment"="카드 발급사 코드"})
      */
     private $code;
 
     /**
      * @var string
      *
-     * @Column(name="name", type="string", length=16, nullable=false, options={"comment"="카드 발급사 이름"})
+     * @Column(name="name", type="string", length=32, nullable=false, options={"comment"="카드 발급사 이름"})
      */
     private $name;
 
@@ -53,15 +62,15 @@ class CardIssuerEntity
     private $logo_image_url;
 
     /**
-     * @param int $pg_id
+     * @param PgEntity $pg
      * @param string $code
      * @param string $name
      * @param string $color
      * @param string $logo_image_url
      */
-    public function __construct(int $pg_id, string $code, string $name, string $color, string $logo_image_url)
+    public function __construct(PgEntity $pg, string $code, string $name, string $color, string $logo_image_url)
     {
-        $this->pg_id = $pg_id;
+        $this->pg = $pg;
         $this->code = $code;
         $this->name = $name;
         $this->color = $color;

@@ -6,7 +6,7 @@ namespace RidiPay\Transaction\Entity;
 use RidiPay\Transaction\Constant\PgConstant;
 
 /**
- * @Table(name="pg")
+ * @Table(name="pg", uniqueConstraints={@UniqueConstraint(name="uniq_name", columns={"name"})})
  * @Entity(repositoryClass="RidiPay\Transaction\Repository\PgRepository")
  */
 class PgEntity
@@ -37,7 +37,7 @@ class PgEntity
     /**
      * @var \DateTime
      *
-     * @Column(name="updated_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
+     * @Column(name="updated_at", type="datetime", columnDefinition="DATETIME on update CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"))
      */
     private $updated_at;
 

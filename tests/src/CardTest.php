@@ -62,9 +62,9 @@ class CardTest extends TestCase
         $this->assertNotNull($card_for_one_time_payment);
         $this->assertTrue($card_for_one_time_payment->isSameCard(self::CARDS[0]['CARD_NUMBER']));
 
-        $card_for_subscription_payment = $payment_method->getCardForSubscriptionPayment();
-        $this->assertNotNull($payment_method->getCardForSubscriptionPayment());
-        $this->assertTrue($card_for_subscription_payment->isSameCard(self::CARDS[0]['CARD_NUMBER']));
+        $card_for_billing_payment = $payment_method->getCardForBillingPayment();
+        $this->assertNotNull($payment_method->getCardForBillingPayment());
+        $this->assertTrue($card_for_billing_payment->isSameCard(self::CARDS[0]['CARD_NUMBER']));
     }
 
     public function testPreventAddingCardIfUserHasCard()
@@ -116,6 +116,6 @@ class CardTest extends TestCase
     {
         $payment_methods = PaymentMethodService::getPaymentMethods($u_idx);
 
-        return $payment_methods->cards[0];
+        return !empty($payment_methods->cards) ? $payment_methods->cards[0] : null;
     }
 }

@@ -6,7 +6,7 @@ use RidiPay\User\Constant\CardPurposeConstant;
 use RidiPay\Transaction\Entity\PgEntity;
 
 /**
- * @Table(name="card", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_pg_id", columns={"pg_id"}), @Index(name="card_issuer_id", columns={"card_issuer_id"})})
+ * @Table(name="card", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_pg_id", columns={"pg_id"}), @Index(name="idx_card_issuer_id", columns={"card_issuer_id"})})
  * @Entity(repositoryClass="RidiPay\User\Repository\CardRepository")
  */
 class CardEntity
@@ -21,11 +21,34 @@ class CardEntity
     private $id;
 
     /**
+     * @var PaymentMethodEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\PaymentMethodEntity")
+     * @JoinColumn(name="payment_method_id", referencedColumnName="id", nullable=false)
+     */
+    private $payment_method;
+
+    /**
+     * @var PgEntity
+     * @ManyToOne(targetEntity="RidiPay\Transaction\Entity\PgEntity")
+     * @JoinColumn(name="pg_id", referencedColumnName="id", nullable=false)
+     */
+    private $pg;
+
+    /**
+     * @var CardIssuerEntity
+     *
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\CardIssuerEntity")
+     * @JoinColumn(name="card_issuer_id", referencedColumnName="id", nullable=false)
+     */
+    private $card_issuer;
+
+    /**
      * @var string
      *
-     * @Column(name="purpose", type="string", length=0, nullable=false, columnDefinition="ENUM('ONE_TIME','BILLING')", options={"default"="ONE_TIME","comment"="용도(ONE_TIME: 단건 결제, BILLING: 정기 결제)"})
+     * @Column(name="purpose", type="string", nullable=false, columnDefinition="ENUM('ONE_TIME','BILLING')", options={"default"="ONE_TIME", "comment"="용도(ONE_TIME: 단건 결제, BILLING: 정기 결제)"})
      */
-    private $purpose = 'ONE_TIME';
+    private $purpose;
 
     /**
      * @var string
@@ -39,35 +62,14 @@ class CardEntity
      *
      * @Column(name="iin", type="string", length=255, nullable=false, options={"comment"="Issuer Identification Number(카드 번호 앞 6자리)"})
      */
-    private $iin = '';
+    private $iin;
 
     /**
      * @var string
      *
      * @Column(name="pg_bill_key", type="string", length=255, nullable=false, options={"comment"="PG사에서 발급한 bill key"})
      */
-    private $pg_bill_key = '';
-
-    /**
-     * @var PaymentMethodEntity
-     *
-     * @ManyToOne(targetEntity="PaymentMethodEntity")
-     * @JoinColumn(name="payment_method_id", referencedColumnName="id")
-     */
-    private $payment_method;
-
-    /**
-     * @var PgEntity
-     * @ManyToOne(targetEntity="RidiPay\Transaction\Entity\PgEntity")
-     */
-    private $pg;
-
-    /**
-     * @var CardIssuerEntity
-     *
-     * @ManyToOne(targetEntity="CardIssuerEntity")
-     */
-    private $card_issuer;
+    private $pg_bill_key;
 
     /**
      * @param string $card_number
@@ -78,13 +80,13 @@ class CardEntity
      * @return CardEntity
      */
     public static function createForOneTimePayment(
-        string $card_number,
-        string $pg_bill_key,
         PaymentMethodEntity $payment_method,
         PgEntity $pg,
-        CardIssuerEntity $card_issuer
+        CardIssuerEntity $card_issuer,
+        string $card_number,
+        string $pg_bill_key
     ) {
-        return new self(CardPurposeConstant::ONE_TIME, $card_number, $pg_bill_key, $payment_method, $pg, $card_issuer);
+        return new self($payment_method, $pg, $card_issuer, CardPurposeConstant::ONE_TIME, $card_number, $pg_bill_key);
     }
 
     /**
@@ -95,42 +97,42 @@ class CardEntity
      * @param CardIssuerEntity $card_issuer
      * @return CardEntity
      */
-    public static function createForSubscriptionPayment(
-        string $card_number,
-        string $pg_bill_key,
+    public static function createForBillingPayment(
         PaymentMethodEntity $payment_method,
         PgEntity $pg,
-        CardIssuerEntity $card_issuer
+        CardIssuerEntity $card_issuer,
+        string $card_number,
+        string $pg_bill_key
     ) {
-        return new self(CardPurposeConstant::SUBSCRIPTION, $card_number, $pg_bill_key, $payment_method, $pg, $card_issuer);
+        return new self($payment_method, $pg, $card_issuer, CardPurposeConstant::BILLING, $card_number, $pg_bill_key);
     }
 
     /**
-     * @param string $purpose
-     * @param string $card_number
-     * @param string $pg_bill_key
      * @param PaymentMethodEntity $payment_method
      * @param PgEntity $pg
      * @param CardIssuerEntity $card_issuer
+     * @param string $purpose
+     * @param string $card_number
+     * @param string $pg_bill_key
      */
     private function __construct(
-        string $purpose,
-        string $card_number,
-        string $pg_bill_key,
         PaymentMethodEntity $payment_method,
         PgEntity $pg,
-        CardIssuerEntity $card_issuer
+        CardIssuerEntity $card_issuer,
+        string $purpose,
+        string $card_number,
+        string $pg_bill_key
     ) {
         self::assertValidPurpose($purpose);
+
+        $this->payment_method = $payment_method;
+        $this->pg = $pg;
+        $this->card_issuer = $card_issuer;
 
         $this->purpose = $purpose;
         $this->hashed_card_number = self::generateHashedCardNumber($card_number);
         $this->iin = substr($card_number, 0, 6); // TODO: 암호화
         $this->pg_bill_key = $pg_bill_key; // TODO: 암호화
-
-        $this->payment_method = $payment_method;
-        $this->pg = $pg;
-        $this->card_issuer = $card_issuer;
     }
 
     /**
@@ -162,9 +164,9 @@ class CardEntity
     /**
      * @return bool
      */
-    public function isAvailableOnSubscriptionPayment(): bool
+    public function isAvailableOnBillingPayment(): bool
     {
-        return $this->purpose === CardPurposeConstant::SUBSCRIPTION;
+        return $this->purpose === CardPurposeConstant::BILLING;
     }
 
     /**
