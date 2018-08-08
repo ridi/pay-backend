@@ -56,6 +56,32 @@ class UserEntity
     }
 
     /**
+     * @param string $pin
+     */
+    public function setPin(string $pin)
+    {
+        $this->pin = self::generateHashedPin($pin);
+    }
+
+    /**
+     * @param string $pin
+     * @return bool
+     */
+    public function isPinMatched(string $pin): bool
+    {
+        return $this->pin === self::generateHashedPin($pin);
+    }
+
+    /**
+     * @param string $pin
+     * @return string
+     */
+    private static function generateHashedPin(string $pin)
+    {
+        return hash('sha256', $pin);
+    }
+
+    /**
      * @return bool
      */
     public function isLeaved(): bool

@@ -28,6 +28,14 @@ class UserActionHistoryService
 
     /**
      * @param UserEntity $user
+     */
+    public static function logUpdatePin(UserEntity $user)
+    {
+        self::logUserAction($user, UserActionConstant::UPDATE_PIN);
+    }
+
+    /**
+     * @param UserEntity $user
      * @param string $action
      */
     private static function logUserAction(UserEntity $user, string $action)
