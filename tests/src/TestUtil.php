@@ -71,6 +71,7 @@ class TestUtil
         // Pg Fixture 생성
         $pg = new PgEntity(PgConstant::KCP);
         $em->persist($pg);
+        $em->flush($pg);
 
         // CardIssuer Fixture 생성
         foreach (Company::COMPANY_NAME_MAPPING_KO as $code => $name) {
@@ -78,8 +79,7 @@ class TestUtil
             $card_issuer = new CardIssuerEntity($pg->getId(), $code, $name, '000000', '');
             $em->persist($card_issuer);
         }
-
-        $em->flush($pg);
+        $em->flush();
     }
 
     /**
