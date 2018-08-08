@@ -37,7 +37,7 @@ phpunit:
   stage: test
   script:
     - composer install
-    - vendor/bin/simple-phpunit --colors=never
+    - vendor/bin/phpunit --colors=never
   except:
     - schedules
     - triggers
