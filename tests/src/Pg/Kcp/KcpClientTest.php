@@ -51,32 +51,35 @@ class KcpClientTest extends TestCase
         );
 
         $auth_res = $client->requestBatchKey($card);
-        $this->assertSame(Response::OK, $auth_res['res_cd']);
-        $this->assertSame($card_company, $auth_res['card_cd']);
-        $this->assertSame(Company::getKoreanName($auth_res['card_cd']), $auth_res['card_name']);
+        $this->assertTrue($auth_res->isSuccess());
+        $this->assertSame(Response::OK, $auth_res->getResCd());
+        $this->assertSame($card_company, $auth_res->getCardCd());
+        $this->assertSame(Company::getKoreanName($auth_res->getCardCd()), $auth_res->getCardName());
 
-        $order_res = $client->batchOrder($auth_res['batch_key'], $order);
-        $this->assertSame(Response::OK, $order_res['res_cd']);
-        $this->assertSame($order_id, $order_res['order_no']);
-        $this->assertSame($order_id, $order_res['ca_order_id']);
-        $this->assertSame((string) $order->getGoodPrice(), $order_res['amount']);
-        $this->assertSame((string) $order->getGoodPrice(), $order_res['card_mny']);
-        $this->assertSame('00', $order_res['quota']);
-        $this->assertSame((string) 90, $order_res['res_tax_mny']);
-        $this->assertSame((string) 10, $order_res['res_vat_mny']);
-        $this->assertSame(Company::getAcquirerFromIssuer($card_company), $order_res['acqu_cd']);
+        $order_res = $client->batchOrder($auth_res->getBatchKey(), $order);
+        $this->assertTrue($order_res->isSuccess());
+        $this->assertSame(Response::OK, $order_res->getResCd());
+        $this->assertSame($order_id, $order_res->getOrderNo());
+        $this->assertSame($order->getGoodPrice(), $order_res->getAmount());
+        $this->assertSame($order->getGoodPrice(), $order_res->getCardMny());
+        $this->assertSame(0, $order_res->getQuota());
+        $this->assertSame(90, $order_res->getResTaxMny());
+        $this->assertSame(10, $order_res->getResVatMny());
+        $this->assertSame(Company::getAcquirerFromIssuer($card_company), $order_res->getAcquCd());
+        $this->assertSame(Company::getKoreanName($order_res->getAcquCd()), $order_res->getAcquName());
 
-        $kcp_tno = $order_res['tno'];
+        $kcp_tno = $order_res->getTno();
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
-        $this->assertSame(Response::OK, $cancel_res['res_cd']);
-        $this->assertSame($order_id, $cancel_res['order_no']);
-        $this->assertSame($order_id, $cancel_res['ca_order_id']);
-        $this->assertSame((string) $order->getGoodPrice(), $cancel_res['amount']);
-        $this->assertSame((string) $order->getGoodPrice(), $cancel_res['card_mny']);
-        $this->assertSame('00', $cancel_res['quota']);
+        $this->assertTrue($cancel_res->isSuccess());
+        $this->assertSame(Response::OK, $cancel_res->getResCd());
+        $this->assertSame($order_id, $cancel_res->getOrderNo());
+        $this->assertSame($order->getGoodPrice(), $cancel_res->getAmount());
+        $this->assertSame($order->getGoodPrice(), $cancel_res->getCardMny());
+        $this->assertSame(0, $cancel_res->getQuota());
 
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
-        $this->assertSame(Response::ALREADY_CANCELLED, $cancel_res['res_cd']);
+        $this->assertFalse($cancel_res->isSuccess());
+        $this->assertTrue($cancel_res->isAlreadyCancelled());
     }
 
     public function testBuildReceiptUrl()

@@ -119,9 +119,9 @@ class Client {
 
     /**
      * @param Card $card
-     * @return array
+     * @return BatchKeyResponse
      */
-    public function requestBatchKey(Card $card): array
+    public function requestBatchKey(Card $card): BatchKeyResponse
     {
         $sign_tx_type = self::SIGN_TRANSACTION_TYPE_AUTH;
         $card_tx_type = self::CARD_TRANSACTION_TYPE_AUTH;
@@ -135,16 +135,16 @@ class Client {
             'payx_data' => $payx_data,
         ];
 
-        return self::execPayPlusClient(self::TRANSACTION_CODE_AUTH, $params);
+        return new BatchKeyResponse(self::execPayPlusClient(self::TRANSACTION_CODE_AUTH, $params));
     }
 
     /**
      * @param string $batch_key 발급받은 배치 키
      * @param Order $order 주문 정보
      * @param int $installment_months 할부 개월수
-     * @return array
+     * @return BatchOrderResponse
      */
-    public function batchOrder(string $batch_key, Order $order, int $installment_months = 0): array
+    public function batchOrder(string $batch_key, Order $order, int $installment_months = 0): BatchOrderResponse
     {
         $price = $order->getGoodPrice();
         $currency = self::CURRENCY_KRW;
@@ -162,15 +162,16 @@ class Client {
             'ordr_data' => (string) $order,
         ];
 
-        return self::execPayPlusClient(self::TRANSACTION_CODE_ORDER, $params);
+        return new BatchOrderResponse(self::execPayPlusClient(self::TRANSACTION_CODE_ORDER, $params));
     }
 
     /**
      * @param string $kcp_tno KCP 측 주문번호
      * @param string $reason 취소 사유
-     * @return array
+     * @return CancelTransactionResponse
      */
-    public function cancelTransaction(string $kcp_tno, string $reason): array {
+    public function cancelTransaction(string $kcp_tno, string $reason): CancelTransactionResponse
+    {
         $reason = "\"$reason\"";
         $mod_type = self::MOD_TYPE_CANCEL_ORDER_FULL;
 
@@ -178,7 +179,7 @@ class Client {
             'modx_data' => "mod_data=tno=$kcp_tno\x1fmod_type=$mod_type\x1fmod_desc=$reason\x1f",
         ];
 
-        return self::execPayPlusClient(self::TRANSACTION_CODE_CANCEL, $params);
+        return new CancelTransactionResponse(self::execPayPlusClient(self::TRANSACTION_CODE_CANCEL, $params));
     }
 
     /**
