@@ -5,10 +5,6 @@
     "license": "proprietary",
     "repositories": [
         {
-            "type": "path",
-            "url": "src/Ridibooks"
-        },
-        {
             "type": "composer",
             "url": "https://satis.ridi.io"
         }
