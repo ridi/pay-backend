@@ -2,6 +2,7 @@
 
 namespace RidiPay\User\Entity;
 
+use RidiPay\User\Exception\OnetouchPaySettingException;
 use RidiPay\User\Exception\WrongPinException;
 
 /**
@@ -79,6 +80,14 @@ class UserEntity
     }
 
     /**
+     * @return bool
+     */
+    private function hasPin(): bool
+    {
+        return !is_null($this->pin);
+    }
+
+    /**
      * @param string $pin
      * @return bool
      */
@@ -94,6 +103,41 @@ class UserEntity
     private static function generateHashedPin(string $pin)
     {
         return hash('sha256', $pin);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isUsingOnetouchPay(): bool
+    {
+        // 원터치 결제 이용 여부 미설정 및 OFF를 원터치 결제를 사용하고 있지 않은 것으로 판단한다.
+        return !empty($this->is_using_onetouch_pay);
+    }
+
+    /**
+     * @throws OnetouchPaySettingException
+     */
+    public function enableOnetouchPay()
+    {
+        // 최초 결제 수단 등록이 아닌 경우, 원터치 결제 활성화 시 결제 비밀번호 소유 필수
+        if (!is_null($this->is_using_onetouch_pay) && !$this->hasPin()) {
+            throw new OnetouchPaySettingException();
+        }
+
+        $this->is_using_onetouch_pay = true;
+    }
+
+    /**
+     * @throws OnetouchPaySettingException
+     */
+    public function disableOnetouchPay()
+    {
+        if (!$this->hasPin()) {
+            // 원터치 결제 비활성화 시 결제 비밀번호 소유 필수
+            throw new OnetouchPaySettingException();
+        }
+
+        $this->is_using_onetouch_pay = false;
     }
 
     /**

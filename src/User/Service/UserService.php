@@ -7,8 +7,8 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Entity\UserEntity;
 use RidiPay\User\Exception\NonUserException;
 use RidiPay\User\Exception\LeavedUserException;
+use RidiPay\User\Exception\OnetouchPaySettingException;
 use RidiPay\User\Exception\UnmatchedPinException;
-use RidiPay\User\Exception\WrongPinException;
 use RidiPay\User\Repository\UserRepository;
 
 class UserService
@@ -18,6 +18,9 @@ class UserService
      * @return null|UserEntity
      * @throws LeavedUserException
      * @throws NonUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public static function getUser(int $u_idx): ?UserEntity
     {
@@ -98,6 +101,9 @@ class UserService
      * @throws LeavedUserException
      * @throws NonUserException
      * @throws UnmatchedPinException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public static function validatePin(int $u_idx, string $pin)
     {
@@ -106,5 +112,85 @@ class UserService
         if (!$user->isPinMatched($pin)) {
             throw new UnmatchedPinException(); // TODO: 비밀번호 오입력 제한 -> 제한 도달 시 다른 Exception throw
         }
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NonUserException
+     * @throws OnetouchPaySettingException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     * @throws \Throwable
+     */
+    public static function enableOnetouchPay(int $u_idx)
+    {
+        $user = self::getUser($u_idx);
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $user->enableOnetouchPay();
+            UserRepository::getRepository()->save($user);
+
+            UserActionHistoryService::logEnableOnetouchPay($user);
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NonUserException
+     * @throws OnetouchPaySettingException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     * @throws \Throwable
+     */
+    public static function disableOnetouchPay(int $u_idx)
+    {
+        $user = self::getUser($u_idx);
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $user->disableOnetouchPay();
+            UserRepository::getRepository()->save($user);
+
+            UserActionHistoryService::logDisableOnetouchPay($user);
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
+    }
+
+    /**
+     * @param int $u_idx
+     * @return bool
+     * @throws LeavedUserException
+     * @throws NonUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     */
+    public static function isUsingOnetouchPay(int $u_idx): bool
+    {
+        $user = self::getUser($u_idx);
+
+        return $user->isUsingOnetouchPay();
     }
 }
