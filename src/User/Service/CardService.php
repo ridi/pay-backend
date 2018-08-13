@@ -115,7 +115,7 @@ class CardService
             $payment_method->delete();
             $payment_method_repo->save($payment_method);
 
-            UserActionHistoryService::logRemoveCard($user);
+            UserActionHistoryService::logDeleteCard($user);
             // TODO: first-party 정기 결제 해지 요청
 
             $em->commit();

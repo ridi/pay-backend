@@ -23,9 +23,9 @@ class UserActionHistoryService
      * @param UserEntity $user
      * @throws \Exception
      */
-    public static function logRemoveCard(UserEntity $user)
+    public static function logDeleteCard(UserEntity $user)
     {
-        self::logUserAction($user, UserActionConstant::REMOVE_CARD);
+        self::logUserAction($user, UserActionConstant::DELETE_CARD);
     }
 
     /**
