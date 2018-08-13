@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Service;
 
+use Ridibooks\Payment\Kcp\BatchKeyResponse;
 use Ridibooks\Payment\Kcp\Card;
 use Ridibooks\Payment\Kcp\Client;
 use Ridibooks\Payment\Kcp\Response;
@@ -43,8 +44,8 @@ class CardService
         self::assertNotHavingCard($u_idx);
 
         $response = self::requestBillKey($card_number, $card_expiration_date, $card_password, $tax_id, $is_test);
-        $pg_bill_key = $response['batch_key'];
-        $card_issuer_code = $response['card_cd'];
+        $pg_bill_key = $response->getBatchKey();
+        $card_issuer_code = $response->getCardCd();
 
         $pg = PgRepository::getRepository()->findOneByName(PgConstant::KCP);
         $card_issuer = CardIssuerRepository::getRepository()->findOneByPgIdAndCode($pg->getId(), $card_issuer_code);
@@ -133,7 +134,7 @@ class CardService
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @param bool $is_test Bill Key 발급 시, PG사 테스트 서버 이용 여부
      * @throws \Throwable
-     * @return array
+     * @return BatchKeyResponse
      */
     private static function requestBillKey(
         string $card_number,
@@ -141,7 +142,7 @@ class CardService
         string $card_password,
         string $tax_id,
         bool $is_test
-    ): array {
+    ): BatchKeyResponse {
         // TODO: KCP 연동 값 채우기
         $site_code = '';
         $site_key = '';
@@ -156,7 +157,7 @@ class CardService
 
         $card = new Card($card_number, $card_expiration_date, $card_password, $tax_id);
         $response = $kcp->requestBatchKey($card);
-        if ($response['res_cd'] !== Response::OK) {
+        if (!$response->isSuccess()) {
             // TODO: 예외 처리
         }
 

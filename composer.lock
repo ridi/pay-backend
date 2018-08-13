@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "429e7a6d5af4f1fb30aee1eba6b44ac6",
+    "content-hash": "b265628fa8717ecdee89b49e8b929d92",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1733,11 +1733,11 @@
         },
         {
             "name": "ridibooks/payment",
-            "version": "0.1.0",
+            "version": "0.2.1",
             "source": {
                 "type": "git",
                 "url": "git@gitlab.ridi.io:store/payment-php.git",
-                "reference": "bc840f0fd995b0fefc89dfd875d6cd4396813d4c"
+                "reference": "9c4d77db5415c7185d45e884e8f03d0d47378274"
             },
             "require-dev": {
                 "phpunit/phpunit": "^7.2",
@@ -1768,7 +1768,7 @@
                 }
             ],
             "description": "Ridibooks Payment Library",
-            "time": "2018-08-06T07:39:21+00:00"
+            "time": "2018-08-10T09:19:40+00:00"
         },
         {
             "name": "sensio/framework-extra-bundle",
