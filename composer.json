@@ -15,6 +15,7 @@
         "ext-iconv": "*",
         "doctrine/dbal": "^2.8",
         "doctrine/orm": "^2.6",
+        "predis/predis": "^1.1",
         "ramsey/uuid-doctrine": "^1.4",
         "ridibooks/core": "^0.9.6",
         "ridibooks/crm": "^0.4.1",

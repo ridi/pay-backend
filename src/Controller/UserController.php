@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use RidiPay\User\Exception\PasswordEntryBlockedException;
 use RidiPay\User\Exception\LeavedUserException;
 use RidiPay\User\Exception\NonUserException;
 use RidiPay\User\Exception\OnetouchPaySettingException;
@@ -88,7 +89,9 @@ class UserController extends Controller
         } catch (NonUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (UnmatchedPinException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (PasswordEntryBlockedException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
         } catch (\Exception $e) {
             return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
         }

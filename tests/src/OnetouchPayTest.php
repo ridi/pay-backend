@@ -39,7 +39,6 @@ class OnetouchPayTest extends TestCase
     public function testDisableOnetouchPayWhenAddingFirstPaymentMethodAndNotHavingPin()
     {
         $this->expectException(OnetouchPaySettingException::class);
-
         UserService::disableOnetouchPay($this->u_idx);
     }
 

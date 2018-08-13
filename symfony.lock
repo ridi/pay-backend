@@ -122,6 +122,9 @@
     "piwik/device-detector": {
         "version": "3.10.2"
     },
+    "predis/predis": {
+        "version": "v1.1.1"
+    },
     "psr/cache": {
         "version": "1.0.1"
     },

@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace RidiPay\Tests;
 
 use PHPUnit\Framework\TestCase;
+use RidiPay\User\Exception\PasswordEntryBlockedException;
 use RidiPay\User\Exception\UnmatchedPinException;
 use RidiPay\User\Exception\WrongPinException;
+use RidiPay\User\Model\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Service\UserService;
 
 class PinTest extends TestCase
@@ -57,22 +59,40 @@ class PinTest extends TestCase
 
     public function testEnterPinCorrectly()
     {
-        $this->expectNotToPerformAssertions();
-
         $pin = self::getValidPin();
         UserService::updatePin($this->u_idx, $pin);
 
+        $this->expectNotToPerformAssertions();
         UserService::validatePin($this->u_idx, $pin);
     }
 
     public function testEnterPinIncorrectly()
     {
-        $this->expectException(UnmatchedPinException::class);
-
         $pin = self::getValidPin();
         UserService::updatePin($this->u_idx, $pin);
 
+        $this->expectException(UnmatchedPinException::class);
         UserService::validatePin($this->u_idx, 'abcdef');
+    }
+
+    public function testPinEntryAbuseBlock()
+    {
+        $pin = self::getValidPin();
+        UserService::updatePin($this->u_idx, $pin);
+
+        $policy = new PinEntryAbuseBlockPolicy();
+        for ($try_count = 0; $try_count < $policy->getBlockThreshold() - 1; $try_count++) {
+            $this->expectException(UnmatchedPinException::class);
+            UserService::validatePin($this->u_idx, self::getInvalidPinIncludingUnsupportedCharacters());
+        }
+
+        // Block
+        $this->expectException(PasswordEntryBlockedException::class);
+        UserService::validatePin($this->u_idx, self::getInvalidPinIncludingUnsupportedCharacters());
+
+        // Block 이후 시도
+        $this->expectException(PasswordEntryBlockedException::class);
+        UserService::validatePin($this->u_idx, self::getInvalidPinIncludingUnsupportedCharacters());
     }
 
     /**
