@@ -12,6 +12,7 @@ class UserActionHistoryService
 {
     /**
      * @param UserEntity $user
+     * @throws \Exception
      */
     public static function logAddCard(UserEntity $user)
     {
@@ -20,6 +21,7 @@ class UserActionHistoryService
 
     /**
      * @param UserEntity $user
+     * @throws \Exception
      */
     public static function logRemoveCard(UserEntity $user)
     {
@@ -28,6 +30,7 @@ class UserActionHistoryService
 
     /**
      * @param UserEntity $user
+     * @throws \Exception
      */
     public static function logUpdatePin(UserEntity $user)
     {
@@ -36,7 +39,26 @@ class UserActionHistoryService
 
     /**
      * @param UserEntity $user
+     * @throws \Exception
+     */
+    public static function logEnableOnetouchPay(UserEntity $user)
+    {
+        self::logUserAction($user, UserActionConstant::ENABLE_ONETOUCH_PAY);
+    }
+
+    /**
+     * @param UserEntity $user
+     * @throws \Exception
+     */
+    public static function logDisableOnetouchPay(UserEntity $user)
+    {
+        self::logUserAction($user, UserActionConstant::DISABLE_ONETOUCH_PAY);
+    }
+
+    /**
+     * @param UserEntity $user
      * @param string $action
+     * @throws \Exception
      */
     private static function logUserAction(UserEntity $user, string $action)
     {
