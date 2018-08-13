@@ -69,8 +69,6 @@ class CardTest extends TestCase
 
     public function testPreventAddingCardIfUserHasCard()
     {
-        $this->expectException(AlreadyCardAddedException::class);
-
         CardService::addCard(
             $this->u_idx,
             self::CARDS[0]['CARD_NUMBER'],
@@ -80,6 +78,7 @@ class CardTest extends TestCase
             true
         );
 
+        $this->expectException(AlreadyCardAddedException::class);
         CardService::addCard(
             $this->u_idx,
             self::CARDS[1]['CARD_NUMBER'],

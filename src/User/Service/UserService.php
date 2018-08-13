@@ -5,10 +5,13 @@ namespace RidiPay\User\Service;
 
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Entity\UserEntity;
+use RidiPay\User\Exception\PasswordEntryBlockedException;
 use RidiPay\User\Exception\NonUserException;
 use RidiPay\User\Exception\LeavedUserException;
 use RidiPay\User\Exception\OnetouchPaySettingException;
 use RidiPay\User\Exception\UnmatchedPinException;
+use RidiPay\User\Model\AbuseBlocker;
+use RidiPay\User\Model\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Repository\UserRepository;
 
 class UserService
@@ -110,7 +113,18 @@ class UserService
         $user = self::getUser($u_idx);
 
         if (!$user->isPinMatched($pin)) {
-            throw new UnmatchedPinException(); // TODO: 비밀번호 오입력 제한 -> 제한 도달 시 다른 Exception throw
+            $policy = new PinEntryAbuseBlockPolicy();
+            $abuse_blocker = new AbuseBlocker($policy, $u_idx);
+
+            if (!$abuse_blocker->isBlocked()) {
+                throw new UnmatchedPinException();
+            }
+
+            $remaining_period_until_unblock = $abuse_blocker->getBlockedAt() + $policy->getBlockedPeriod() - time();
+            throw new PasswordEntryBlockedException(
+                $policy,
+                ($remaining_period_until_unblock >= 0 ? $remaining_period_until_unblock : 0)
+            );
         }
     }
 
