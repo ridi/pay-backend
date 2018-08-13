@@ -1,9 +1,6 @@
 variables:
   COMPOSER_HOME: $CI_PROJECT_DIR/.composer
   GIT_SUBMODULE_STRATEGY: normal
-  MYSQL_DATABASE: ridi_pay
-  MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
-  PHPUNIT_DATABASE_URL: mysql://root@mariadb/ridi_pay
 
 cache:
   key: composer
@@ -24,8 +21,6 @@ stages:
 
 .php-test: &php-test
   image: ridibooks/store-php-test:7.2
-  services:
-    - mariadb:10.3
 
 composer:
   <<: *php-test
@@ -40,6 +35,14 @@ composer:
 phpunit:
   <<: *php-test
   stage: test
+  services:
+    - mariadb:10.3
+    - redis:4.0
+  variables:
+    MYSQL_DATABASE: ridi_pay
+    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    PHPUNIT_DATABASE_URL: mysql://root@mariadb/ridi_pay
+    REDIS_HOST: redis
   script:
     - composer install
     - vendor/bin/phpunit --colors=never
