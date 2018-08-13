@@ -44,6 +44,9 @@
     "doctrine/reflection": {
         "version": "v1.0.0"
     },
+    "firebase/php-jwt": {
+        "version": "v5.0.0"
+    },
     "goaop/framework": {
         "version": "2.2.0"
     },
@@ -157,6 +160,9 @@
     },
     "ridibooks/crm": {
         "version": "0.4.1"
+    },
+    "ridibooks/oauth2": {
+        "version": "v0.1.3"
     },
     "ridibooks/payment": {
         "version": "0.1.0"
