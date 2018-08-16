@@ -6,8 +6,6 @@ namespace RidiPay\Library\OAuth2\Handler;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use Ridibooks\OAuth2\Authorization\Exception\InsufficientScopeException;
 use Ridibooks\OAuth2\Grant\Granter;
-use Ridibooks\OAuth2\Silex\Constant\OAuth2ProviderKeyConstant;
-use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -42,11 +40,7 @@ class LoginForcedExceptionHandler implements ExceptionHandlerInterface
             $url = $this->granter->authorize($state, $redirect_uri);
         }
 
-        $response = new RedirectResponse($url);
-        $cookie = new Cookie(OAuth2ProviderKeyConstant::STATE, $state, 0, '/', $request->getHost(), true, true);
-        $response->headers->setCookie($cookie);
-
-        return $response;
+        return new RedirectResponse($url);
     }
 
     /**
