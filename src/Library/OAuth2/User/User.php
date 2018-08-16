@@ -25,8 +25,8 @@ class User
         }
         $result = $json->result;
 
-        $this->u_idx = $result->u_idx;
-        $this->u_id = $result->u_idx;
+        $this->u_idx = $result->idx;
+        $this->u_id = $result->id;
     }
 
     /**
