@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use RidiPay\User\Exception\PasswordEntryBlockedException;
+use RidiPay\Library\OAuth2\Annotation\OAuth2;
+use RidiPay\Library\OAuth2\OAuth2Manager;
 use RidiPay\User\Exception\LeavedUserException;
 use RidiPay\User\Exception\NonUserException;
 use RidiPay\User\Exception\OnetouchPaySettingException;
@@ -31,7 +33,7 @@ class UserController extends Controller
         try {
             $payment_methods = PaymentMethodService::getPaymentMethods($u_idx);
         } catch (\Exception $e) {
-            return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse(['payment_methods' => $payment_methods]);
@@ -39,19 +41,25 @@ class UserController extends Controller
 
     /**
      * @Route("/users/{u_id}/pin", methods={"PUT"})
+     * @OAuth2()
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
      */
     public function updatePin(Request $request, string $u_id)
     {
-        $u_idx = 0; // TODO: u_idx 값 얻기
+        /** @var OAuth2Manager $oauth2_manager */
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+        $u_idx = $oauth2_manager->getUser()->getUidx();
+        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+        }
 
         $body = json_decode($request->getContent());
         if (is_null($body)
             || !property_exists($body, 'pin')
         ) {
-            return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -61,7 +69,7 @@ class UserController extends Controller
         } catch (WrongPinException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (\Throwable $t) {
-            return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse();
@@ -69,19 +77,25 @@ class UserController extends Controller
 
     /**
      * @Route("/users/{u_id}/pin/validate", methods={"POST"})
+     * @OAuth2()
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
      */
     public function validatePin(Request $request, string $u_id)
     {
-        $u_idx = 0; // TODO: u_idx 값 얻기
+        /** @var OAuth2Manager $oauth2_manager */
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+        $u_idx = $oauth2_manager->getUser()->getUidx();
+        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+        }
 
         $body = json_decode($request->getContent());
         if (is_null($body)
             || !property_exists($body, 'pin')
         ) {
-            return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -93,7 +107,7 @@ class UserController extends Controller
         } catch (PasswordEntryBlockedException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
         } catch (\Exception $e) {
-            return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse();
@@ -101,18 +115,24 @@ class UserController extends Controller
 
     /**
      * @param Request $request
+     * @OAuth2()
      * @param string $u_id
      * @return JsonResponse
      */
     public function updateOnetouchPay(Request $request, string $u_id)
     {
-        $u_idx = 0; // TODO: u_idx 값 얻기
+        /** @var OAuth2Manager $oauth2_manager */
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+        $u_idx = $oauth2_manager->getUser()->getUidx();
+        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+            return new JsonResponse('Login required', Response::HTTP_UNAUTHORIZED);
+        }
 
         $body = json_decode($request->getContent());
         if (is_null($body)
             || !property_exists($body, 'enable_onetouch_pay')
         ) {
-            return new JsonResponse(null, Response::HTTP_BAD_REQUEST);
+            return new JsonResponse('Invalid request', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -126,7 +146,7 @@ class UserController extends Controller
         } catch (OnetouchPaySettingException $e) {
             return new JsonResponse(['message' => $e->getMessage()], response::HTTP_FORBIDDEN);
         } catch (\Throwable $t) {
-            return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
         return new JsonResponse();

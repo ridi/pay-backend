@@ -13,3 +13,12 @@ services:
         public: false       # Allows optimizing the container by removing unused services; this also means
                             # fetching services directly from the container via $container->get() won't work.
                             # The best practice is to be explicit about your dependencies anyway.
+
+    ridi_pay.services.oauth2.manager:
+        class: RidiPay\Library\OAuth2\OAuth2Manager
+
+    ridi_pay.services.oauth2.middleware:
+        class: RidiPay\Library\OAuth2\OAuth2Middleware
+        arguments:
+            - '@ridi_pay.services.oauth2.manager'
+            - '@annotation_reader'
