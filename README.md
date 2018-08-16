@@ -1,13 +1,24 @@
-## 개발 환경 셋팅
-#### 0. PHP 7.2 설치
+## 0. Requirements
+- PHP 7.2
 ```
 brew install php72
 ```
 
-#### 1. php 의존성 패키지 설치
+- Composer
+  - https://getcomposer.org/doc/00-intro.md#globally
+
+- mkcert
 ```
-composer install
-# composer 전역 설치는 https://getcomposer.org/doc/00-intro.md#globally 페이지를 참고합니다.
+brew install mkcert
+brew install nss # Firefox 사용 시
+```
+
+- Docker
+  - https://store.docker.com/editions/community/docker-ce-desktop-mac
+
+#### 1. Make
+```
+make dev
 ```
 
 #### 2. Docker 컨테이너 생성
