@@ -8,7 +8,6 @@ use Ridibooks\OAuth2\Authorization\Authorizer;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use Ridibooks\OAuth2\Authorization\Token\JwtToken;
 use Ridibooks\OAuth2\Authorization\Validator\JwtTokenValidator;
-use Ridibooks\OAuth2\Constant\ScopeConstant;
 use Ridibooks\OAuth2\Grant\DataTransferObject\AuthorizationServerInfo;
 use Ridibooks\OAuth2\Grant\DataTransferObject\ClientInfo;
 use Ridibooks\OAuth2\Grant\Granter;
@@ -21,7 +20,7 @@ class OAuth2Manager
     private const JWT_ALGORITHM = 'HS256';
     private const JWT_EXPIRE_TERM = 5 * TimeConstant::SEC_IN_MINUTE;
 
-    private const AUTHORIZATION_URL_PATH = '/oauth2/authorize/';
+    private const AUTHORIZATION_URL_PATH = '/ridi/authorize/';
     private const TOKEN_URL_PATH = '/oauth2/token/';
 
     /** @var string */
@@ -85,10 +84,8 @@ class OAuth2Manager
         $client_secret = getenv('OAUTH2_CLIENT_SECRET');
         $authorize_url = $this->account_server_host . self::AUTHORIZATION_URL_PATH;
         $token_url = $this->account_server_host . self::TOKEN_URL_PATH;
-        $scope = [ScopeConstant::ALL];
-        $redirect_uri = null;
 
-        $client_info = new ClientInfo($client_id, $client_secret, $scope, $redirect_uri);
+        $client_info = new ClientInfo($client_id, $client_secret);
         $auth_server_info = new AuthorizationServerInfo($authorize_url, $token_url);
         $this->granter = new Granter($client_info, $auth_server_info);
     }
@@ -96,13 +93,12 @@ class OAuth2Manager
     private function bindAuthorizer(): void
     {
         $jwt_secret = getenv('OAUTH2_JWT_SECRET');
-        $required_scope = [ScopeConstant::ALL];
 
         $jwt_token_validator = new JwtTokenValidator(
             $jwt_secret,
             self::JWT_ALGORITHM,
             self::JWT_EXPIRE_TERM
         );
-        $this->authorizer = new Authorizer($jwt_token_validator, $required_scope);
+        $this->authorizer = new Authorizer($jwt_token_validator);
     }
 }
