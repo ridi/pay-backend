@@ -7,7 +7,7 @@ services:
     build:
       context: .
       args:
-        SITE: pay.ridi.com
+        SITE: ${SITE}
     ports:
       - 80:80
       - 443:443
