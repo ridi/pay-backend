@@ -4,7 +4,7 @@ info:
   title: RIDI Pay API
   description: RIDI Pay API
 servers:
-  - url: https://pay.dev.ridi.com
+  - url: https://pay.local.ridi.io
     description: Local Server
   - url: https://pay.ridi.com
     description: Production Server
