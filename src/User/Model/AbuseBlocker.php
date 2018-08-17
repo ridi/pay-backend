@@ -26,7 +26,7 @@ class AbuseBlocker
     public function __construct(BaseAbuseBlockPolicy $policy, int $u_idx)
     {
         $this->policy = $policy;
-        $this->redis = new Client(getenv('REDIS_HOST'));
+        $this->redis = new Client(['host' => getenv('REDIS_HOST')]);
     }
 
     /**
