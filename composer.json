@@ -18,7 +18,7 @@
         "predis/predis": "^1.1",
         "ramsey/uuid-doctrine": "^1.4",
         "ridibooks/core": "^0.9.6",
-        "ridibooks/crm": "^0.4.1",
+        "ridibooks/crm": "^0.4.4",
         "ridibooks/oauth2": "^0.1.3",
         "ridibooks/payment": "^0.2.1",
         "sensio/framework-extra-bundle": "^5.2",
