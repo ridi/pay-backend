@@ -16,7 +16,7 @@
         <env name="SHELL_VERBOSITY" value="-1" />
         <!-- define your env variables for the test env here -->
         <env name="PHPUNIT_DATABASE_URL" value="mysql://root@127.0.0.1/ridi_pay" />
-        <env name="REDIS_HOST" value="127.0.0.1" />
+
     </php>
 
     <testsuites>
