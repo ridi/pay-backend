@@ -2,6 +2,7 @@
 
 namespace RidiPay\User\Entity;
 
+use RidiPay\Library\PasswordValidationApi;
 use RidiPay\User\Exception\OnetouchPaySettingException;
 use RidiPay\User\Exception\WrongPinException;
 
@@ -103,6 +104,16 @@ class UserEntity
     private static function generateHashedPin(string $pin)
     {
         return hash('sha256', $pin);
+    }
+
+    /**
+     * @param string $password
+     * @return bool
+     * @throws \Exception
+     */
+    public function isPasswordMatched(string $password): bool
+    {
+        return PasswordValidationApi::isPasswordMatched($password);
     }
 
     /**
