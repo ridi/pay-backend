@@ -9,6 +9,7 @@ use RidiPay\Library\OAuth2\OAuth2Manager;
 use RidiPay\User\Exception\LeavedUserException;
 use RidiPay\User\Exception\NonUserException;
 use RidiPay\User\Exception\OnetouchPaySettingException;
+use RidiPay\User\Exception\UnmatchedPasswordException;
 use RidiPay\User\Exception\UnmatchedPinException;
 use RidiPay\User\Exception\WrongPinException;
 use RidiPay\User\Service\PaymentMethodService;
@@ -103,6 +104,42 @@ class UserController extends Controller
         } catch (NonUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (UnmatchedPinException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (PasswordEntryBlockedException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+        } catch (\Exception $e) {
+            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse();
+    }
+
+    /**
+     * @param Request $request
+     * @param string $u_id
+     * @return JsonResponse
+     */
+    public function validatePassword(Request $request, string $u_id)
+    {
+        /** @var OAuth2Manager $oauth2_manager */
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+        $u_idx = $oauth2_manager->getUser()->getUidx();
+        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $body = json_decode($request->getContent());
+        if (is_null($body)
+            || !property_exists($body, 'password')
+        ) {
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            UserService::validatePassword($u_idx, $body->pin);
+        } catch (NonUserException | LeavedUserException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+        } catch (UnmatchedPasswordException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         } catch (PasswordEntryBlockedException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
