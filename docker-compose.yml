@@ -2,14 +2,18 @@ version: "3"
 
 services:
   apache:
-    image: ridi/pay:${TAG}
+    image: ridi/pay:latest
     container_name: apache
     build:
       context: .
       args:
-        SITE: ${SITE}
+        SITE: pay.local.ridi.io
     ports:
       - 80:80
       - 443:443
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
       - .:/app

@@ -11,20 +11,19 @@ require __DIR__.'/../vendor/autoload.php';
 
 Type::addType('uuid_binary', UuidBinaryType::class);
 
-// The check is to ensure we don't use .env in production
-if (!isset($_SERVER['APP_ENV'])) {
-    if (!class_exists(Dotenv::class)) {
-        throw new \RuntimeException('APP_ENV environment variable is not defined. You need to define environment variables for configuration or add "symfony/dotenv" as a Composer dependency to load variables from a .env file.');
-    }
-    (new Dotenv())->load(__DIR__.'/../.env');
+$env = getenv('APP_ENV');
+if ($env === false) {
+    throw new \RuntimeException('APP_ENV environment variables is not defined.');
 }
 
-$env = $_SERVER['APP_ENV'] ?? 'dev';
-$debug = (bool) ($_SERVER['APP_DEBUG'] ?? ('prod' !== $env));
+$is_dev = ($env === 'dev');
+if ($is_dev) {
+    $dotenv_file_path = __DIR__ . '/../.env';
+    if (file_exists($dotenv_file_path)) {
+        (new Dotenv())->load($dotenv_file_path);
+    }
 
-if ($debug) {
     umask(0000);
-
     Debug::enable();
 }
 
@@ -36,7 +35,7 @@ if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? false) {
     Request::setTrustedHosts(explode(',', $trustedHosts));
 }
 
-$kernel = new Kernel($env, $debug);
+$kernel = new Kernel($env, $is_dev);
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
 $response->send();
