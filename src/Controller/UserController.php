@@ -115,6 +115,8 @@ class UserController extends Controller
     }
 
     /**
+     * @Route("/users/{u_id}/password/validate", methods={"POST"})
+     * @OAuth2()
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
