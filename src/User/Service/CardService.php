@@ -6,7 +6,6 @@ namespace RidiPay\User\Service;
 use Ridibooks\Payment\Kcp\BatchKeyResponse;
 use Ridibooks\Payment\Kcp\Card;
 use Ridibooks\Payment\Kcp\Client;
-use Ridibooks\Payment\Kcp\Response;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Constant\PaymentMethodTypeConstant;
 use RidiPay\User\Entity\CardEntity;
