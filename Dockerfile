@@ -5,7 +5,9 @@ RUN sed -i -e "s/\/\/archive\.ubuntu/\/\/mirror\.kakao/" /etc/apt/sources.list
 
 RUN apt-get update --fix-missing && apt-get install -y \
     software-properties-common \
-    gettext-base
+    gettext-base \
+    python3-pip \
+    jq
 
 RUN LC_ALL=C.UTF-8 apt-add-repository -y ppa:ondrej/php
 
@@ -23,6 +25,8 @@ RUN apt-get update --fix-missing && apt-get install -y \
     libapache2-mod-php7.2
 RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache2/php.ini && \
     sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/cli/php.ini
+
+RUN pip3 install awscli
 
 ARG SITE
 
@@ -42,7 +46,10 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" &&
 COPY . /app
 RUN mkdir -p /htdocs/app/var && chmod -R 777 /htdocs/app/var
 
+COPY ./docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
 WORKDIR /app
 RUN composer install --no-dev --optimize-autoloader
 
-CMD apachectl -D FOREGROUND
+ENTRYPOINT ["/docker-entrypoint.sh"]
