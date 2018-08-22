@@ -52,7 +52,7 @@ class CardController extends Controller
                 $body->card_password,
                 $body->tax_id
             );
-        } catch (LeavedUserException | AlreadyCardAddedException $e) {
+        } catch (AlreadyCardAddedException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
         } catch (\Throwable $t) {
             return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);

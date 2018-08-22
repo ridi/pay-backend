@@ -11,6 +11,7 @@ use RidiPay\User\Exception\LeavedUserException;
 use RidiPay\User\Exception\OnetouchPaySettingException;
 use RidiPay\User\Exception\UnmatchedPasswordException;
 use RidiPay\User\Exception\UnmatchedPinException;
+use RidiPay\User\Exception\WrongPinException;
 use RidiPay\User\Model\AbuseBlocker;
 use RidiPay\User\Model\PasswordEntryAbuseBlockPolicy;
 use RidiPay\User\Model\PinEntryAbuseBlockPolicy;
@@ -76,6 +77,7 @@ class UserService
      * @param string $pin
      * @throws LeavedUserException
      * @throws NonUserException
+     * @throws WrongPinException
      * @throws \Throwable
      */
     public static function updatePin(int $u_idx, string $pin)
@@ -106,6 +108,7 @@ class UserService
      * @throws LeavedUserException
      * @throws NonUserException
      * @throws UnmatchedPinException
+     * @throws PasswordEntryBlockedException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Exception
