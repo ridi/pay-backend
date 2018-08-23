@@ -20,7 +20,7 @@ class PasswordValidationApi
     public static function isPasswordMatched(string $password): bool
     {
         $client = self::createClient();
-        $data = json_encode(['password' => $password]);
+        $data = ['password' => $password];
         $headers = JwtAuthorizationHelper::getAuthorizationHeader(
             JwtAuthorizationServiceNameConstant::RIDI_PAY,
             JwtAuthorizationServiceNameConstant::STORE
