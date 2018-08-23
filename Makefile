@@ -7,6 +7,5 @@ composer:
 
 mkcert:
 	mkcert -install
-	[ -d config/certs ] || mkdir config/certs
-	site=$(subst SITE=,,$(shell grep SITE= .env)) && \
-	cd config/certs/ && mkcert $$site $(join '*.', $$site);
+	[ -d config/certs ] || mkdir -p config/certs
+	cd config/certs/ && mkcert pay.local.ridi.io *.pay.local.ridi.io
