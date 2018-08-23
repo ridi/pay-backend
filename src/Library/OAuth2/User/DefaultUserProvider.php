@@ -18,8 +18,6 @@ class DefaultUserProvider implements UserProviderInterface
 {
     private const USER_INFO_URL_PATH = '/accounts/me/';
 
-    private const ACCESS_TOKEN_COOKIE_DOMAIN = '.ridi.com';
-
     /** @var string */
     private $user_info_url;
 
@@ -48,7 +46,7 @@ class DefaultUserProvider implements UserProviderInterface
 
         $cookie_jar = CookieJar::fromArray(
             [AccessTokenConstant::ACCESS_TOKEN_COOKIE_KEY => $access_token],
-            self::ACCESS_TOKEN_COOKIE_DOMAIN
+            getenv('OAUTH2_ACCESS_TOKEN_COOKIE_DOMAIN')
         );
 
         try {
