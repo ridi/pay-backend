@@ -14,11 +14,13 @@ services:
                             # fetching services directly from the container via $container->get() won't work.
                             # The best practice is to be explicit about your dependencies anyway.
 
-    ridi_pay.services.oauth2.manager:
+    RidiPay\Library\OAuth2\OAuth2Manager:
         class: RidiPay\Library\OAuth2\OAuth2Manager
+        public: true
 
-    ridi_pay.services.oauth2.middleware:
+    RidiPay\Library\OAuth2\OAuth2Middleware:
         class: RidiPay\Library\OAuth2\OAuth2Middleware
         arguments:
-            - '@ridi_pay.services.oauth2.manager'
+            - '@RidiPay\Library\OAuth2\OAuth2Manager'
             - '@annotation_reader'
+        public: true
