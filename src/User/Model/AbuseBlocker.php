@@ -27,6 +27,7 @@ class AbuseBlocker
     {
         $this->policy = $policy;
         $this->redis = new Client(['host' => getenv('REDIS_HOST')]);
+        $this->u_idx = $u_idx;
     }
 
     /**
