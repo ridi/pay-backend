@@ -1,11 +1,8 @@
 dev:
-	$(MAKE) composer-dev
+	$(MAKE) composer
 	$(MAKE) mkcert
 
 composer:
-	composer install --no-dev --optimize-autoloader
-
-composer-dev:
 	composer install
 
 mkcert:
