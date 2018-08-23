@@ -20,7 +20,7 @@ class JwtAuthorizationHelper
     {
         $token = self::encodeJwt($iss, $aud, $sub);
         return [
-            'Authorization' => "Bearer ${$token}",
+            'Authorization' => "Bearer {$token}",
             'Accept' => 'application/json',
         ];
     }
