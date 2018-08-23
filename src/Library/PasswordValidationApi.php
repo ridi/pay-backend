@@ -28,7 +28,7 @@ class PasswordValidationApi
 
         try {
             $client->post(
-                '/account/password/validate',
+                '/api/account/password/validate',
                 [
                     'json' => $data,
                     'headers' => $headers
