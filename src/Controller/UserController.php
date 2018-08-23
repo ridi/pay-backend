@@ -164,14 +164,14 @@ class UserController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse('Login required', Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
         }
 
         $body = json_decode($request->getContent());
         if (is_null($body)
             || !property_exists($body, 'enable_onetouch_pay')
         ) {
-            return new JsonResponse('Invalid request', Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
