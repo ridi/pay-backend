@@ -61,8 +61,13 @@ class JwtAuthorizationHelper
         $service_part = "{$iss}_to_{$aud}";
         $key_type = ($is_public ? 'public' : 'private') . '_key';
 
-        $key_name = strtoupper("{$service_part}_{$key_type}");
-        $key = \getenv($key_name);
+        /**
+         * 환경 변수 이름 규칙
+         *   - hyphen을 지원하지 않아서 underscore로 치환
+         *   - 대문자 이용
+         */
+        $key_name = str_replace('-', '_', strtoupper("{$service_part}_{$key_type}"));
+        $key = str_replace("\\n", "\n", getenv($key_name));
 
         return empty($key) ? null : $key;
     }
