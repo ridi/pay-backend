@@ -138,7 +138,7 @@ class UserController extends Controller
         }
 
         try {
-            UserService::validatePassword($u_idx, $body->pin);
+            UserService::validatePassword($u_idx, $body->password);
         } catch (NonUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (UnmatchedPasswordException $e) {
