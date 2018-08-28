@@ -83,15 +83,15 @@ class JwtMiddleware implements EventSubscriberInterface
      */
     private function isJwtAnnotated($controller, string $method_name): bool
     {
-        return $this->isOauth2AnnotatedOnClass($controller)
-            || $this->isOAuth2AnnotatedOnMethod($controller, $method_name);
+        return $this->isJwtAnnotatedOnClass($controller)
+            || $this->isJwtAnnotatedOnMethod($controller, $method_name);
     }
 
     /**
      * @param $controller
      * @return bool
      */
-    private function isOauth2AnnotatedOnClass($controller): bool
+    private function isJwtAnnotatedOnClass($controller): bool
     {
         $reflection_class = new \ReflectionClass($controller);
 
@@ -103,7 +103,7 @@ class JwtMiddleware implements EventSubscriberInterface
      * @param $method_name
      * @return bool
      */
-    private function isOAuth2AnnotatedOnMethod($controller, string $method_name): bool
+    private function isJwtAnnotatedOnMethod($controller, string $method_name): bool
     {
         $reflectionObject = new \ReflectionObject($controller);
         $reflectionMethod = $reflectionObject->getMethod($method_name);
