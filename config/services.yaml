@@ -24,3 +24,9 @@ services:
             - '@RidiPay\Library\OAuth2\OAuth2Manager'
             - '@annotation_reader'
         public: true
+
+    RidiPay\Library\Jwt\JwtMiddleware:
+        class: RidiPay\Library\Jwt\JwtMiddleware
+        arguments:
+            - '@annotation_reader'
+        public: true

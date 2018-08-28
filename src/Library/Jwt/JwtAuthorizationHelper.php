@@ -36,7 +36,7 @@ class JwtAuthorizationHelper
     {
         $rsa_private_key = self::getKey($iss, $aud, false);
         if (is_null($rsa_private_key)) {
-            throw new \Exception("RSA private key doesn't exist.");
+            throw new \Exception("RSA private key doesn't exist");
         }
 
         $payload = [
@@ -48,6 +48,32 @@ class JwtAuthorizationHelper
         }
 
         return JWT::encode($payload, $rsa_private_key, self::SIGNING_ALGORITHM);
+    }
+
+    /**
+     * @param string $jwt
+     * @param string $aud
+     * @return \stdClass
+     * @throws \Exception
+     */
+    public static function decodeJwt(string $jwt, string $aud): \stdClass
+    {
+        $payload = JWT::jsonDecode(JWT::urlsafeB64Decode(explode('.', $jwt)[1]));
+
+        if ($payload->aud !== $aud) {
+            throw new \Exception('Invalid aud');
+        }
+
+        if (!isset($payload->iss)) {
+            throw new \Exception("iss should be defined");
+        }
+
+        $rsa_public_key = self::getKey($payload->iss, $aud, true);
+        if (is_null($rsa_public_key)) {
+            throw new \Exception("RSA public key doesn't exist");
+        }
+
+        return JWT::decode($jwt, $rsa_public_key, [self::SIGNING_ALGORITHM]);
     }
 
     /**
