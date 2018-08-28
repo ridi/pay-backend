@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use RidiPay\Library\Jwt\Annotation\Jwt;
 use RidiPay\User\Exception\PasswordEntryBlockedException;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
@@ -24,12 +25,18 @@ class UserController extends Controller
 {
     /**
      * @Route("/users/{u_id}/payment-methods", methods={"GET"})
+     * @OAuth2
+     * @Jwt()
      * @param string $u_id
      * @return JsonResponse
      */
     public function getPaymentMethods(string $u_id): JsonResponse
     {
-        $u_idx = 0; // TODO: u_idx 값 얻기
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+        $u_idx = $oauth2_manager->getUser()->getUidx();
+        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+        }
 
         try {
             $payment_methods = PaymentMethodService::getPaymentMethods($u_idx);
