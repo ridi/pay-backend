@@ -160,8 +160,9 @@ class UserController extends Controller
     }
 
     /**
-     * @param Request $request
+     * @Route("/users/{u_id}/onetouch", methods={"PUT"})
      * @OAuth2()
+     * @param Request $request
      * @param string $u_id
      * @return JsonResponse
      */
