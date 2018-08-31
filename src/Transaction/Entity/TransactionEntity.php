@@ -163,6 +163,14 @@ class TransactionEntity
     }
 
     /**
+     * @return int
+     */
+    public function getPgId(): int
+    {
+        return $this->pg_id;
+    }
+
+    /**
      * @return string
      */
     public function getPartnerTransactionId(): string
