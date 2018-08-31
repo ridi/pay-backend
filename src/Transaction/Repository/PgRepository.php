@@ -11,6 +11,15 @@ use RidiPay\Transaction\Entity\PgEntity;
 class PgRepository extends BaseEntityRepository
 {
     /**
+     * @param int $id
+     * @return null|PgEntity
+     */
+    public function findOneById(int $id): ?PgEntity
+    {
+        return $this->findOneBy(['id' => $id]);
+    }
+
+    /**
      * @return null|PgEntity
      */
     public function findActiveOne(): ?PgEntity

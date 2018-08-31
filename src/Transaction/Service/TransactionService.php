@@ -8,7 +8,6 @@ use Predis\Client;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\Library\TimeConstant;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Transaction\Constant\PgConstant;
 use RidiPay\Transaction\Dto\ApproveTransactionDto;
 use RidiPay\Transaction\Dto\CancelTransactionDto;
 use RidiPay\Transaction\Entity\PartnerEntity;
@@ -130,7 +129,8 @@ class TransactionService
             throw new \Exception();
         }
 
-        $pg_handler = PgHandlerFactory::create(PgConstant::KCP, $is_test);
+        $pg = PgRepository::getRepository()->findOneById($transaction->getPgId());
+        $pg_handler = PgHandlerFactory::create($pg->getName(), $is_test);
         $response = $pg_handler->approveTransaction($transaction);
 
         $em = EntityManagerProvider::getEntityManager();
@@ -189,7 +189,8 @@ class TransactionService
             throw new \Exception();
         }
 
-        $pg_handler = PgHandlerFactory::create(PgConstant::KCP, $is_test);
+        $pg = PgRepository::getRepository()->findOneById($transaction->getPgId());
+        $pg_handler = PgHandlerFactory::create($pg->getName(), $is_test);
         $cancel_reason = '';
         $response = $pg_handler->cancelTransaction($transaction_id, $cancel_reason);
 
