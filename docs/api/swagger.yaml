@@ -90,8 +90,8 @@ paths:
         - Public API
       summary: 결제 예약
       parameters:
-        - $ref: '#/components/parameters/X-Partner-ID'
-        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/Api-Key'
+        - $ref: '#/components/parameters/Secret-Key'
       requestBody:
         content:
           application/json:
@@ -112,8 +112,8 @@ paths:
         - Public API
       summary: 결제 승인
       parameters:
-        - $ref: '#/components/parameters/X-Partner-ID'
-        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/Api-Key'
+        - $ref: '#/components/parameters/Secret-Key'
         - $ref: '#/components/parameters/TransactionId'
       responses:
         200:
@@ -128,8 +128,8 @@ paths:
         - Public API
       summary: 결제 취소
       parameters:
-        - $ref: '#/components/parameters/X-Partner-ID'
-        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/Api-Key'
+        - $ref: '#/components/parameters/Secret-Key'
         - $ref: '#/components/parameters/TransactionId'
       responses:
         200:
@@ -144,8 +144,8 @@ paths:
         - Public API
       summary: 결제 상태 조회
       parameters:
-        - $ref: '#/components/parameters/X-Partner-ID'
-        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/Api-Key'
+        - $ref: '#/components/parameters/Secret-Key'
         - $ref: '#/components/parameters/TransactionId'
       responses:
         200:
@@ -160,8 +160,8 @@ paths:
         - Public API
       summary: 정기 결제 등록
       parameters:
-        - $ref: '#/components/parameters/X-Partner-ID'
-        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/Api-Key'
+        - $ref: '#/components/parameters/Secret-Key'
       requestBody:
         content:
           application/json:
@@ -182,8 +182,8 @@ paths:
         - Public API
       summary: 정기 결제 해지
       parameters:
-        - $ref: '#/components/parameters/X-Partner-ID'
-        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/Api-Key'
+        - $ref: '#/components/parameters/Secret-Key'
         - $ref: '#/components/parameters/SubscriptionId'
       responses:
         200:
@@ -200,8 +200,8 @@ paths:
         - Public API
       summary: 정기 결제 승인
       parameters:
-        - $ref: '#/components/parameters/X-Partner-ID'
-        - $ref: '#/components/parameters/X-Partner-Secret'
+        - $ref: '#/components/parameters/Api-Key'
+        - $ref: '#/components/parameters/Secret-Key'
         - $ref: '#/components/parameters/SubscriptionId'
       requestBody:
         content:
@@ -558,15 +558,15 @@ components:
         - code
         - message
   parameters:
-    X-Partner-ID:
-      name: X-Partner-ID
+    Api-Key:
+      name: Api-Key
       in: header
       required: true
       description: 가맹점 구별을 위한 ID, RIDI Pay에서 발급한 값
       schema:
         type: string
-    X-Partner-Secret:
-      name: X-Partner-Secret
+    Secret-Key:
+      name: Secret-Key
       in: header
       required: true
       description: 가맹점의 RIDI Pay 연동을 위한 Secret, RIDI Pay에서 발급한 값
