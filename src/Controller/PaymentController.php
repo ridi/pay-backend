@@ -30,7 +30,7 @@ class PaymentController extends Controller
         $partner_secret_key = $request->headers->get('Secret-Key');
 
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
         }
 
         $body = json_decode($request->getContent());
@@ -79,7 +79,7 @@ class PaymentController extends Controller
         $partner_secret_key = $request->headers->get('Secret-Key');
 
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -108,7 +108,7 @@ class PaymentController extends Controller
         $partner_secret_key = $request->headers->get('Secret-Key');
 
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -142,7 +142,7 @@ class PaymentController extends Controller
         $partner_secret_key = $request->headers->get('Secret-Key');
 
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -176,7 +176,7 @@ class PaymentController extends Controller
         $partner_secret_key = $request->headers->get('Secret-Key');
 
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
