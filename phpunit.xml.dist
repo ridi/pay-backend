@@ -5,13 +5,11 @@
          xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/6.5/phpunit.xsd"
          backupGlobals="false"
          colors="true"
-         bootstrap="tests/index.php"
->
+         bootstrap="tests/index.php">
     <php>
         <ini name="error_reporting" value="-1" />
         <env name="KERNEL_CLASS" value="RidiPay\Kernel" />
         <env name="APP_ENV" value="dev" />
-        <env name="APP_DEBUG" value="1" />
         <env name="APP_SECRET" value="s$cretf0rt3st" />
         <env name="SHELL_VERBOSITY" value="-1" />
         <!-- define your env variables for the test env here -->
