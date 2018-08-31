@@ -4,10 +4,13 @@ namespace RidiPay\Transaction\Entity;
 
 /**
  * @Table(name="transaction_history", indexes={@Index(name="idx_transaction_id", columns={"transaction_id"})})
- * @Entity
+ * @Entity(repositoryClass="RidiPay\Transaction\Repository\TransactionHistoryRepository")
  */
 class TransactionHistoryEntity
 {
+    private const ACTION_APPROVE = 'APPROVE';
+    private const ACTION_CANCEL = 'CANCEL';
+
     /**
      * @var int
      *
@@ -18,7 +21,7 @@ class TransactionHistoryEntity
     private $id;
 
     /**
-     * @var UserEntity
+     * @var TransactionEntity
      *
      * @ManyToOne(targetEntity="RidiPay\Transaction\Entity\TransactionEntity")
      * @JoinColumn(name="transaction_id", referencedColumnName="id", nullable=false)
@@ -59,4 +62,70 @@ class TransactionHistoryEntity
      * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
      */
     private $created_at;
+
+    /**
+     * @param TransactionEntity $transaction
+     * @param bool $is_success
+     * @param string $pg_response_code
+     * @param string $pg_response_message
+     * @return TransactionHistoryEntity
+     */
+    public static function createApproveHistory(
+        TransactionEntity $transaction,
+        bool $is_success,
+        string $pg_response_code,
+        string $pg_response_message
+    ): TransactionHistoryEntity {
+        return new TransactionHistoryEntity(
+            $transaction,
+            self::ACTION_APPROVE,
+            $is_success,
+            $pg_response_code,
+            $pg_response_message
+        );
+    }
+
+    /**
+     * @param TransactionEntity $transaction
+     * @param bool $is_success
+     * @param string $pg_response_code
+     * @param string $pg_response_message
+     * @return TransactionHistoryEntity
+     */
+    public static function createCancelHistory(
+        TransactionEntity $transaction,
+        bool $is_success,
+        string $pg_response_code,
+        string $pg_response_message
+    ): TransactionHistoryEntity {
+        return new TransactionHistoryEntity(
+            $transaction,
+            self::ACTION_CANCEL,
+            $is_success,
+            $pg_response_code,
+            $pg_response_message
+        );
+    }
+
+    /**
+     * @param TransactionEntity $transaction
+     * @param string $action
+     * @param bool $is_success
+     * @param string $pg_response_code
+     * @param string $pg_response_message
+     */
+    private function __construct(
+        TransactionEntity $transaction,
+        string $action,
+        bool $is_success,
+        string $pg_response_code,
+        string $pg_response_message
+    ) {
+        $this->transaction = $transaction;
+        $this->action = $action;
+        $this->is_success = $is_success;
+        $this->pg_response_code = $pg_response_code;
+        $this->pg_response_message = $pg_response_message;
+        $this->created_at = new \DateTime();
+    }
 }

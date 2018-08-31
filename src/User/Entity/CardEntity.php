@@ -24,7 +24,7 @@ class CardEntity
     /**
      * @var PaymentMethodEntity
      *
-     * @ManyToOne(targetEntity="RidiPay\User\Entity\PaymentMethodEntity")
+     * @ManyToOne(targetEntity="RidiPay\User\Entity\PaymentMethodEntity", inversedBy="cards")
      * @JoinColumn(name="payment_method_id", referencedColumnName="id", nullable=false)
      */
     private $payment_method;
@@ -132,7 +132,7 @@ class CardEntity
         $this->card_issuer = $card_issuer;
 
         $this->purpose = $purpose;
-        $this->hashed_card_number = self::generateHashedCardNumber($card_number);
+        $this->hashed_card_number = self::hashCardNumber($card_number);
         $this->iin = substr($card_number, 0, 6); // TODO: 암호화
         $this->pg_bill_key = $pg_bill_key; // TODO: 암호화
     }
@@ -143,14 +143,14 @@ class CardEntity
      */
     public function isSameCard(string $card_number): bool
     {
-        return $this->hashed_card_number === self::generateHashedCardNumber($card_number);
+        return $this->hashed_card_number === self::hashCardNumber($card_number);
     }
 
     /**
      * @param string $card_number
      * @return string
      */
-    private static function generateHashedCardNumber(string $card_number): string
+    private static function hashCardNumber(string $card_number): string
     {
         return hash('sha256', $card_number);
     }
@@ -177,6 +177,14 @@ class CardEntity
     public function getIin(): string
     {
         return $this->iin;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPgBillKey(): string
+    {
+        return $this->pg_bill_key;
     }
 
     /**

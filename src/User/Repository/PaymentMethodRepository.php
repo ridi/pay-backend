@@ -3,46 +3,66 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Repository;
 
+use Doctrine\ORM\Query\Expr;
+use Ramsey\Uuid\Doctrine\UuidBinaryType;
+use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Entity\PaymentMethodEntity;
 use RidiPay\Transaction\Constant\PgConstant;
 use Doctrine\DBAL\Types\Type;
-use Doctrine\ORM\Query\Expr;
-use Ramsey\Uuid\Uuid;
 
 class PaymentMethodRepository extends BaseEntityRepository
 {
     /**
-     * @param string $uuid
+     * @param int $id
      * @return null|PaymentMethodEntity
      */
-    public function findOneByUuid(string $uuid): ?PaymentMethodEntity
+    public function findOneById(int $id): ?PaymentMethodEntity
     {
-        return $this->findOneBy(['uuid' => Uuid::fromString($uuid)]);
+        return $this->findOneBy(['id' => $id]);
+    }
+
+    /**
+     * @param UuidInterface $uuid
+     * @return null|PaymentMethodEntity
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    public function findOneByUuid(UuidInterface $uuid): ?PaymentMethodEntity
+    {
+        $qb = $this->createQueryBuilder('pm')
+            ->addSelect('c')
+            ->leftJoin('pm.cards', 'c')
+            ->where('pm.uuid = :uuid')
+            ->setParameter('uuid', $uuid, UuidBinaryType::NAME);
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     /**
      * @param int $u_idx
      * @return PaymentMethodEntity[]
      */
-    public function getPaymentMethods(int $u_idx)
+    public function getAvailablePaymentMethods(int $u_idx)
     {
         $qb = $this->createQueryBuilder('pm')
             ->addSelect('c')
-            ->leftJoin('pm.cards', 'c', Expr\Join::WITH)
-            ->join('c.card_issuer', 'ci', Expr\Join::WITH)
+            ->join('pm.user', 'u')
+            ->leftJoin('pm.cards', 'c')
+            ->join('c.card_issuer', 'ci')
             ->join('c.pg', 'pg', Expr\Join::WITH, 'pg.status != :inactive')
-            ->where('pm.u_idx = :u_idx')
+            ->where('u.u_idx = :u_idx')
             ->andWhere('pm.deleted_at IS NULL')
             ->setParameter('inactive', PgConstant::STATUS_INACTIVE, Type::STRING)
             ->setParameter('u_idx', $u_idx, Type::INTEGER);
 
-        return $qb->getQuery()->execute();
+        return $qb->getQuery()->getResult();
     }
 
     /**
      * @return PaymentMethodRepository
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      */
     public static function getRepository()
     {

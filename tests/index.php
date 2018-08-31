@@ -16,7 +16,7 @@ $aspect_mock_kernel->init([
     ]
 ]);
 
-Type::addType('uuid_binary', UuidBinaryType::class);
+Type::addType(UuidBinaryType::NAME, UuidBinaryType::class);
 
 TestUtil::prepareDatabaseFixture();
 
