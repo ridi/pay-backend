@@ -5,6 +5,7 @@ namespace RidiPay\Transaction\Entity;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use RidiPay\Transaction\Constant\TransactionConstant;
 
 /**
  * @Table(name="transaction", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"}), @Index(name="idx_pg_id", columns={"pg_id"}), @Index(name="idx_u_idx", columns={"u_idx"})})
@@ -85,6 +86,13 @@ class TransactionEntity
     private $amount;
 
     /**
+     * @var string
+     *
+     * @Column(name="status", type="string", length=0, nullable=false, columnDefinition="ENUM('RESERVED','APPROVED','CANCELED')", options={"default"="RESERVED","comment"="Transaction 상태"})
+     */
+    private $status;
+
+    /**
      * @var \DateTime
      *
      * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP","comment"="Transaction 생성 시각"})
@@ -133,6 +141,7 @@ class TransactionEntity
         $this->pg_transaction_id = null;
         $this->product_name = $product_name;
         $this->amount = $amount;
+        $this->status = TransactionConstant::STATUS_RESERVED;
         $this->created_at = new \DateTime();
         $this->approved_at = null;
         $this->canceled_at = null;
@@ -181,6 +190,14 @@ class TransactionEntity
     /**
      * @return string
      */
+    public function getPgTransactionId(): string
+    {
+        return $this->pg_transaction_id;
+    }
+
+    /**
+     * @return string
+     */
     public function getProductName(): string
     {
         return $this->product_name;
@@ -192,6 +209,14 @@ class TransactionEntity
     public function getAmount(): int
     {
         return $this->amount;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStatus(): string
+    {
+        return $this->status;
     }
 
     /**
@@ -210,13 +235,19 @@ class TransactionEntity
         return $this->canceled_at;
     }
 
-    public function approve(): void
+    /**
+     * @param string $pg_transaction_id
+     */
+    public function approve(string $pg_transaction_id): void
     {
+        $this->pg_transaction_id = $pg_transaction_id;
+        $this->status = TransactionConstant::STATUS_APPROVED;
         $this->approved_at = new \DateTime();
     }
 
     public function cancel(): void
     {
+        $this->status = TransactionConstant::STATUS_CANCELED;
         $this->canceled_at = new \DateTime();
     }
 }

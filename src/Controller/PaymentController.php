@@ -120,7 +120,7 @@ class PaymentController extends Controller
             return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse($result, Response::HTTP_OK, [], true);
+        return new JsonResponse(json_encode($result), Response::HTTP_OK, [], true);
     }
 
     /**
@@ -154,6 +154,40 @@ class PaymentController extends Controller
             return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse($result, Response::HTTP_OK, [], true);
+        return new JsonResponse(json_encode($result), Response::HTTP_OK, [], true);
+    }
+
+    /**
+     * @Route("/payments/{transaction_id}/status", methods={"GET"})
+     * @OAuth2()
+     * @param Request $request
+     * @param string $transaction_id
+     * @return JsonResponse
+     */
+    public function showPaymentStatus(Request $request, string $transaction_id): JsonResponse
+    {
+        /** @var OAuth2Manager $oauth2_manager */
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+        $u_idx = $oauth2_manager->getUser()->getUidx();
+
+        $partner_api_key = $request->headers->get('Api-Key');
+        $partner_secret_key = $request->headers->get('Secret-Key');
+
+        if (is_null($partner_api_key) || is_null($partner_secret_key)) {
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $result = TransactionService::getTransactionStatus(
+                $partner_api_key,
+                $partner_secret_key,
+                $u_idx,
+                $transaction_id
+            );
+        } catch (\Throwable $t) {
+            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new JsonResponse(json_encode($result), Response::HTTP_OK, [], true);
     }
 }
