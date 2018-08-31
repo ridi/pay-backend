@@ -40,6 +40,19 @@ class PaymentMethodService
     }
 
     /**
+     * @param int $payment_method_id
+     * @return bool
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function isCard(int $payment_method_id): bool
+    {
+        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+
+        return $payment_method->isCard();
+    }
+
+    /**
      * @param string $payment_method_uuid
      * @return PaymentMethodDto
      * @throws UnsupportedPaymentMethodException

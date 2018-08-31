@@ -9,16 +9,15 @@ use RidiPay\Transaction\Exception\UnsupportedPgException;
 class PgHandlerFactory
 {
     /**
-     * @param string $pg_type
-     * @param bool $is_test
+     * @param string $pg_name
      * @return PgHandlerInterface
      * @throws UnsupportedPgException
      */
-    public static function create(string $pg_type, bool $is_test): PgHandlerInterface
+    public static function create(string $pg_name): PgHandlerInterface
     {
-        switch ($pg_type) {
+        switch ($pg_name) {
             case PgConstant::KCP:
-                return new KcpHandler($is_test);
+                return new KcpHandler();
             default:
                 throw new UnsupportedPgException();
         }

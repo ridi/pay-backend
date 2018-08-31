@@ -4,6 +4,10 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Dto;
 
 use RidiPay\Transaction\Entity\TransactionEntity;
+use RidiPay\Transaction\Exception\UnsupportedPgException;
+use RidiPay\Transaction\Repository\PgRepository;
+use RidiPay\Transaction\Service\Pg\PgHandlerFactory;
+use RidiPay\User\Service\PaymentMethodService;
 
 class TransactionStatusDto implements \JsonSerializable
 {
@@ -28,8 +32,14 @@ class TransactionStatusDto implements \JsonSerializable
     /** @var \DateTime|null */
     public $canceled_at;
 
+    /** @var string|null */
+    public $card_receipt_url;
+
     /**
      * @param TransactionEntity $transaction
+     * @throws UnsupportedPgException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      */
     public function __construct(TransactionEntity $transaction)
     {
@@ -40,6 +50,12 @@ class TransactionStatusDto implements \JsonSerializable
         $this->amount = $transaction->getAmount();
         $this->approved_at = $transaction->getApprovedAt();
         $this->canceled_at = $transaction->getCanceledAt();
+
+        if (PaymentMethodService::isCard($transaction->getPaymentMethodId()) && $transaction->isApproved()) {
+            $pg = PgRepository::getRepository()->findOneById($transaction->getPgId());
+            $pg_handler = PgHandlerFactory::create($pg->getName());
+            $this->card_receipt_url = $pg_handler->getCardReceiptUrl($transaction);
+        }
     }
 
     /**
@@ -60,6 +76,9 @@ class TransactionStatusDto implements \JsonSerializable
         }
         if (!is_null($this->canceled_at)) {
             $data['canceled_at'] = $this->canceled_at;
+        }
+        if (!is_null($this->card_receipt_url)) {
+            $data['card_receipt_url'] = $this->card_receipt_url;
         }
     }
 }

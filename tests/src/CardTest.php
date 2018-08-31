@@ -52,8 +52,7 @@ class CardTest extends TestCase
             self::CARDS[0]['CARD_NUMBER'],
             self::CARDS[0]['CARD_EXPIRATION_DATE'],
             self::CARDS[0]['CARD_PASSWORD'],
-            self::TAX_ID,
-            true
+            self::TAX_ID
         );
         $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_id));
 
@@ -73,8 +72,7 @@ class CardTest extends TestCase
             self::CARDS[0]['CARD_NUMBER'],
             self::CARDS[0]['CARD_EXPIRATION_DATE'],
             self::CARDS[0]['CARD_PASSWORD'],
-            self::TAX_ID,
-            true
+            self::TAX_ID
         );
 
         $this->expectException(AlreadyCardAddedException::class);
@@ -83,8 +81,7 @@ class CardTest extends TestCase
             self::CARDS[1]['CARD_NUMBER'],
             self::CARDS[1]['CARD_EXPIRATION_DATE'],
             self::CARDS[1]['CARD_PASSWORD'],
-            self::TAX_ID,
-            true
+            self::TAX_ID
         );
     }
 
@@ -95,8 +92,7 @@ class CardTest extends TestCase
             self::CARDS[0]['CARD_NUMBER'],
             self::CARDS[0]['CARD_EXPIRATION_DATE'],
             self::CARDS[0]['CARD_PASSWORD'],
-            self::TAX_ID,
-            true
+            self::TAX_ID
         );
 
         CardService::deleteCard($this->u_idx, $payment_method_id);

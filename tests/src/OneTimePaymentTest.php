@@ -269,6 +269,7 @@ class OneTimePaymentTest extends TestCase
         );
         $this->assertSame(TransactionConstant::STATUS_APPROVED, $transaction_status->status);
         $this->assertSame($approve_transaction_dto->approved_at, $transaction_status->approved_at);
+        $this->assertNotNull($transaction_status->card_receipt_url);
     }
 
     /**
@@ -322,8 +323,7 @@ class OneTimePaymentTest extends TestCase
             '5164531234567890',
             '2511',
             '11',
-            '940101',
-            true
+            '940101'
         );
 
         return $payment_method_id;
