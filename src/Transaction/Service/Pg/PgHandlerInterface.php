@@ -33,4 +33,10 @@ interface PgHandlerInterface
      * @return CancelTransactionResponse
      */
     public function cancelTransaction(string $pg_transaction_id, string $cancel_reason): CancelTransactionResponse;
+
+    /**
+     * @param TransactionEntity $transaction
+     * @return string
+     */
+    public function getCardReceiptUrl(TransactionEntity $transaction): string;
 }

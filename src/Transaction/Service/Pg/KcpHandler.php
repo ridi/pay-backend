@@ -6,6 +6,7 @@ namespace RidiPay\Transaction\Service\Pg;
 use Ridibooks\Payment\Kcp\Card;
 use Ridibooks\Payment\Kcp\Client;
 use Ridibooks\Payment\Kcp\Order;
+use Ridibooks\Payment\Kcp\Util;
 use RidiPay\Transaction\Entity\TransactionEntity;
 use RidiPay\Transaction\Exception\PgException;
 use RidiPay\User\Service\PaymentMethodService;
@@ -15,14 +16,15 @@ class KcpHandler implements PgHandlerInterface
     /** @var Client */
     private $client;
 
-    /**
-     * @param bool $is_test
-     */
-    public function __construct(bool $is_test)
+    /** @var bool */
+    private $is_dev;
+
+    public function __construct()
     {
+        $is_dev = getenv('APP_ENV') === 'dev';
         $log_dir = getenv('KCP_LOG_DIR');
 
-        if ($is_test) {
+        if ($is_dev) {
             $this->client = Client::getTestClient($log_dir);
         } else {
             $this->client = new Client(
@@ -120,6 +122,21 @@ class KcpHandler implements PgHandlerInterface
             $response->getResMsg(),
             $response->getAmount(),
             $response->getCancTime()
+        );
+    }
+
+    /**
+     * @param TransactionEntity $transaction
+     * @return string
+     */
+    public function getCardReceiptUrl(TransactionEntity $transaction): string
+    {
+        return Util::buildReceiptUrl(
+            $transaction->getPgTransactionId(),
+            $transaction->getUuid()->toString(),
+            $transaction->getAmount(),
+            Util::RECEIPT_LANG_KO,
+            !$this->is_dev
         );
     }
 }

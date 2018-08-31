@@ -26,7 +26,6 @@ class CardService
      * @param string $card_password 카드 비밀번호 앞 2자리
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
-     * @param bool $is_test Bill Key 발급 시, PG사 테스트 서버 이용 여부
      * @return string
      * @throws AlreadyCardAddedException
      * @throws \Throwable
@@ -36,13 +35,12 @@ class CardService
         string $card_number,
         string $card_expiration_date,
         string $card_password,
-        string $tax_id,
-        bool $is_test = false
+        string $tax_id
     ): string {
         self::assertNotHavingCard($u_idx);
 
         $pg = PgRepository::getRepository()->findActiveOne();
-        $pg_processor = PgHandlerFactory::create($pg->getName(), $is_test);
+        $pg_processor = PgHandlerFactory::create($pg->getName());
         $response = $pg_processor->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
         $card_issuer = CardIssuerRepository::getRepository()->findOneByPgIdAndCode(
             $pg->getId(),

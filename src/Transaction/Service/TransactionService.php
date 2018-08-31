@@ -228,6 +228,7 @@ class TransactionService
      * @param string $transaction_id
      * @return TransactionStatusDto
      * @throws UnauthorizedPartnerException
+     * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */

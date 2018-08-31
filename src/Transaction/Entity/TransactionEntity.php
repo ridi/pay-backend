@@ -212,6 +212,14 @@ class TransactionEntity
     }
 
     /**
+     * @return bool
+     */
+    public function isApproved(): bool
+    {
+        return $this->status === TransactionConstant::STATUS_APPROVED;
+    }
+
+    /**
      * @return string
      */
     public function getStatus(): string
