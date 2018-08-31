@@ -3,8 +3,8 @@
 namespace RidiPay\Transaction\Entity;
 
 /**
- * @Table(name="partner", uniqueConstraints={@UniqueConstraint(name="uniq_secret", columns={"secret"}), @UniqueConstraint(name="uniq_name", columns={"name"})})
- * @Entity
+ * @Table(name="partner", uniqueConstraints={@UniqueConstraint(name="uniq_name", columns={"name"}), @UniqueConstraint(name="uniq_api_key", columns={"api_key"})})
+ * @Entity(repositoryClass="RidiPay\Transaction\Repository\PartnerRepository")
  */
 class PartnerEntity
 {
@@ -20,16 +20,30 @@ class PartnerEntity
     /**
      * @var string
      *
-     * @Column(name="name", type="string", length=16, nullable=false, options={"comment"="가맹점 식별을 위한 가맹점명"})
+     * @Column(name="name", type="string", length=16, nullable=false, options={"comment"="가맹점 관리자 로그인 Username"})
      */
     private $name;
 
     /**
      * @var string
      *
-     * @Column(name="secret", type="string", length=255, nullable=false, options={"comment"="가맹점 연동을 위한 Secret"})
+     * @Column(name="password", type="string", length=255, nullable=false, options={"charset"="utf8mb4", "collation"="utf8mb4_unicode_ci", "comment"="가맹점 관리자 로그인 Password"})
      */
-    private $secret;
+    private $password;
+
+    /**
+     * @var string
+     *
+     * @Column(name="api_key", type="string", length=255, nullable=false, options={"comment"="API 연동 Key"})
+     */
+    private $api_key;
+
+    /**
+     * @var string
+     *
+     * @Column(name="secret_key", type="string", length=255, nullable=false, options={"charset"="utf8mb4", "collation"="utf8mb4_unicode_ci", "comment"="API 연동 Secret Key"})
+     */
+    private $secret_key;
 
     /**
      * @var bool
@@ -54,14 +68,50 @@ class PartnerEntity
 
     /**
      * @param string $name
+     * @param string $password
+     * @param string $api_key
+     * @param string $secret_key
      * @param bool $is_first_party
      */
-    public function __construct(string $name, bool $is_first_party)
-    {
+    public function __construct(
+        string $name,
+        string $password,
+        string $api_key,
+        string $secret_key,
+        bool $is_first_party
+    ) {
         $this->name = $name;
-        $this->secret = ''; // TODO: 구현
+        $this->password = hash('sha256', $password);
+        $this->api_key = $api_key;
+        $this->secret_key = hash('sha256', $secret_key);
         $this->is_valid = true;
         $this->is_first_party = $is_first_party;
         $this->updated_at = new \DateTime();
+    }
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @param string $password
+     * @return bool
+     */
+    public function isValidPassword(string $password): bool
+    {
+        return $this->password === hash('sha256', $password);
+    }
+
+    /**
+     * @param string $secret_key
+     * @return bool
+     */
+    public function isValidSecretKey(string $secret_key): bool
+    {
+        return $this->secret_key === hash('sha256', $secret_key);
     }
 }

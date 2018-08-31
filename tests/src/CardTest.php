@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Ramsey\Uuid\Uuid;
 use RidiPay\User\Dto\CardDto;
 use RidiPay\User\Exception\AlreadyCardAddedException;
 use RidiPay\User\Repository\PaymentMethodRepository;
@@ -46,7 +47,7 @@ class CardTest extends TestCase
 
     public function testAddCard()
     {
-        CardService::addCard(
+        $payment_method_id = CardService::addCard(
             $this->u_idx,
             self::CARDS[0]['CARD_NUMBER'],
             self::CARDS[0]['CARD_EXPIRATION_DATE'],
@@ -54,16 +55,14 @@ class CardTest extends TestCase
             self::TAX_ID,
             true
         );
-
-        $card = self::getCard($this->u_idx);
-        $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid($card->payment_method_id);
+        $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_id));
 
         $card_for_one_time_payment = $payment_method->getCardForOneTimePayment();
         $this->assertNotNull($card_for_one_time_payment);
         $this->assertTrue($card_for_one_time_payment->isSameCard(self::CARDS[0]['CARD_NUMBER']));
 
         $card_for_billing_payment = $payment_method->getCardForBillingPayment();
-        $this->assertNotNull($payment_method->getCardForBillingPayment());
+        $this->assertNotNull($card_for_billing_payment);
         $this->assertTrue($card_for_billing_payment->isSameCard(self::CARDS[0]['CARD_NUMBER']));
     }
 
@@ -91,7 +90,7 @@ class CardTest extends TestCase
 
     public function testDeleteCard()
     {
-        CardService::addCard(
+        $payment_method_id = CardService::addCard(
             $this->u_idx,
             self::CARDS[0]['CARD_NUMBER'],
             self::CARDS[0]['CARD_EXPIRATION_DATE'],
@@ -100,9 +99,7 @@ class CardTest extends TestCase
             true
         );
 
-        $card = self::getCard($this->u_idx);
-
-        CardService::deleteCard($this->u_idx, $card->payment_method_id);
+        CardService::deleteCard($this->u_idx, $payment_method_id);
 
         $this->assertNull(self::getCard($this->u_idx));
     }
@@ -113,7 +110,7 @@ class CardTest extends TestCase
      */
     private static function getCard(int $u_idx): ?CardDto
     {
-        $payment_methods = PaymentMethodService::getPaymentMethods($u_idx);
+        $payment_methods = PaymentMethodService::getAvailablePaymentMethods($u_idx);
 
         return !empty($payment_methods->cards) ? $payment_methods->cards[0] : null;
     }

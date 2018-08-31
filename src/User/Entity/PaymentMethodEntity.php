@@ -2,6 +2,8 @@
 
 namespace RidiPay\User\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\PersistentCollection;
 use RidiPay\User\Constant\PaymentMethodTypeConstant;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -37,13 +39,6 @@ class PaymentMethodEntity
     private $user;
 
     /**
-     * @var int
-     *
-     * @Column(name="u_idx", type="integer", nullable=false)
-     */
-    private $u_idx;
-
-    /**
      * @var string
      *
      * @Column(name="type", type="string", length=0, nullable=false, columnDefinition="ENUM('CARD')", options={"default"="CARD","comment"="결제 수단"})
@@ -65,15 +60,16 @@ class PaymentMethodEntity
     private $deleted_at;
 
     /**
-     * @var CardEntity[]
+     * @var PersistentCollection
      *
-     * @OneToMany(targetEntity="CardEntity", mappedBy="payment_method")
+     * @OneToMany(targetEntity="RidiPay\User\Entity\CardEntity", mappedBy="payment_method")
      */
     private $cards;
 
     /**
      * @param UserEntity $user
      * @param string $type
+     * @throws \Exception
      */
     public function __construct(UserEntity $user, string $type)
     {
@@ -82,6 +78,14 @@ class PaymentMethodEntity
         $this->type = $type;
         $this->created_at = new \DateTime();
         $this->deleted_at = null;
+    }
+
+    /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
     }
 
     /**
@@ -101,6 +105,14 @@ class PaymentMethodEntity
     }
 
     /**
+     * @return string
+     */
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    /**
      * SOFT DELETE
      */
     public function delete(): void
@@ -117,7 +129,7 @@ class PaymentMethodEntity
             return [];
         }
 
-        return $this->cards;
+        return $this->cards->getValues();
     }
 
     /**
@@ -125,11 +137,7 @@ class PaymentMethodEntity
      */
     public function getCardForOneTimePayment(): ?CardEntity
     {
-        if (!$this->isCard()) {
-            return null;
-        }
-
-        foreach ($this->cards as $card) {
+        foreach ($this->getCards() as $card) {
             if ($card->isAvailableOnOneTimePayment()) {
                 return $card;
             }
@@ -143,11 +151,7 @@ class PaymentMethodEntity
      */
     public function getCardForBillingPayment(): ?CardEntity
     {
-        if (!$this->isCard()) {
-            return null;
-        }
-
-        foreach ($this->cards as $card) {
+        foreach ($this->getCards() as $card) {
             if ($card->isAvailableOnBillingPayment()) {
                 return $card;
             }

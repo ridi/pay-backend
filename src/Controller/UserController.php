@@ -39,7 +39,7 @@ class UserController extends Controller
         }
 
         try {
-            $payment_methods = PaymentMethodService::getPaymentMethods($u_idx);
+            $payment_methods = PaymentMethodService::getAvailablePaymentMethods($u_idx);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }

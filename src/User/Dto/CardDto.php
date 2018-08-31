@@ -3,16 +3,16 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Dto;
 
-use RidiPay\User\Dto\AbstractPaymentMethodDto;
+use RidiPay\User\Dto\PaymentMethodDto;
 use RidiPay\User\Entity\CardEntity;
 
-class CardDto extends AbstractPaymentMethodDto
+class CardDto extends PaymentMethodDto
 {
     /** @var string 발급자 식별 번호(카드 번호 앞 6자리) */
-    private $iin;
+    public $iin;
 
     /** @var string 카드 발급사명 */
-    private $issuer_name;
+    public $issuer_name;
 
     /**
      * @param CardEntity $card

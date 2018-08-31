@@ -38,7 +38,6 @@ class TestUtil
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\Tools\ToolsException
-     * @throws \ReflectionException
      */
     public static function prepareDatabaseFixture()
     {

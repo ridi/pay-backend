@@ -5,7 +5,7 @@ namespace RidiPay\User\Dto;
 
 use RidiPay\User\Entity\PaymentMethodEntity;
 
-abstract class AbstractPaymentMethodDto
+abstract class PaymentMethodDto
 {
     /** @var string 결제 수단 UUID */
     public $payment_method_id;
