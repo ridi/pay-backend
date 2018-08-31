@@ -114,7 +114,6 @@ class TransactionService
      * @param string $partner_secret_key
      * @param int $u_idx
      * @param string $transaction_id
-     * @param bool $is_test
      * @return ApproveTransactionDto
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -125,8 +124,7 @@ class TransactionService
         string $partner_api_key,
         string $partner_secret_key,
         int $u_idx,
-        string $transaction_id,
-        bool $is_test = false
+        string $transaction_id
     ) {
         $partner = self::getPartner($partner_api_key, $partner_secret_key);
 
@@ -136,7 +134,7 @@ class TransactionService
         }
 
         $pg = PgRepository::getRepository()->findOneById($transaction->getPgId());
-        $pg_handler = PgHandlerFactory::create($pg->getName(), $is_test);
+        $pg_handler = PgHandlerFactory::create($pg->getName());
         $response = $pg_handler->approveTransaction($transaction);
 
         $em = EntityManagerProvider::getEntityManager();
@@ -174,7 +172,6 @@ class TransactionService
      * @param string $partner_secret_key
      * @param int $u_idx
      * @param string $transaction_id
-     * @param bool $is_test
      * @return CancelTransactionDto
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -185,8 +182,7 @@ class TransactionService
         string $partner_api_key,
         string $partner_secret_key,
         int $u_idx,
-        string $transaction_id,
-        bool $is_test = false
+        string $transaction_id
     ) {
         $partner = self::getPartner($partner_api_key, $partner_secret_key);
 
@@ -196,7 +192,7 @@ class TransactionService
         }
 
         $pg = PgRepository::getRepository()->findOneById($transaction->getPgId());
-        $pg_handler = PgHandlerFactory::create($pg->getName(), $is_test);
+        $pg_handler = PgHandlerFactory::create($pg->getName());
         $cancel_reason = '';
         $response = $pg_handler->cancelTransaction($transaction->getPgTransactionId(), $cancel_reason);
 
