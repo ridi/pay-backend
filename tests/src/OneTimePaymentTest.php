@@ -7,6 +7,7 @@ use AspectMock\Test as test;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\PasswordValidationApi;
+use RidiPay\Transaction\Constant\TransactionConstant;
 use RidiPay\Transaction\Dto\PartnerDto;
 use RidiPay\Transaction\Service\PartnerService;
 use RidiPay\Transaction\Service\TransactionService;
@@ -20,6 +21,9 @@ class OneTimePaymentTest extends TestCase
 
     /** @var PartnerDto */
     private static $partner;
+
+    /** @var string */
+    private static $transaction_id;
 
     public static function setUpBeforeClass()
     {
@@ -65,22 +69,27 @@ class OneTimePaymentTest extends TestCase
         $this->assertTrue(UserService::isUsingOnetouchPay($this->u_idx));
 
         // 결제 Transaction 생성
-        $create_transaction_dto = TransactionService::createTransaction($reservation_id);
-        $this->assertSame($create_transaction_dto->partner_transaction_id, $partner_transaction_id);
-        $this->assertSame($create_transaction_dto->return_url, $return_url);
+        $this->assertCreateTransactionSuccessfully(
+            $reservation_id,
+            $partner_transaction_id,
+            $return_url,
+            $product_name,
+            $amount
+        );
 
         // 결제 승인
-        $approve_transaction_dto = TransactionService::approveTransaction(
-            self::$partner->api_key,
-            self::$partner->secret_key,
-            $this->u_idx,
-            $create_transaction_dto->transaction_id,
-            true
+        $this->assertApproveTransactionSuccessfully(
+            $partner_transaction_id,
+            $product_name,
+            $amount
         );
-        $this->assertSame($approve_transaction_dto->partner_transaction_id, $partner_transaction_id);
-        $this->assertSame($approve_transaction_dto->transaction_id, $create_transaction_dto->transaction_id);
-        $this->assertSame($approve_transaction_dto->product_name, $product_name);
-        $this->assertSame($approve_transaction_dto->amount, $amount);
+
+        // 결제 취소
+        $this->assertCancelTransactionSuccessfully(
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
     }
 
     public function testOneTimePaymentLifeCycleCaseInCaseOfPinValidation()
@@ -111,22 +120,27 @@ class OneTimePaymentTest extends TestCase
         UserService::validatePin($this->u_idx, $pin);
 
         // 결제 Transaction 생성
-        $create_transaction_dto = TransactionService::createTransaction($reservation_id);
-        $this->assertSame($create_transaction_dto->partner_transaction_id, $partner_transaction_id);
-        $this->assertSame($create_transaction_dto->return_url, $return_url);
+        $this->assertCreateTransactionSuccessfully(
+            $reservation_id,
+            $partner_transaction_id,
+            $return_url,
+            $product_name,
+            $amount
+        );
 
         // 결제 승인
-        $approve_transaction_dto = TransactionService::approveTransaction(
-            self::$partner->api_key,
-            self::$partner->secret_key,
-            $this->u_idx,
-            $create_transaction_dto->transaction_id,
-            true
+        $this->assertApproveTransactionSuccessfully(
+            $partner_transaction_id,
+            $product_name,
+            $amount
         );
-        $this->assertSame($approve_transaction_dto->partner_transaction_id, $partner_transaction_id);
-        $this->assertSame($approve_transaction_dto->transaction_id, $create_transaction_dto->transaction_id);
-        $this->assertSame($approve_transaction_dto->product_name, $product_name);
-        $this->assertSame($approve_transaction_dto->amount, $amount);
+
+        // 결제 취소
+        $this->assertCancelTransactionSuccessfully(
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
     }
 
     public function testOneTimePaymentLifeCycleCaseInCaseOfPasswordValidation()
@@ -155,24 +169,145 @@ class OneTimePaymentTest extends TestCase
         UserService::validatePassword($this->u_idx, 'abcde@12345');
 
         // 결제 Transaction 생성
-        $create_transaction_dto = TransactionService::createTransaction($reservation_id);
-        $this->assertSame($create_transaction_dto->partner_transaction_id, $partner_transaction_id);
-        $this->assertSame($create_transaction_dto->return_url, $return_url);
+        $this->assertCreateTransactionSuccessfully(
+            $reservation_id,
+            $partner_transaction_id,
+            $return_url,
+            $product_name,
+            $amount
+        );
 
+        // 결제 승인
+        $this->assertApproveTransactionSuccessfully(
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
+
+        // 결제 취소
+        $this->assertCancelTransactionSuccessfully(
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
+
+        test::clean(PasswordValidationApi::class);
+    }
+
+    /**
+     * @param string $reservation_id
+     * @param string $partner_transaction_id
+     * @param string $return_url
+     * @param string $product_name
+     * @param int $amount
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \RidiPay\Transaction\Exception\UnauthorizedPartnerException
+     */
+    private function assertCreateTransactionSuccessfully(
+        string $reservation_id,
+        string $partner_transaction_id,
+        string $return_url,
+        string $product_name,
+        int $amount
+    ) {
+        // 결제 Transaction 생성
+        $create_transaction_dto = TransactionService::createTransaction($reservation_id);
+        $this->assertSame($partner_transaction_id, $create_transaction_dto->partner_transaction_id);
+        $this->assertSame($return_url, $create_transaction_dto->return_url);
+
+        // 상태 조회
+        $transaction_status = TransactionService::getTransactionStatus(
+            self::$partner->api_key,
+            self::$partner->secret_key,
+            $this->u_idx,
+            $create_transaction_dto->transaction_id
+        );
+        $this->assertSame($create_transaction_dto->transaction_id, $transaction_status->transaction_id);
+        $this->assertSame($partner_transaction_id, $transaction_status->partner_transaction_id);
+        $this->assertSame(TransactionConstant::STATUS_RESERVED, $transaction_status->status);
+        $this->assertSame($product_name, $transaction_status->product_name);
+        $this->assertSame($amount, $transaction_status->amount);
+
+        self::$transaction_id = $create_transaction_dto->transaction_id;
+    }
+
+    /**
+     * @param string $partner_transaction_id
+     * @param string $product_name
+     * @param int $amount
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \RidiPay\Transaction\Exception\UnauthorizedPartnerException
+     * @throws \RidiPay\Transaction\Exception\UnsupportedPgException
+     * @throws \Throwable
+     */
+    private function assertApproveTransactionSuccessfully(
+        string $partner_transaction_id,
+        string $product_name,
+        int $amount
+    ) {
         // 결제 승인
         $approve_transaction_dto = TransactionService::approveTransaction(
             self::$partner->api_key,
             self::$partner->secret_key,
             $this->u_idx,
-            $create_transaction_dto->transaction_id,
+            self::$transaction_id,
             true
         );
-        $this->assertSame($approve_transaction_dto->partner_transaction_id, $partner_transaction_id);
-        $this->assertSame($approve_transaction_dto->transaction_id, $create_transaction_dto->transaction_id);
-        $this->assertSame($approve_transaction_dto->product_name, $product_name);
-        $this->assertSame($approve_transaction_dto->amount, $amount);
+        $this->assertSame(self::$transaction_id, $approve_transaction_dto->transaction_id);
+        $this->assertSame($partner_transaction_id, $approve_transaction_dto->partner_transaction_id);
+        $this->assertSame($product_name, $approve_transaction_dto->product_name);
+        $this->assertSame($amount, $approve_transaction_dto->amount);
 
-        test::clean(PasswordValidationApi::class);
+        // 상태 조회
+        $transaction_status = TransactionService::getTransactionStatus(
+            self::$partner->api_key,
+            self::$partner->secret_key,
+            $this->u_idx,
+            $approve_transaction_dto->transaction_id
+        );
+        $this->assertSame(TransactionConstant::STATUS_APPROVED, $transaction_status->status);
+        $this->assertSame($approve_transaction_dto->approved_at, $transaction_status->approved_at);
+    }
+
+    /**
+     * @param string $partner_transaction_id
+     * @param string $product_name
+     * @param int $amount
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \RidiPay\Transaction\Exception\UnauthorizedPartnerException
+     * @throws \RidiPay\Transaction\Exception\UnsupportedPgException
+     * @throws \Throwable
+     */
+    private function assertCancelTransactionSuccessfully(
+        string $partner_transaction_id,
+        string $product_name,
+        int $amount
+    ) {
+        // 결제 취소
+        $cancel_transaction_dto = TransactionService::cancelTransaction(
+            self::$partner->api_key,
+            self::$partner->secret_key,
+            $this->u_idx,
+            self::$transaction_id,
+            true
+        );
+        $this->assertSame(self::$transaction_id, $cancel_transaction_dto->transaction_id);
+        $this->assertSame($partner_transaction_id, $cancel_transaction_dto->partner_transaction_id);
+        $this->assertSame($product_name, $cancel_transaction_dto->product_name);
+        $this->assertSame($amount, $cancel_transaction_dto->amount);
+
+        // 상태 조회
+        $transaction_status = TransactionService::getTransactionStatus(
+            self::$partner->api_key,
+            self::$partner->secret_key,
+            $this->u_idx,
+            self::$transaction_id
+        );
+        $this->assertSame(TransactionConstant::STATUS_CANCELED, $transaction_status->status);
+        $this->assertSame($cancel_transaction_dto->canceled_at, $transaction_status->canceled_at);
     }
 
     /**

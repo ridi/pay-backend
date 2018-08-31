@@ -10,6 +10,7 @@ use Ridibooks\Library\TimeConstant;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Transaction\Dto\ApproveTransactionDto;
 use RidiPay\Transaction\Dto\CancelTransactionDto;
+use RidiPay\Transaction\Dto\TransactionStatusDto;
 use RidiPay\Transaction\Entity\PartnerEntity;
 use RidiPay\Transaction\Entity\TransactionEntity;
 use RidiPay\Transaction\Entity\TransactionHistoryEntity;
@@ -137,7 +138,7 @@ class TransactionService
         $em->beginTransaction();
 
         try {
-            $transaction->approve();
+            $transaction->approve($response->getPgTransactionId());
             TransactionRepository::getRepository()->save($transaction);
 
             $transaction_history = TransactionHistoryEntity::createApproveHistory(
@@ -192,7 +193,7 @@ class TransactionService
         $pg = PgRepository::getRepository()->findOneById($transaction->getPgId());
         $pg_handler = PgHandlerFactory::create($pg->getName(), $is_test);
         $cancel_reason = '';
-        $response = $pg_handler->cancelTransaction($transaction_id, $cancel_reason);
+        $response = $pg_handler->cancelTransaction($transaction->getPgTransactionId(), $cancel_reason);
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -208,6 +209,8 @@ class TransactionService
                 $response->getResponseMessage()
             );
             TransactionHistoryRepository::getRepository()->save($transaction_history);
+
+            $em->commit();
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
@@ -216,6 +219,32 @@ class TransactionService
         }
 
         return new CancelTransactionDto($transaction);
+    }
+
+    /**
+     * @param string $partner_api_key
+     * @param string $partner_secret_key
+     * @param int $u_idx
+     * @param string $transaction_id
+     * @return TransactionStatusDto
+     * @throws UnauthorizedPartnerException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getTransactionStatus(
+        string $partner_api_key,
+        string $partner_secret_key,
+        int $u_idx,
+        string $transaction_id
+    ): TransactionStatusDto {
+        $partner = self::getPartner($partner_api_key, $partner_secret_key);
+
+        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
+        if ($u_idx !== $transaction->getUidx()) {
+            throw new \Exception();
+        }
+
+        return new TransactionStatusDto($transaction);
     }
 
     /**
