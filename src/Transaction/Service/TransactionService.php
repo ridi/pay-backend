@@ -71,23 +71,28 @@ class TransactionService
     }
 
     /**
+     * @param int $u_idx
      * @param string $reservation_id
      * @return CreateTransactionDto
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function createTransaction(string $reservation_id): CreateTransactionDto
+    public static function createTransaction(int $u_idx, string $reservation_id): CreateTransactionDto
     {
         $redis = self::getRedisClient();
         $reservation_key = self::getReservationKey($reservation_id);
         $transaction_data = $redis->hgetall($reservation_key);
+
+        if ($u_idx !== intval($transaction_data['u_idx'])) {
+            throw new \Exception();
+        }
 
         $payment_method_id = PaymentMethodService::getPaymentMethodIdByUuid($transaction_data['payment_method_id']);
         $pg = PgRepository::getRepository()->findActiveOne();
         $partner_transaction_id = $transaction_data['partner_transaction_id'];
 
         $transaction = new TransactionEntity(
-            intval($transaction_data['u_idx']),
+            $u_idx,
             $payment_method_id,
             $pg->getId(),
             intval($transaction_data['partner_id']),
