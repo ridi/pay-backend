@@ -28,6 +28,21 @@ paths:
       responses:
         200:
           $ref: '#/components/responses/SpaResponse'
+    post:
+      tags:
+      - Private API
+      summary: 결제 Transaction 생성
+      parameters:
+      - $ref: '#/components/parameters/Api-Key'
+      - $ref: '#/components/parameters/Secret-Key'
+      - $ref: '#/components/parameters/ReservationId'
+      responses:
+        200:
+          $ref: '#/components/responses/CreatePaymentResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
   /legal/terms:
     get:
       tags:
@@ -263,6 +278,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
         500:
           $ref: '#/components/responses/InternalServerError'
   /users/{u_id}/cards/{payment_method_id}:
@@ -280,6 +297,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
   /users/{u_id}/onetouch:
@@ -293,7 +312,7 @@ paths:
             schema:
               type: object
               properties:
-                uses_onetouch_pay:
+                enable_onetouch_pay:
                   type: boolean
                   description: 원터치 결제 이용 여부
                   example: true
@@ -315,6 +334,10 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
   /users/{u_id}/password/validate:
@@ -339,6 +362,10 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
   /users/{u_id}/pin:
@@ -365,6 +392,8 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        404:
+          $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
   /users/{u_id}/pin/validate:
@@ -389,6 +418,10 @@ paths:
           $ref: '#/components/responses/BadRequest'
         401:
           $ref: '#/components/responses/Unauthorized'
+        403:
+          $ref: '#/components/responses/Forbidden'
+        404:
+          $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
   /users/{u_id}/payment-methods:
@@ -478,7 +511,7 @@ components:
           example: 550E8400-E29B-41D4-A716-446655440000
         partner_transaction_id:
           type: string
-          description: 가맹점 결제 고유 번호
+          description: 가맹점 결제 ID
           example: 2018010112345612
         amount:
           type: integer
@@ -517,7 +550,7 @@ components:
       properties:
         partner_transaction_id:
           type: string
-          description: 가맹점 결제 고유 번호
+          description: 가맹점 결제 ID
           example: 2018010112345612
       required:
         - partner_transaction_id
@@ -576,28 +609,28 @@ components:
       name: reservation_id
       in: path
       required: true
-      description: RIDI Pay 결제 예약 번호, [POST] /payments/reserve API 참고
+      description: RIDI Pay 결제 예약 ID, [POST] /payments/reserve API 참고
       schema:
         type: string
     TransactionId:
       name: transaction_id
       in: path
       required: true
-      description: RIDI Pay 결제 고유 번호
+      description: RIDI Pay 결제 ID
       schema:
         type: string
     SubscriptionId:
       name: subscription_id
       in: path
       required: true
-      description: RIDI Pay 정기 결제 고유 번호
+      description: RIDI Pay 정기 결제 ID
       schema:
         type: string
     PaymentMethodId:
       name: payment_method_id
       in: path
       required: true
-      description: 결제 수단 UUID
+      description: RIDI Pay 결제 수단 ID
       schema:
         type: string
     Uid:
@@ -632,6 +665,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/FailureResponse'
+    Forbidden:
+      description: Forbidden(403)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FailureResponse'
     NotFound:
       description: Not Found(404)
       content:
@@ -657,6 +696,19 @@ components:
                 example: 880E8200-A29B-24B2-8716-42B65544A000
             required:
               - reservation_id
+    CreatePaymentResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              return_url:
+                type: string
+                description: RIDI Pay 결제 인증 성공/실패 후, 본 승인 요청을 전송할 가맹점 URL
+                example: https://ridibooks.com/payment/callback/ridi-pay
+            required:
+            - return_url
     ApprovePaymentResponse:
       description: 'OK'
       content:
@@ -666,11 +718,15 @@ components:
             properties:
               transaction_id:
                 type: string
-                description: RIDI Pay 결제 고유 번호
+                description: RIDI Pay 결제 ID
               partner_transaction_id:
                 type: string
-                description: 가맹점 결제 고유 번호
+                description: 가맹점 결제 ID
                 example: 2018010112345612
+              product_name:
+                type: string
+                description: 상품명
+                example: 리디북스 전자책
               amount:
                 type: integer
                 description: 승인 금액
@@ -682,6 +738,7 @@ components:
             required:
               - transaction_id
               - partner_transaction_id
+              - product_name
               - amount
               - approved_at
     CancelPaymentResponse:
@@ -693,11 +750,15 @@ components:
             properties:
               transaction_id:
                 type: string
-                description: RIDI Pay 결제 고유 번호
+                description: RIDI Pay 결제 ID
               partner_transaction_id:
                 type: string
-                description: 가맹점 결제 고유 번호
+                description: 가맹점 결제 ID
                 example: 2018010112345612
+              product_name:
+                type: string
+                description: 상품명
+                example: 리디북스 전자책
               amount:
                 type: integer
                 description: 취소 금액
@@ -713,6 +774,7 @@ components:
             required:
               - transaction_id
               - partner_transaction_id
+              - product_name
               - amount
               - approved_at
               - canceled_at
@@ -725,24 +787,20 @@ components:
             properties:
               transaction_id:
                 type: string
-                description: RIDI Pay 결제 고유 번호
+                description: RIDI Pay 결제 ID
               partner_transaction_id:
                 type: string
-                description: 가맹점 결제 고유 번호
+                description: 가맹점 결제 ID
                 example: 2018010112345612
-              is_subscription:
-                type: boolean
-                description: 정기 결제 여부
-                example: true
-              subscription_id:
-                type: string
-                description: RIDI Pay 정기 결제 고유 번호
-                example: 28F02410-A29D-BD34-80A3-FBA2BC113200
               status:
                 type: string
                 enum: [RESERVED, APPROVED, CANCELED]
                 description: 결제 건 상태
                 example: CANCELED
+              product_name:
+                type: string
+                description: 상품명
+                example: 리디북스 전자책
               amount:
                 type: integer
                 description: 승인/취소 금액
@@ -755,11 +813,15 @@ components:
                 type: string
                 description: 승인/취소 일시 (ISO 8601 Format)
                 example: '2018-06-09T01:59:59+09:00'
+              card_receipt_url:
+                type: string
+                description: 신용카드 매출 전표 URL
+                example: 'https://admin8.kcp.co.kr/assist/bill.BillActionNew.do?cmd=card_bill&tno=kcp_tno&order_no=order_no&trade_mony=100'
             required:
               - transaction_id
               - partner_transaction_id
-              - is_subscription
               - status
+              - product_name
               - amount
     SubscriptionResponse:
       description: 'OK'
@@ -770,7 +832,7 @@ components:
             properties:
               subscription_id:
                 type: string
-                description: RIDI Pay 정기 결제 고유 번호
+                description: RIDI Pay 정기 결제 ID
                 example: 28F02410-A29D-BD34-80A3-FBA2BC113200
               subscribed_at:
                 type: string
@@ -788,7 +850,7 @@ components:
             properties:
               subscription_id:
                 type: string
-                description: RIDI Pay 정기 결제 고유 번호
+                description: RIDI Pay 정기 결제 ID
                 example: 28F02410-A29D-BD34-80A3-FBA2BC113200
               subscribed_at:
                 type: string
@@ -811,14 +873,14 @@ components:
             properties:
               transaction_id:
                 type: string
-                description: RIDI Pay 결제 고유 번호
+                description: RIDI Pay 결제 ID
               partner_transaction_id:
                 type: string
-                description: 가맹점 결제 고유 번호
+                description: 가맹점 결제 ID
                 example: 2018010112345612
               subscription_id:
                 type: string
-                description: RIDI Pay 정기 결제 고유 번호
+                description: RIDI Pay 정기 결제 ID
                 example: 28F02410-A29D-BD34-80A3-FBA2BC113200
               amount:
                 type: integer
