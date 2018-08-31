@@ -203,6 +203,7 @@ class OneTimePaymentTest extends TestCase
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \RidiPay\Transaction\Exception\UnauthorizedPartnerException
+     * @throws \RidiPay\Transaction\Exception\UnsupportedPgException
      */
     private function assertCreateTransactionSuccessfully(
         string $reservation_id,
@@ -212,7 +213,7 @@ class OneTimePaymentTest extends TestCase
         int $amount
     ) {
         // 결제 Transaction 생성
-        $create_transaction_dto = TransactionService::createTransaction($reservation_id);
+        $create_transaction_dto = TransactionService::createTransaction($this->u_idx, $reservation_id);
         $this->assertSame($partner_transaction_id, $create_transaction_dto->partner_transaction_id);
         $this->assertSame($return_url, $create_transaction_dto->return_url);
 
@@ -252,8 +253,7 @@ class OneTimePaymentTest extends TestCase
             self::$partner->api_key,
             self::$partner->secret_key,
             $this->u_idx,
-            self::$transaction_id,
-            true
+            self::$transaction_id
         );
         $this->assertSame(self::$transaction_id, $approve_transaction_dto->transaction_id);
         $this->assertSame($partner_transaction_id, $approve_transaction_dto->partner_transaction_id);
@@ -292,8 +292,7 @@ class OneTimePaymentTest extends TestCase
             self::$partner->api_key,
             self::$partner->secret_key,
             $this->u_idx,
-            self::$transaction_id,
-            true
+            self::$transaction_id
         );
         $this->assertSame(self::$transaction_id, $cancel_transaction_dto->transaction_id);
         $this->assertSame($partner_transaction_id, $cancel_transaction_dto->partner_transaction_id);
