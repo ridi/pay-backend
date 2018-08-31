@@ -83,7 +83,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $return_url = TransactionService::createTransaction($reservation_id);
+            $return_url = TransactionService::createTransaction($u_idx, $reservation_id);
         } catch (\Throwable $t) {
             return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
