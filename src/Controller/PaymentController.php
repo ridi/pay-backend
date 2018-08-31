@@ -28,11 +28,13 @@ class PaymentController extends Controller
 
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
-        $body = json_decode($request->getContent());
 
-        if (is_null($partner_api_key)
-            || is_null($partner_secret_key)
-            || is_null($body)
+        if (is_null($partner_api_key) || is_null($partner_secret_key)) {
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $body = json_decode($request->getContent());
+        if (is_null($body)
             || !property_exists($body, 'payment_method_id')
             || !property_exists($body, 'partner_transaction_id')
             || !property_exists($body, 'product_name')
@@ -77,7 +79,7 @@ class PaymentController extends Controller
         $partner_secret_key = $request->headers->get('Secret-Key');
 
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -106,7 +108,7 @@ class PaymentController extends Controller
         $partner_secret_key = $request->headers->get('Secret-Key');
 
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
