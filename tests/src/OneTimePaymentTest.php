@@ -11,8 +11,8 @@ use RidiPay\Transaction\Constant\TransactionConstant;
 use RidiPay\Transaction\Dto\PartnerDto;
 use RidiPay\Transaction\Service\PartnerService;
 use RidiPay\Transaction\Service\TransactionService;
-use RidiPay\User\Service\CardService;
-use RidiPay\User\Service\UserService;
+use RidiPay\User\Application\Service\CardAppService;
+use RidiPay\User\Application\Service\UserAppService;
 
 class OneTimePaymentTest extends TestCase
 {
@@ -35,7 +35,7 @@ class OneTimePaymentTest extends TestCase
     protected function setUp()
     {
         $this->u_idx = TestUtil::getRandomUidx();
-        UserService::createUserIfNotExists($this->u_idx);
+        UserAppService::createUserIfNotExists($this->u_idx);
     }
 
     public static function tearDownAfterClass()
@@ -45,7 +45,7 @@ class OneTimePaymentTest extends TestCase
 
     public function testOneTimePaymentLifeCycleInCaseOfOnetouchPay()
     {
-        UserService::enableOnetouchPay($this->u_idx);
+        UserAppService::enableOnetouchPay($this->u_idx);
 
         $payment_method_id = $this->createCard();
         $partner_transaction_id = Uuid::uuid4()->toString();
@@ -66,7 +66,7 @@ class OneTimePaymentTest extends TestCase
         );
 
         // 인증
-        $this->assertTrue(UserService::isUsingOnetouchPay($this->u_idx));
+        $this->assertTrue(UserAppService::isUsingOnetouchPay($this->u_idx));
 
         // 결제 Transaction 생성
         $this->assertCreateTransactionSuccessfully(
@@ -95,8 +95,8 @@ class OneTimePaymentTest extends TestCase
     public function testOneTimePaymentLifeCycleCaseInCaseOfPinValidation()
     {
         $pin = '123456';
-        UserService::updatePin($this->u_idx, $pin);
-        UserService::disableOnetouchPay($this->u_idx);
+        UserAppService::updatePin($this->u_idx, $pin);
+        UserAppService::disableOnetouchPay($this->u_idx);
 
         $payment_method_id = $this->createCard();
         $partner_transaction_id = Uuid::uuid4()->toString();
@@ -117,7 +117,7 @@ class OneTimePaymentTest extends TestCase
         );
 
         // 인증
-        UserService::validatePin($this->u_idx, $pin);
+        UserAppService::validatePin($this->u_idx, $pin);
 
         // 결제 Transaction 생성
         $this->assertCreateTransactionSuccessfully(
@@ -166,7 +166,7 @@ class OneTimePaymentTest extends TestCase
         );
 
         // 인증
-        UserService::validatePassword($this->u_idx, 'abcde@12345');
+        UserAppService::validatePassword($this->u_idx, 'abcde@12345');
 
         // 결제 Transaction 생성
         $this->assertCreateTransactionSuccessfully(
@@ -312,12 +312,12 @@ class OneTimePaymentTest extends TestCase
 
     /**
      * @return string
-     * @throws \RidiPay\User\Exception\AlreadyCardAddedException
+     * @throws \RidiPay\User\Domain\Exception\AlreadyHadCardException
      * @throws \Throwable
      */
     private function createCard(): string
     {
-        $payment_method_id = CardService::addCard(
+        $payment_method_id = CardAppService::registerCard(
             $this->u_idx,
             '5164531234567890',
             '2511',

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Repository;
 
+use Doctrine\Common\Collections\Criteria;
 use RidiPay\Library\BaseEntityRepository;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Transaction\Constant\PgConstant;
@@ -25,6 +26,23 @@ class PgRepository extends BaseEntityRepository
     public function findActiveOne(): ?PgEntity
     {
         return $this->findOneBy(['status' => PgConstant::STATUS_ACTIVE]);
+    }
+
+    /**
+     * @return PgEntity[]
+     */
+    public function findPayablePgIds(): array
+    {
+        $criteria = new Criteria();
+        $criteria->where(Criteria::expr()->neq('status', PgConstant::STATUS_INACTIVE));
+        $pgs = $this->matching($criteria)->getValues();
+
+        return array_map(
+            function (PgEntity $pg) {
+                return $pg->getId();
+            },
+            $pgs
+        );
     }
 
     /**

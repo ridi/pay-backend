@@ -7,7 +7,7 @@ use RidiPay\Transaction\Entity\TransactionEntity;
 use RidiPay\Transaction\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Repository\PgRepository;
 use RidiPay\Transaction\Service\Pg\PgHandlerFactory;
-use RidiPay\User\Service\PaymentMethodService;
+use RidiPay\User\Application\Service\PaymentMethodAppService;
 
 class TransactionStatusDto implements \JsonSerializable
 {
@@ -51,7 +51,7 @@ class TransactionStatusDto implements \JsonSerializable
         $this->approved_at = $transaction->getApprovedAt();
         $this->canceled_at = $transaction->getCanceledAt();
 
-        if (PaymentMethodService::isCard($transaction->getPaymentMethodId()) && $transaction->isApproved()) {
+        if (PaymentMethodAppService::isCard($transaction->getPaymentMethodId()) && $transaction->isApproved()) {
             $pg = PgRepository::getRepository()->findOneById($transaction->getPgId());
             $pg_handler = PgHandlerFactory::create($pg->getName());
             $this->card_receipt_url = $pg_handler->getCardReceiptUrl($transaction);

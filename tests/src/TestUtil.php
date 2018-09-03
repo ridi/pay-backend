@@ -19,11 +19,11 @@ use RidiPay\Transaction\Entity\PgEntity;
 use RidiPay\Transaction\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Entity\TransactionEntity;
 use RidiPay\Transaction\Entity\TransactionHistoryEntity;
-use RidiPay\User\Entity\CardEntity;
-use RidiPay\User\Entity\CardIssuerEntity;
-use RidiPay\User\Entity\PaymentMethodEntity;
-use RidiPay\User\Entity\UserActionHistoryEntity;
-use RidiPay\User\Entity\UserEntity;
+use RidiPay\User\Domain\Entity\CardEntity;
+use RidiPay\User\Domain\Entity\CardIssuerEntity;
+use RidiPay\User\Domain\Entity\PaymentMethodEntity;
+use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
+use RidiPay\User\Domain\Entity\UserEntity;
 
 class TestUtil
 {
@@ -75,7 +75,7 @@ class TestUtil
         // CardIssuer Fixture 생성
         foreach (Company::COMPANY_NAME_MAPPING_KO as $code => $name) {
             // TODO: 색상, 로고 Image URL 채우기
-            $card_issuer = new CardIssuerEntity($pg, $code, $name, '000000', '');
+            $card_issuer = new CardIssuerEntity($pg->getId(), $code, $name, '000000', '');
             $em->persist($card_issuer);
         }
         $em->flush();

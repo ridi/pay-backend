@@ -9,7 +9,7 @@ use Ridibooks\Payment\Kcp\Order;
 use Ridibooks\Payment\Kcp\Util;
 use RidiPay\Transaction\Entity\TransactionEntity;
 use RidiPay\Transaction\Exception\PgException;
-use RidiPay\User\Service\PaymentMethodService;
+use RidiPay\User\Application\Service\PaymentMethodAppService;
 
 class KcpHandler implements PgHandlerInterface
 {
@@ -87,7 +87,7 @@ class KcpHandler implements PgHandlerInterface
             $buyer_tel1,
             $buyer_tel2
         );
-        $pg_bill_key = PaymentMethodService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
+        $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
         $response = $this->client->batchOrder($pg_bill_key, $order);
         if (!$response->isSuccess()) {
             throw new PgException('KCP 결제 승인 실패');

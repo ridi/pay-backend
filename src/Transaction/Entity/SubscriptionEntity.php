@@ -2,7 +2,7 @@
 
 namespace RidiPay\Transaction\Entity;
 
-use RidiPay\User\Entity\PaymentMethodEntity;
+use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 
 /**
  * @Table(name="subscription", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"})})
@@ -22,7 +22,7 @@ class SubscriptionEntity
     /**
      * @var PaymentMethodEntity
      *
-     * @ManyToOne(targetEntity="RidiPay\User\Entity\PaymentMethodEntity")
+     * @ManyToOne(targetEntity="RidiPay\User\Domain\Entity\PaymentMethodEntity")
      * @JoinColumn(name="payment_method_id", referencedColumnName="id", nullable=false)
      */
     private $payment_method;

@@ -5,11 +5,11 @@ namespace RidiPay\Controller;
 
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
-use RidiPay\User\Exception\AlreadyCardAddedException;
-use RidiPay\User\Exception\LeavedUserException;
-use RidiPay\User\Exception\NonUserException;
-use RidiPay\User\Exception\UnknownPaymentMethodException;
-use RidiPay\User\Service\CardService;
+use RidiPay\User\Domain\Exception\AlreadyHadCardException;
+use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\UnregisteredUserException;
+use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
+use RidiPay\User\Application\Service\CardAppService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +25,7 @@ class CardController extends Controller
      * @param string $u_id
      * @return JsonResponse
      */
-    public function addCard(Request $request, string $u_id): JsonResponse
+    public function registerCard(Request $request, string $u_id): JsonResponse
     {
         /** @var OAuth2Manager $oauth2_manager */
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
@@ -45,14 +45,14 @@ class CardController extends Controller
         }
 
         try {
-            CardService::addCard(
+            CardAppService::registerCard(
                 $u_idx,
                 $body->card_number,
                 $body->card_expiration_date,
                 $body->card_password,
                 $body->tax_id
             );
-        } catch (AlreadyCardAddedException $e) {
+        } catch (AlreadyHadCardException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
         } catch (\Throwable $t) {
             return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -78,8 +78,8 @@ class CardController extends Controller
         }
 
         try {
-            CardService::deleteCard($u_idx, $payment_method_id);
-        } catch (NonUserException | LeavedUserException | UnknownPaymentMethodException $e) {
+            CardAppService::deleteCard($u_idx, $payment_method_id);
+        } catch (UnregisteredUserException | LeavedUserException | UnregisteredPaymentMethodException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (\Throwable $t) {
             return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);

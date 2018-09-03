@@ -22,7 +22,7 @@ use RidiPay\Transaction\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Repository\TransactionRepository;
 use RidiPay\Transaction\Service\Pg\PgHandlerFactory;
 use RidiPay\Transaction\Dto\CreateTransactionDto;
-use RidiPay\User\Service\PaymentMethodService;
+use RidiPay\User\Application\Service\PaymentMethodAppService;
 
 class TransactionService
 {
@@ -87,7 +87,7 @@ class TransactionService
             throw new \Exception();
         }
 
-        $payment_method_id = PaymentMethodService::getPaymentMethodIdByUuid($transaction_data['payment_method_id']);
+        $payment_method_id = \RidiPay\User\Application\Service\PaymentMethodAppService::getPaymentMethodIdByUuid($transaction_data['payment_method_id']);
         $pg = PgRepository::getRepository()->findActiveOne();
         $partner_transaction_id = $transaction_data['partner_transaction_id'];
 
