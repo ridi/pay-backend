@@ -36,16 +36,17 @@ class AbuseBlocker
     public function isBlocked(): bool
     {
         $key = $this->getKey();
-        $try_count = $this->redis->hincrby($this->getKey(), self::FIELD_TRY_COUNT, 1);
-        if ($try_count === $this->policy->getBlockThreshold()) {
+        $try_count = $this->redis->hincrby($key, self::FIELD_TRY_COUNT, 1);
+        if ($try_count >= $this->policy->getBlockThreshold()) {
             $blocked_at = time();
-            $this->redis->hsetnx($key, self::FIELD_BLOCKED_AT, $blocked_at);
-            $this->redis->expireat($key, $blocked_at + $this->policy->getBlockedPeriod());
+            if ($this->redis->hsetnx($key, self::FIELD_BLOCKED_AT, $blocked_at) === 1) {
+                $this->redis->expireat($key, $blocked_at + $this->policy->getBlockedPeriod());
+            }
 
             return true;
+        } else {
+            return false;
         }
-
-        return false;
     }
 
     /**

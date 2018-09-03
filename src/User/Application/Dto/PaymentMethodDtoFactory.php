@@ -5,6 +5,7 @@ namespace RidiPay\User\Application\Dto;
 
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
+use RidiPay\User\Domain\PaymentMethodConstant;
 
 class PaymentMethodDtoFactory
 {
