@@ -32,11 +32,6 @@ class PasswordTest extends TestCase
         TestUtil::tearDownDatabaseDoubles();
     }
 
-    public static function tearDownAfterClass()
-    {
-        TestUtil::tearDownDatabaseDoubles();
-    }
-
     public function testEnterPasswordCorrectly()
     {
         test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);

@@ -5,7 +5,7 @@ namespace RidiPay\Controller;
 
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
-use RidiPay\Transaction\Service\TransactionService;
+use RidiPay\Transaction\Application\Service\TransactionAppService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,7 +45,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $reservation_id = TransactionService::reserveTransaction(
+            $reservation_id = TransactionAppService::reserveTransaction(
                 $partner_api_key,
                 $partner_secret_key,
                 $u_idx,
@@ -65,30 +65,24 @@ class PaymentController extends Controller
     /**
      * @Route("/payments/{reservation_id}", methods={"POST"})
      * @OAuth2()
-     * @param Request $request
      * @param string $reservation_id
      * @return JsonResponse
      */
-    public function createPayment(Request $request, string $reservation_id): JsonResponse
+    public function createPayment(string $reservation_id): JsonResponse
     {
         /** @var OAuth2Manager $oauth2_manager */
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
 
-        $partner_api_key = $request->headers->get('Api-Key');
-        $partner_secret_key = $request->headers->get('Secret-Key');
-
-        if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
-        }
-
         try {
-            $return_url = TransactionService::createTransaction($u_idx, $reservation_id);
+            $result = TransactionAppService::createTransaction($u_idx, $reservation_id);
         } catch (\Throwable $t) {
             return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['return_url' => $return_url]);
+        return new JsonResponse([
+            'return_url' => $result->return_url . '?' . http_build_query(['transaction_id' => $result->transaction_id])
+        ]);
     }
 
     /**
@@ -112,7 +106,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $result = TransactionService::approveTransaction(
+            $result = TransactionAppService::approveTransaction(
                 $partner_api_key,
                 $partner_secret_key,
                 $u_idx,
@@ -146,7 +140,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $result = TransactionService::cancelTransaction(
+            $result = TransactionAppService::cancelTransaction(
                 $partner_api_key,
                 $partner_secret_key,
                 $u_idx,
@@ -180,7 +174,7 @@ class PaymentController extends Controller
         }
 
         try {
-            $result = TransactionService::getTransactionStatus(
+            $result = TransactionAppService::getTransactionStatus(
                 $partner_api_key,
                 $partner_secret_key,
                 $u_idx,

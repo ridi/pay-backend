@@ -731,6 +731,10 @@ components:
                 type: integer
                 description: 승인 금액
                 example: 10000
+              reserved_at:
+                type: string
+                description: 예약 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:30+09:00'
               approved_at:
                 type: string
                 description: 승인 일시 (ISO 8601 Format)
@@ -740,6 +744,7 @@ components:
               - partner_transaction_id
               - product_name
               - amount
+              - reserved_at
               - approved_at
     CancelPaymentResponse:
       description: 'OK'
@@ -763,6 +768,10 @@ components:
                 type: integer
                 description: 취소 금액
                 example: 10000
+              reserved_at:
+                type: string
+                description: 예약 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:30+09:00'
               approved_at:
                 type: string
                 description: 승인 일시 (ISO 8601 Format)
@@ -776,6 +785,7 @@ components:
               - partner_transaction_id
               - product_name
               - amount
+              - reserved_at
               - approved_at
               - canceled_at
     GetPaymentStatusResponse:
@@ -805,13 +815,17 @@ components:
                 type: integer
                 description: 승인/취소 금액
                 example: 10000
+              reserved_at:
+                type: string
+                description: 예약 일시 (ISO 8601 Format)
+                example: '2018-06-07T01:59:30+09:00'
               approved_at:
                 type: string
                 description: 승인 일시 (ISO 8601 Format)
                 example: '2018-06-07T01:59:59+09:00'
               canceled_at:
                 type: string
-                description: 승인/취소 일시 (ISO 8601 Format)
+                description: 취소 일시 (ISO 8601 Format)
                 example: '2018-06-09T01:59:59+09:00'
               card_receipt_url:
                 type: string
@@ -823,6 +837,7 @@ components:
               - status
               - product_name
               - amount
+              - reserved_at
     SubscriptionResponse:
       description: 'OK'
       content:

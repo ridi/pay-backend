@@ -13,12 +13,12 @@ use Ridibooks\Library\AdaptableCache;
 use Ridibooks\Payment\Kcp\Company;
 use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Transaction\Constant\PgConstant;
-use RidiPay\Transaction\Entity\PartnerEntity;
-use RidiPay\Transaction\Entity\PgEntity;
-use RidiPay\Transaction\Entity\SubscriptionEntity;
-use RidiPay\Transaction\Entity\TransactionEntity;
-use RidiPay\Transaction\Entity\TransactionHistoryEntity;
+use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
+use RidiPay\Transaction\Domain\Entity\PartnerEntity;
+use RidiPay\Pg\Domain\Entity\PgEntity;
+use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
+use RidiPay\Transaction\Domain\Entity\TransactionEntity;
+use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
 use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\CardIssuerEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
@@ -34,6 +34,7 @@ class TestUtil
     private static $em = null;
 
     /**
+     * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Doctrine\ORM\OptimisticLockException
@@ -68,7 +69,7 @@ class TestUtil
         $schemaTool->createSchema($classes);
 
         // Pg Fixture 생성
-        $pg = new PgEntity(PgConstant::KCP);
+        $pg = PgEntity::createKcp();
         $em->persist($pg);
         $em->flush($pg);
 

@@ -9,6 +9,8 @@ use Ramsey\Uuid\Doctrine\UuidBinaryType;
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Pg\Application\Dto\PgDto;
+use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use Doctrine\DBAL\Types\Type;
 
@@ -41,11 +43,20 @@ class PaymentMethodRepository extends BaseEntityRepository
 
     /**
      * @param int $u_idx
-     * @param int[] $pg_ids
      * @return PaymentMethodEntity[]
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      */
-    public function getAvailablePaymentMethods(int $u_idx, array $pg_ids)
+    public function getAvailablePaymentMethods(int $u_idx)
     {
+        $pgs = PgAppService::getPayablePgs();
+        $pg_ids = array_map(
+            function (PgDto $pg) {
+                return $pg->id;
+            },
+            $pgs
+        );
+
         $qb = $this->createQueryBuilder('pm')
             ->addSelect('c')
             ->leftJoin('pm.cards', 'c', Expr\Join::WITH, 'c.pg_id IN (:pg_ids)')

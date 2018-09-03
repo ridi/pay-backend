@@ -25,11 +25,6 @@ class OnetouchPayTest extends TestCase
         TestUtil::tearDownDatabaseDoubles();
     }
 
-    public static function tearDownAfterClass()
-    {
-        TestUtil::tearDownDatabaseDoubles();
-    }
-
     public function testEnableOnetouchPayWhenAddingFirstPaymentMethod()
     {
         UserAppService::enableOnetouchPay($this->u_idx);

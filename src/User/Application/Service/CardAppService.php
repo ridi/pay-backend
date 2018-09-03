@@ -5,7 +5,8 @@ namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Transaction\Service\Pg\PgHandlerFactory;
+use RidiPay\Pg\Application\Service\PgAppService;
+use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 use RidiPay\User\Domain\Service\UserService;
@@ -15,7 +16,6 @@ use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\UnregisteredUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
-use RidiPay\Transaction\Repository\PgRepository;
 use RidiPay\User\Domain\Repository\UserRepository;
 
 class CardAppService
@@ -37,8 +37,8 @@ class CardAppService
         string $card_password,
         string $tax_id
     ): string {
-        $pg = PgRepository::getRepository()->findActiveOne();
-        $pg_handler = PgHandlerFactory::create($pg->getName());
+        $pg = PgAppService::getActivePg();
+        $pg_handler = PgHandlerFactory::create($pg->name);
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -57,7 +57,7 @@ class CardAppService
                 $card_expiration_date,
                 $card_password,
                 $tax_id,
-                $pg->getId(),
+                $pg->id,
                 $pg_handler
             );
             UserActionHistoryService::logAddCard($user);
