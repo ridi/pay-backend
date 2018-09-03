@@ -16,6 +16,11 @@
         <env name="PHPUNIT_DATABASE_URL" value="mysql://root@mariadb/ridi_pay" />
         <env name="REDIS_HOST" value="redis" />
         <env name="KCP_LOG_DIR" value="/app/var/log" />
+        <env name="ACCOUNT_SERVER_HOST" value="https://account.dev.ridi.io" />
+        <env name="OAUTH2_CLIENT_ID" value="oauth2_client_id" />
+        <env name="OAUTH2_CLIENT_SECRET" value="oauth2_client_secret" />
+        <env name="OAUTH2_JWT_SECRET" value="secret" />
+        <env name="OAUTH2_ACCESS_TOKEN" value="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyaWRpb2F1dGgydGVzdCIsInVfaWR4IjoyODAzMDUwLCJleHAiOjE5MzExMDM0ODUsImNsaWVudF9pZCI6ImlheDdPY0N1WUo4U3U1cDlzd2pzN1JOb3NMN3pZWjR6ZFY1eHlIVngiLCJzY29wZSI6ImFsbCJ9.Eh_kyD7VS5hbveUfWryK_uST2wMpWeESnCrfoJvLCbQ" />
     </php>
 
     <testsuites>
