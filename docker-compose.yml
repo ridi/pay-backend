@@ -17,3 +17,6 @@ services:
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
       - .:/app
+  redis:
+    image: redis:latest
+    container_name: redis
