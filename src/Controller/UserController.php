@@ -4,17 +4,17 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use RidiPay\Library\Jwt\Annotation\Jwt;
-use RidiPay\User\Exception\PasswordEntryBlockedException;
+use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
-use RidiPay\User\Exception\LeavedUserException;
-use RidiPay\User\Exception\NonUserException;
-use RidiPay\User\Exception\OnetouchPaySettingException;
-use RidiPay\User\Exception\UnmatchedPasswordException;
-use RidiPay\User\Exception\UnmatchedPinException;
-use RidiPay\User\Exception\WrongPinException;
-use RidiPay\User\Service\PaymentMethodService;
-use RidiPay\User\Service\UserService;
+use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\UnregisteredUserException;
+use RidiPay\User\Domain\Exception\OnetouchPaySettingException;
+use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
+use RidiPay\User\Domain\Exception\UnmatchedPinException;
+use RidiPay\User\Domain\Exception\WrongPinException;
+use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +25,7 @@ class UserController extends Controller
 {
     /**
      * @Route("/users/{u_id}/payment-methods", methods={"GET"})
-     * @OAuth2
+     * @OAuth2()
      * @Jwt()
      * @param string $u_id
      * @return JsonResponse
@@ -39,7 +39,7 @@ class UserController extends Controller
         }
 
         try {
-            $payment_methods = PaymentMethodService::getAvailablePaymentMethods($u_idx);
+            $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
         } catch (\Exception $e) {
             return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -71,8 +71,8 @@ class UserController extends Controller
         }
 
         try {
-            UserService::updatePin($u_idx, $body->pin);
-        } catch (NonUserException | LeavedUserException $e) {
+            UserAppService::updatePin($u_idx, $body->pin);
+        } catch (UnregisteredUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (WrongPinException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -107,8 +107,8 @@ class UserController extends Controller
         }
 
         try {
-            UserService::validatePin($u_idx, $body->pin);
-        } catch (NonUserException | LeavedUserException $e) {
+            UserAppService::validatePin($u_idx, $body->pin);
+        } catch (UnregisteredUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (UnmatchedPinException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -145,8 +145,8 @@ class UserController extends Controller
         }
 
         try {
-            UserService::validatePassword($u_idx, $body->password);
-        } catch (NonUserException | LeavedUserException $e) {
+            UserAppService::validatePassword($u_idx, $body->password);
+        } catch (UnregisteredUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (UnmatchedPasswordException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
@@ -184,11 +184,11 @@ class UserController extends Controller
 
         try {
             if ($body->enable_onetouch_pay) {
-                UserService::enableOnetouchPay($u_idx);
+                UserAppService::enableOnetouchPay($u_idx);
             } else {
-                UserService::disableOnetouchPay($u_idx);
+                UserAppService::disableOnetouchPay($u_idx);
             }
-        } catch (NonUserException | LeavedUserException $e) {
+        } catch (UnregisteredUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
         } catch (OnetouchPaySettingException $e) {
             return new JsonResponse(['message' => $e->getMessage()], response::HTTP_FORBIDDEN);

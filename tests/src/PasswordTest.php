@@ -6,10 +6,10 @@ namespace RidiPay\Tests;
 use AspectMock\Test as test;
 use PHPUnit\Framework\TestCase;
 use RidiPay\Library\PasswordValidationApi;
-use RidiPay\User\Exception\PasswordEntryBlockedException;
-use RidiPay\User\Exception\UnmatchedPasswordException;;
-use RidiPay\User\Model\PasswordEntryAbuseBlockPolicy;
-use RidiPay\User\Service\UserService;
+use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
+use RidiPay\User\Domain\Exception\UnmatchedPasswordException;;
+use RidiPay\User\Domain\Service\PasswordEntryAbuseBlockPolicy;
+use RidiPay\User\Application\Service\UserAppService;
 
 class PasswordTest extends TestCase
 {
@@ -24,7 +24,7 @@ class PasswordTest extends TestCase
         TestUtil::setUpDatabaseDoubles();
 
         $this->u_idx = TestUtil::getRandomUidx();
-        UserService::createUserIfNotExists($this->u_idx);
+        UserAppService::createUserIfNotExists($this->u_idx);
     }
 
     protected function tearDown()
@@ -42,7 +42,7 @@ class PasswordTest extends TestCase
         test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);
 
         $this->expectNotToPerformAssertions();
-        UserService::validatePassword($this->u_idx, self::VALID_PASSWORD);
+        UserAppService::validatePassword($this->u_idx, self::VALID_PASSWORD);
 
         test::clean(PasswordValidationApi::class);
     }
@@ -52,7 +52,7 @@ class PasswordTest extends TestCase
         test::double(PasswordValidationApi::class, ['isPasswordMatched' => false]);
 
         $this->expectException(UnmatchedPasswordException::class);
-        UserService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
+        UserAppService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
 
         test::clean(PasswordValidationApi::class);
     }
@@ -64,16 +64,16 @@ class PasswordTest extends TestCase
         $policy = new PasswordEntryAbuseBlockPolicy();
         for ($try_count = 0; $try_count < $policy->getBlockThreshold() - 1; $try_count++) {
             $this->expectException(UnmatchedPasswordException::class);
-            UserService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
+            UserAppService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
         }
 
         // Block
         $this->expectException(PasswordEntryBlockedException::class);
-        UserService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
+        UserAppService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
 
         // Block 이후 시도
         $this->expectException(PasswordEntryBlockedException::class);
-        UserService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
+        UserAppService::validatePassword($this->u_idx, self::INVALID_PASSWORD);
 
         test::clean(PasswordValidationApi::class);
     }

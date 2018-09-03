@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace RidiPay\Tests;
 
 use PHPUnit\Framework\TestCase;
-use RidiPay\User\Exception\OnetouchPaySettingException;
-use RidiPay\User\Service\UserService;
+use RidiPay\User\Domain\Exception\OnetouchPaySettingException;
+use RidiPay\User\Application\Service\UserAppService;
 
 class OnetouchPayTest extends TestCase
 {
@@ -17,7 +17,7 @@ class OnetouchPayTest extends TestCase
         TestUtil::setUpDatabaseDoubles();
 
         $this->u_idx = TestUtil::getRandomUidx();
-        UserService::createUserIfNotExists($this->u_idx);
+        UserAppService::createUserIfNotExists($this->u_idx);
     }
 
     protected function tearDown()
@@ -32,39 +32,39 @@ class OnetouchPayTest extends TestCase
 
     public function testEnableOnetouchPayWhenAddingFirstPaymentMethod()
     {
-        UserService::enableOnetouchPay($this->u_idx);
-        $this->assertTrue(UserService::isUsingOnetouchPay($this->u_idx));
+        UserAppService::enableOnetouchPay($this->u_idx);
+        $this->assertTrue(UserAppService::isUsingOnetouchPay($this->u_idx));
     }
 
     public function testDisableOnetouchPayWhenAddingFirstPaymentMethodAndNotHavingPin()
     {
         $this->expectException(OnetouchPaySettingException::class);
-        UserService::disableOnetouchPay($this->u_idx);
+        UserAppService::disableOnetouchPay($this->u_idx);
     }
 
     public function testDisableOnetouchPayWhenAddingFirstPaymentMethodAndHavingPin()
     {
-        UserService::updatePin($this->u_idx, PinTest::getValidPin());
+        UserAppService::updatePin($this->u_idx, PinTest::getValidPin());
 
-        UserService::disableOnetouchPay($this->u_idx);
-        $this->assertFalse(UserService::isUsingOnetouchPay($this->u_idx));
+        UserAppService::disableOnetouchPay($this->u_idx);
+        $this->assertFalse(UserAppService::isUsingOnetouchPay($this->u_idx));
     }
 
     public function testEnableOnetouchPay()
     {
-        UserService::updatePin($this->u_idx, PinTest::getValidPin());
-        UserService::disableOnetouchPay($this->u_idx);
+        UserAppService::updatePin($this->u_idx, PinTest::getValidPin());
+        UserAppService::disableOnetouchPay($this->u_idx);
 
-        UserService::enableOnetouchPay($this->u_idx);
-        $this->assertTrue(UserService::isUsingOnetouchPay($this->u_idx));
+        UserAppService::enableOnetouchPay($this->u_idx);
+        $this->assertTrue(UserAppService::isUsingOnetouchPay($this->u_idx));
     }
 
     public function testDisableOnetouchPay()
     {
-        UserService::updatePin($this->u_idx, PinTest::getValidPin());
-        UserService::enableOnetouchPay($this->u_idx);
+        UserAppService::updatePin($this->u_idx, PinTest::getValidPin());
+        UserAppService::enableOnetouchPay($this->u_idx);
 
-        UserService::disableOnetouchPay($this->u_idx);
-        $this->assertFalse(UserService::isUsingOnetouchPay($this->u_idx));
+        UserAppService::disableOnetouchPay($this->u_idx);
+        $this->assertFalse(UserAppService::isUsingOnetouchPay($this->u_idx));
     }
 }
