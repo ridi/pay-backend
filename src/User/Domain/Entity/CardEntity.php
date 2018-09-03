@@ -215,19 +215,10 @@ class CardEntity
      */
     private function setPurpose(string $purpose): void
     {
-        self::assertValidPurpose($purpose);
-
-        $this->purpose = $purpose;
-    }
-
-    /**
-     * @param string $purpose
-     * @throws UnavailableCardPurposeException
-     */
-    private static function assertValidPurpose(string $purpose): void
-    {
         if (!in_array($purpose, self::AVAILABLE_PURPOSES)) {
             throw new UnavailableCardPurposeException();
         }
+
+        $this->purpose = $purpose;
     }
 }

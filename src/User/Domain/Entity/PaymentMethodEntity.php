@@ -5,6 +5,7 @@ namespace RidiPay\User\Domain\Entity;
 use Doctrine\ORM\PersistentCollection;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use RidiPay\User\Domain\PaymentMethodConstant;
 
 /**
  * @Table(name="payment_method", uniqueConstraints={@UniqueConstraint(name="uniq_uuid", columns={"uuid"})}, indexes={@Index(name="idx_u_idx", columns={"u_idx"})})
@@ -12,8 +13,6 @@ use Ramsey\Uuid\UuidInterface;
  */
 class PaymentMethodEntity
 {
-    public const TYPE_CARD = 'CARD'; // 카드
-
     /**
      * @var int
      *
@@ -72,7 +71,7 @@ class PaymentMethodEntity
      */
     public static function createForCard(int $u_idx): PaymentMethodEntity
     {
-        return new self($u_idx, self::TYPE_CARD);
+        return new self($u_idx, PaymentMethodConstant::TYPE_CARD);
     }
 
     /**
@@ -110,7 +109,7 @@ class PaymentMethodEntity
      */
     public function isCard(): bool
     {
-        return $this->type === self::TYPE_CARD;
+        return $this->type === PaymentMethodConstant::TYPE_CARD;
     }
 
     /**

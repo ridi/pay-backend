@@ -4,8 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Service;
 
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Transaction\Repository\PgRepository;
-use RidiPay\Transaction\Service\Pg\PgHandlerInterface;
+use RidiPay\Pg\Domain\Service\PgHandlerInterface;
 use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\AlreadyHadCardException;
@@ -89,10 +88,8 @@ class CardService
      */
     private static function assertNotHavingCard(int $u_idx): void
     {
-        $pg_ids = PgRepository::getRepository()->findPayablePgIds();
         $available_payment_methods = PaymentMethodRepository::getRepository()->getAvailablePaymentMethods(
-            $u_idx,
-            $pg_ids
+            $u_idx
         );
         $available_cards = array_filter(
             $available_payment_methods,

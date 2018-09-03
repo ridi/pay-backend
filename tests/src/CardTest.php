@@ -60,7 +60,7 @@ class CardTest extends TestCase
         $this->assertTrue($card_for_billing_payment->isSameCard(self::CARD_A['CARD_NUMBER']));
     }
 
-    public function testPreventCardRegisterationIfUserHasCard()
+    public function testPreventCardRegisterationIfUserHadCard()
     {
         CardAppService::registerCard(
             $this->u_idx,

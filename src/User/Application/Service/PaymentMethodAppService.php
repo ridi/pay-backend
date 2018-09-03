@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
-use RidiPay\Transaction\Repository\PgRepository;
 use RidiPay\User\Application\Dto\PaymentMethodDto;
 use RidiPay\User\Application\Dto\AvailablePaymentMethodsDto;
 use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
@@ -22,8 +21,7 @@ class PaymentMethodAppService
      */
     public static function getAvailablePaymentMethods(int $u_idx): AvailablePaymentMethodsDto
     {
-        $pg_ids = PgRepository::getRepository()->findPayablePgIds();
-        $payment_methods = PaymentMethodRepository::getRepository()->getAvailablePaymentMethods($u_idx, $pg_ids);
+        $payment_methods = PaymentMethodRepository::getRepository()->getAvailablePaymentMethods($u_idx);
 
         return new AvailablePaymentMethodsDto($payment_methods);
     }
