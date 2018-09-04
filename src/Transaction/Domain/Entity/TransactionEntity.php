@@ -5,6 +5,7 @@ namespace RidiPay\Transaction\Domain\Entity;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use RidiPay\Transaction\Domain\TransactionConstant;
 
 /**
  * @Table(name="transaction", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"}), @Index(name="idx_pg_id", columns={"pg_id"}), @Index(name="idx_u_idx", columns={"u_idx"})})
@@ -12,10 +13,6 @@ use Ramsey\Uuid\UuidInterface;
  */
 class TransactionEntity
 {
-    private const STATUS_RESERVED = 'RESERVED'; // 예약
-    private const STATUS_APPROVED = 'APPROVED'; // 승인
-    private const STATUS_CANCELED = 'CANCELED'; // 취소
-
     /**
      * @var int
      *
@@ -146,7 +143,7 @@ class TransactionEntity
         $this->pg_transaction_id = null;
         $this->product_name = $product_name;
         $this->amount = $amount;
-        $this->status = self::STATUS_RESERVED;
+        $this->status = TransactionConstant::STATUS_RESERVED;
         $this->reserved_at = $reserved_at;
         $this->approved_at = null;
         $this->canceled_at = null;
@@ -221,7 +218,7 @@ class TransactionEntity
      */
     public function isReserved(): bool
     {
-        return $this->status === self::STATUS_RESERVED;
+        return $this->status === TransactionConstant::STATUS_RESERVED;
     }
 
     /**
@@ -229,7 +226,7 @@ class TransactionEntity
      */
     public function isApproved(): bool
     {
-        return $this->status === self::STATUS_APPROVED;
+        return $this->status === TransactionConstant::STATUS_APPROVED;
     }
 
     /**
@@ -237,7 +234,7 @@ class TransactionEntity
      */
     public function isCanceled(): bool
     {
-        return $this->status === self::STATUS_CANCELED;
+        return $this->status === TransactionConstant::STATUS_CANCELED;
     }
 
     /**
@@ -278,13 +275,13 @@ class TransactionEntity
     public function approve(string $pg_transaction_id): void
     {
         $this->pg_transaction_id = $pg_transaction_id;
-        $this->status = self::STATUS_APPROVED;
+        $this->status = TransactionConstant::STATUS_APPROVED;
         $this->approved_at = new \DateTime();
     }
 
     public function cancel(): void
     {
-        $this->status = self::STATUS_CANCELED;
+        $this->status = TransactionConstant::STATUS_CANCELED;
         $this->canceled_at = new \DateTime();
     }
 }

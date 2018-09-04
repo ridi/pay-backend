@@ -160,7 +160,7 @@ class PaymentController extends Controller
      * @param string $transaction_id
      * @return JsonResponse
      */
-    public function showPaymentStatus(Request $request, string $transaction_id): JsonResponse
+    public function getPaymentStatus(Request $request, string $transaction_id): JsonResponse
     {
         /** @var OAuth2Manager $oauth2_manager */
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
