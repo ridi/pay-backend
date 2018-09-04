@@ -33,8 +33,6 @@ paths:
       - Private API
       summary: 결제 Transaction 생성
       parameters:
-      - $ref: '#/components/parameters/Api-Key'
-      - $ref: '#/components/parameters/Secret-Key'
       - $ref: '#/components/parameters/ReservationId'
       responses:
         200:
