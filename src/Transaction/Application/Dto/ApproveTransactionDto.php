@@ -45,7 +45,7 @@ class ApproveTransactionDto implements \JsonSerializable
     {
         return [
             'transaction_id' => $this->transaction_id,
-            'parnter_transaction_id' => $this->partner_transaction_id,
+            'partner_transaction_id' => $this->partner_transaction_id,
             'product_name' => $this->product_name,
             'amount' => $this->amount,
             'reserved_at' => $this->reserved_at->format(DATE_ATOM),

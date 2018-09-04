@@ -73,7 +73,7 @@ class TransactionStatusDto implements \JsonSerializable
             'status' => $this->status,
             'product_name' => $this->product_name,
             'amount' => $this->amount,
-            'reserved_at' => $this->approved_at->format(DATE_ATOM)
+            'reserved_at' => $this->reserved_at->format(DATE_ATOM)
         ];
 
         if (!is_null($this->approved_at)) {
