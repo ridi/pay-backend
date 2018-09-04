@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Domain\Repository;
 
+use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Transaction\Domain\Entity\PartnerEntity;
@@ -28,10 +29,10 @@ class PartnerRepository extends BaseEntityRepository
     }
 
     /**
-     * @param string $api_key
+     * @param UuidInterface $api_key
      * @return null|PartnerEntity
      */
-    public function findOneByApiKey(string $api_key): ?PartnerEntity
+    public function findOneByApiKey(UuidInterface $api_key): ?PartnerEntity
     {
         return $this->findOneBy(['api_key' => $api_key]);
     }

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
+use RidiPay\Library\Crypto;
 use RidiPay\User\Domain\Exception\UnavailableCardPurposeException;
 
 /**
@@ -119,7 +120,7 @@ class CardEntity
 
     /**
      * @param PaymentMethodEntity $payment_method
-     * @param CardIssuerEntity $card_issuer,
+     * @param CardIssuerEntity $card_issuer
      * @param int $pg_id
      * @param string $pg_bill_key
      * @param string $card_number
@@ -137,9 +138,9 @@ class CardEntity
         $this->payment_method = $payment_method;
         $this->card_issuer = $card_issuer;
         $this->pg_id = $pg_id;
-        $this->pg_bill_key = $pg_bill_key; // TODO: 암호화
+        $this->setEncryptedPgBillKey($pg_bill_key);
         $this->hashed_card_number = self::hashCardNumber($card_number);
-        $this->iin = substr($card_number, 0, 6); // TODO: 암호화
+        $this->setEncryptedIin(substr($card_number, 0, 6));
         $this->setPurpose($purpose);
     }
 
@@ -161,10 +162,28 @@ class CardEntity
 
     /**
      * @return string
+     * @throws \Exception
      */
     public function getPgBillKey(): string
     {
-        return $this->pg_bill_key;
+        return Crypto::decrypt($this->pg_bill_key, self::getPgBillKeySecret());
+    }
+
+    /**
+     * @param string $pg_bill_key
+     * @throws \Exception
+     */
+    private function setEncryptedPgBillKey(string $pg_bill_key): void
+    {
+        $this->pg_bill_key = Crypto::encrypt($pg_bill_key, self::getPgBillKeySecret());
+    }
+
+    /**
+     * @return string
+     */
+    private static function getPgBillKeySecret(): string
+    {
+        return base64_decode(getenv('PG_BILL_KEY_SECRET'));
     }
 
     /**
@@ -187,10 +206,28 @@ class CardEntity
 
     /**
      * @return string
+     * @throws \Exception
      */
     public function getIin(): string
     {
-        return $this->iin;
+        return Crypto::decrypt($this->iin, self::getIinSecret());
+    }
+
+    /**
+     * @param string $iin
+     * @throws \Exception
+     */
+    private function setEncryptedIin(string $iin): void
+    {
+        $this->iin = Crypto::encrypt($iin, self::getIinSecret());
+    }
+
+    /**
+     * @return string
+     */
+    private static function getIinSecret(): string
+    {
+        return base64_decode(getenv('IIN_SECRET'));
     }
 
     /**
