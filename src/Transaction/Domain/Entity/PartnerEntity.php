@@ -3,6 +3,10 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Domain\Entity;
 
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
+use RidiPay\Library\Crypto;
+
 /**
  * @Table(name="partner", uniqueConstraints={@UniqueConstraint(name="uniq_name", columns={"name"}), @UniqueConstraint(name="uniq_api_key", columns={"api_key"})})
  * @Entity(repositoryClass="RidiPay\Transaction\Domain\Repository\PartnerRepository")
@@ -28,21 +32,21 @@ class PartnerEntity
     /**
      * @var string
      *
-     * @Column(name="password", type="string", length=255, nullable=false, options={"charset"="utf8mb4", "collation"="utf8mb4_unicode_ci", "comment"="가맹점 관리자 로그인 Password"})
+     * @Column(name="password", type="string", length=255, nullable=false, options={"comment"="가맹점 관리자 로그인 Password"})
      */
     private $password;
 
     /**
-     * @var string
+     * @var UuidInterface
      *
-     * @Column(name="api_key", type="string", length=255, nullable=false, options={"comment"="API 연동 Key"})
+     * @Column(name="api_key", type="uuid_binary", nullable=false, options={"comment"="API 연동 Key"})
      */
     private $api_key;
 
     /**
      * @var string
      *
-     * @Column(name="secret_key", type="string", length=255, nullable=false, options={"charset"="utf8mb4", "collation"="utf8mb4_unicode_ci", "comment"="API 연동 Secret Key"})
+     * @Column(name="secret_key", type="string", length=255, nullable=false, options={"comment"="API 연동 Secret Key"})
      */
     private $secret_key;
 
@@ -70,21 +74,18 @@ class PartnerEntity
     /**
      * @param string $name
      * @param string $password
-     * @param string $api_key
-     * @param string $secret_key
      * @param bool $is_first_party
+     * @throws \Exception
      */
     public function __construct(
         string $name,
         string $password,
-        string $api_key,
-        string $secret_key,
         bool $is_first_party
     ) {
         $this->name = $name;
-        $this->password = hash('sha256', $password);
-        $this->api_key = $api_key;
-        $this->secret_key = hash('sha256', $secret_key);
+        $this->password = self::hashPassword($password);
+        $this->api_key = Uuid::uuid4();
+        $this->setEncryptedSecretKey();
         $this->is_valid = true;
         $this->is_first_party = $is_first_party;
         $this->updated_at = new \DateTime();
@@ -104,15 +105,55 @@ class PartnerEntity
      */
     public function isValidPassword(string $password): bool
     {
-        return $this->password === hash('sha256', $password);
+        return $this->password === self::hashPassword($password);
+    }
+
+    /**
+     * @param string $password
+     * @return string
+     */
+    private static function hashPassword(string $password): string
+    {
+        return hash('sha256', $password);
+    }
+
+    /**
+     * @return UuidInterface
+     */
+    public function getApiKey(): UuidInterface
+    {
+        return $this->api_key;
     }
 
     /**
      * @param string $secret_key
      * @return bool
+     * @throws \Exception
      */
     public function isValidSecretKey(string $secret_key): bool
     {
-        return $this->secret_key === hash('sha256', $secret_key);
+        return $this->getSecretKey()->toString() === $secret_key;
+    }
+
+    /**
+     * @return UuidInterface
+     * @throws \Exception
+     */
+    public function getSecretKey(): UuidInterface
+    {
+        return Uuid::fromBytes(Crypto::decrypt($this->secret_key, self::getPartnerSecretKeySecret()));
+    }
+
+    private function setEncryptedSecretKey(): void
+    {
+        $this->secret_key = Crypto::encrypt(Uuid::uuid4()->getBytes(), self::getPartnerSecretKeySecret());
+    }
+
+    /**
+     * @return string
+     */
+    private static function getPartnerSecretKeySecret(): string
+    {
+        return base64_decode(getenv('PARTNER_SECRET_KEY_SECRET'));
     }
 }

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Application\Dto;
 
+use RidiPay\Transaction\Domain\Entity\PartnerEntity;
+
 class RegisterPartnerDto
 {
     /** @var string */
@@ -12,12 +14,12 @@ class RegisterPartnerDto
     public $secret_key;
 
     /**
-     * @param string $api_key
-     * @param string $secret_key
+     * @param PartnerEntity $partner
+     * @throws \Exception
      */
-    public function __construct(string $api_key, string $secret_key)
+    public function __construct(PartnerEntity $partner)
     {
-        $this->api_key = $api_key;
-        $this->secret_key = $secret_key;
+        $this->api_key = $partner->getApiKey()->toString();
+        $this->secret_key = $partner->getSecretKey()->toString();
     }
 }

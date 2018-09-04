@@ -28,13 +28,10 @@ class PartnerAppService
             throw new AlreadyRegisteredPartnerException();
         }
 
-        $api_key = Uuid::uuid4()->toString();
-        $secret_key = Uuid::uuid4()->toString();
-
-        $partner = new PartnerEntity($name, $password, $api_key, $secret_key, $is_first_party);
+        $partner = new PartnerEntity($name, $password, $is_first_party);
         PartnerRepository::getRepository()->save($partner, true);
 
-        return new RegisterPartnerDto($api_key, $secret_key);
+        return new RegisterPartnerDto($partner);
     }
 
     /**
@@ -46,7 +43,7 @@ class PartnerAppService
      */
     public static function validatePartner(string $api_key, string $secret_key): void
     {
-        $partner = PartnerRepository::getRepository()->findOneByApiKey($api_key);
+        $partner = PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($api_key));
         if (is_null($partner) || !$partner->isValidSecretKey($secret_key)) {
             throw new UnauthorizedPartnerException();
         }
@@ -60,7 +57,7 @@ class PartnerAppService
      */
     public static function getPartnerIdByApiKey(string $api_key): int
     {
-        $partner = PartnerRepository::getRepository()->findOneByApiKey($api_key);
+        $partner = PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($api_key));
 
         return $partner->getId();
     }
