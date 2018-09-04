@@ -1,23 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Tests\Action;
+namespace RidiPay\Tests\Controller;
 
-use AspectMock\Test as test;
-use Ridibooks\OAuth2\Constant\AccessTokenConstant;
-use RidiPay\Library\OAuth2\User\DefaultUserProvider;
-use RidiPay\Library\OAuth2\User\User;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
-class UpdatePinTest extends WebTestCase
+class UpdatePinTest extends ControllerTestCase
 {
-    private const U_ID = 'ridipay';
-
     /** @var Client */
     private static $client;
 
@@ -31,53 +23,34 @@ class UpdatePinTest extends WebTestCase
         self::$u_idx = TestUtil::getRandomUidx();
         UserAppService::createUserIfNotExists(self::$u_idx);
 
-        test::double(
-            DefaultUserProvider::class,
-            [
-                'getUser' => new User(json_encode([
-                    'result' => [
-                        'id' => self::U_ID,
-                        'idx' => self::$u_idx,
-                        'is_verified_adult' => true,
-                    ],
-                    'message' => '정상적으로 완료되었습니다.'
-                ]))
-            ]
-        );
-
-        $cookie = new Cookie(
-            AccessTokenConstant::ACCESS_TOKEN_COOKIE_KEY,
-            getenv('OAUTH2_ACCESS_TOKEN')
-        );
-        self::$client = static::createClient();
-        self::$client->getCookieJar()->set($cookie);
+        self::$client = self::createClientWithOAuth2AccessToken();
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
     }
 
     public static function tearDownAfterClass()
     {
-        test::clean(DefaultUserProvider::class);
-
+        TestUtil::tearDownOAuth2Doubles();
         TestUtil::tearDownDatabaseDoubles();
     }
 
     public function testUpdateValidPin()
     {
         $body = json_encode(['pin' => self::getValidPin()]);
-        self::$client->request('PUT', '/users/' . self::U_ID . '/pin', [], [], [], $body);
+        self::$client->request('PUT', '/users/' . TestUtil::U_ID . '/pin', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
     }
 
     public function testPreventUpdatingInvalidPinWithShortLength()
     {
         $body = json_encode(['pin' => self::getInvalidPinWithShortLength()]);
-        self::$client->request('PUT', '/users/' . self::U_ID . '/pin', [], [], [], $body);
+        self::$client->request('PUT', '/users/' . TestUtil::U_ID . '/pin', [], [], [], $body);
         $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
     }
 
     public function testPreventUpdatingInvalidPinIncludingUnsupportedCharacters()
     {
         $body = json_encode(['pin' => self::getInvalidPinIncludingUnsupportedCharacters()]);
-        self::$client->request('PUT', '/users/' . self::U_ID . '/pin', [], [], [], $body);
+        self::$client->request('PUT', '/users/' . TestUtil::U_ID . '/pin', [], [], [], $body);
         $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
     }
 

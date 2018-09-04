@@ -4,15 +4,14 @@ declare(strict_types=1);
 namespace RidiPay\Tests;
 
 use AspectMock\Test as test;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\DriverManager;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\SchemaTool;
-use Doctrine\ORM\Tools\Setup;
-use Ridibooks\Library\AdaptableCache;
+use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use Ridibooks\Payment\Kcp\Company;
 use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\Jwt\JwtMiddleware;
+use RidiPay\Library\OAuth2\User\DefaultUserProvider;
+use RidiPay\Library\OAuth2\User\User;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Domain\Entity\PartnerEntity;
 use RidiPay\Pg\Domain\Entity\PgEntity;
@@ -27,11 +26,7 @@ use RidiPay\User\Domain\Entity\UserEntity;
 
 class TestUtil
 {
-    /** @var Connection */
-    private static $conn = null;
-
-    /** @var EntityManager */
-    private static $em = null;
+    public const U_ID = 'ridipay';
 
     /**
      * @throws UnsupportedPgException
@@ -42,11 +37,13 @@ class TestUtil
      */
     public static function prepareDatabaseFixture()
     {
-        $conn = self::getConnection();
+        self::setUpDatabaseDoubles();
+
+        $conn = ConnectionProvider::getConnection();
         $conn->getSchemaManager()->dropAndCreateDatabase($conn->getDatabase());
         $conn->close();
 
-        $em = self::getEntityManager();
+        $em = EntityManagerProvider::getEntityManager();
         $schemaTool = new SchemaTool($em);
 
         $classes = array_map(
@@ -80,65 +77,64 @@ class TestUtil
             $em->persist($card_issuer);
         }
         $em->flush();
+
+        self::tearDownDatabaseDoubles();
     }
 
     /**
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
-    public static function setUpDatabaseDoubles()
+    public static function setUpDatabaseDoubles(): void
     {
         test::double(
             ConnectionProvider::class,
-            ['getConnection' => self::getConnection()]
+            ['getConnectionParams' => ['url' => \getenv('PHPUNIT_DATABASE_URL')]]
         );
+    }
 
+    public static function tearDownDatabaseDoubles(): void
+    {
+        test::clean(ConnectionProvider::class);
+    }
+
+    /**
+     * @param int $u_idx
+     * @param string $u_id
+     * @throws AuthorizationException
+     */
+    public static function setUpOAuth2Doubles(int $u_idx, string $u_id): void
+    {
         test::double(
-            EntityManagerProvider::class,
-            ['getEntityManager' => self::getEntityManager()]
+            DefaultUserProvider::class,
+            [
+                'getUser' => new User(json_encode([
+                    'result' => [
+                        'id' => $u_id,
+                        'idx' => $u_idx,
+                        'is_verified_adult' => true,
+                    ],
+                    'message' => '정상적으로 완료되었습니다.'
+                ]))
+            ]
         );
     }
 
-    public static function tearDownDatabaseDoubles()
+    public static function tearDownOAuth2Doubles(): void
     {
-        test::clean();
+        test::clean(DefaultUserProvider::class);
     }
 
     /**
-     * @return EntityManager
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
-    public static function getEntityManager(): EntityManager
+    public static function setUpJwtDoubles(): void
     {
-        if (self::$em === null || !self::$em->isOpen()) {
-            $config = Setup::createAnnotationMetadataConfiguration(
-                [__DIR__ . "/../../src"]
-            );
-            self::$em = EntityManager::create(self::getConnection(), $config);
-            $platform = self::$em->getConnection()->getDatabasePlatform();
-            $platform->registerDoctrineTypeMapping('enum', 'string');
-            $platform->registerDoctrineTypeMapping('bit', 'integer');
-        }
-
-        return self::$em;
+        test::double(JwtMiddleware::class, ['authorize' => null]);
     }
 
-    /**
-     * @return Connection
-     * @throws \Doctrine\DBAL\DBALException
-     */
-    public static function getConnection(): Connection
+    public static function tearDownJwtDoubles(): void
     {
-        if (self::$conn === null || !self::$conn->isConnected()) {
-            self::$conn = DriverManager::getConnection([
-                'url' => \getenv('PHPUNIT_DATABASE_URL')
-            ]);
-            self::$conn->setFetchMode(\PDO::FETCH_OBJ);
-            self::$conn->getConfiguration()->setResultCacheImpl(new AdaptableCache());
-        }
-
-        return self::$conn;
+        test::double(JwtMiddleware::class);
     }
 
     /**

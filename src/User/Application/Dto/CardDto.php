@@ -15,6 +15,7 @@ class CardDto extends PaymentMethodDto
 
     /**
      * @param CardEntity $card
+     * @throws \Exception
      */
     public function __construct(CardEntity $card)
     {
