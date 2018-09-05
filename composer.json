@@ -11,9 +11,8 @@
     ],
     "require": {
         "php": "^7.2",
-        "ext-ctype": "*",
-        "ext-iconv": "*",
         "ext-json": "*",
+        "ext-sodium": "*",
         "doctrine/dbal": "^2.8",
         "doctrine/orm": "^2.6",
         "firebase/php-jwt": "^5.0",
