@@ -41,6 +41,8 @@ phpunit:
   variables:
     MYSQL_DATABASE: ridi_pay
     MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    PHPUNIT_DATABASE_URL: mysql://root@mariadb/ridi_pay
+    REDIS_HOST: redis
   script:
     - composer install
     - vendor/bin/phpunit --colors=never
