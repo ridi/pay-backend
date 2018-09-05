@@ -1,18 +1,17 @@
-FROM ubuntu:xenial
+FROM ubuntu:bionic
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 # 카카오 미러 서버로 저장소 변경
 RUN sed -i -e "s/\/\/archive\.ubuntu/\/\/mirror\.kakao/" /etc/apt/sources.list
 
-RUN apt-get update --fix-missing && apt-get install -y \
+RUN apt-get update --fix-missing && apt-get install --no-install-recommends -y \
     software-properties-common \
     gettext-base \
     python3-pip \
-    jq
-
-RUN LC_ALL=C.UTF-8 apt-add-repository -y ppa:ondrej/php
-
-RUN apt-get update --fix-missing && apt-get install -y \
-    apache2 \
+    python3-setuptools \
+    python3-wheel \
+    jq \
     php7.2 \
     php7.2-cli \
     php7.2-curl \
@@ -22,6 +21,7 @@ RUN apt-get update --fix-missing && apt-get install -y \
     php7.2-zip \
     php7.2-xml \
     php7.2-xdebug \
+    apache2 \
     libapache2-mod-php7.2
 RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache2/php.ini && \
     sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/cli/php.ini
