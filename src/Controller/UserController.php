@@ -3,7 +3,8 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
-use RidiPay\Library\Jwt\Annotation\Jwt;
+use RidiPay\Library\Jwt\Annotation\JwtAuth;
+use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
@@ -26,7 +27,8 @@ class UserController extends Controller
     /**
      * @Route("/users/{u_id}/payment-methods", methods={"GET"})
      * @OAuth2()
-     * @Jwt()
+     * @JwtAuth()
+     *
      * @param string $u_id
      * @return JsonResponse
      */
@@ -49,7 +51,9 @@ class UserController extends Controller
 
     /**
      * @Route("/users/{u_id}/pin", methods={"PUT"})
+     * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
@@ -63,14 +67,8 @@ class UserController extends Controller
             return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $body = json_decode($request->getContent());
-        if (is_null($body)
-            || !property_exists($body, 'pin')
-        ) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
-        }
-
         try {
+            $body = json_decode($request->getContent());
             UserAppService::updatePin($u_idx, $body->pin);
         } catch (UnregisteredUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
@@ -85,7 +83,9 @@ class UserController extends Controller
 
     /**
      * @Route("/users/{u_id}/pin/validate", methods={"POST"})
+     * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
@@ -99,14 +99,8 @@ class UserController extends Controller
             return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $body = json_decode($request->getContent());
-        if (is_null($body)
-            || !property_exists($body, 'pin')
-        ) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
-        }
-
         try {
+            $body = json_decode($request->getContent());
             UserAppService::validatePin($u_idx, $body->pin);
         } catch (UnregisteredUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
@@ -123,7 +117,9 @@ class UserController extends Controller
 
     /**
      * @Route("/users/{u_id}/password/validate", methods={"POST"})
+     * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
@@ -137,14 +133,8 @@ class UserController extends Controller
             return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $body = json_decode($request->getContent());
-        if (is_null($body)
-            || !property_exists($body, 'password')
-        ) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
-        }
-
         try {
+            $body = json_decode($request->getContent());
             UserAppService::validatePassword($u_idx, $body->password);
         } catch (UnregisteredUserException | LeavedUserException $e) {
             return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
@@ -161,7 +151,9 @@ class UserController extends Controller
 
     /**
      * @Route("/users/{u_id}/onetouch", methods={"PUT"})
+     * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
@@ -175,14 +167,8 @@ class UserController extends Controller
             return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $body = json_decode($request->getContent());
-        if (is_null($body)
-            || !property_exists($body, 'enable_onetouch_pay')
-        ) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
-        }
-
         try {
+            $body = json_decode($request->getContent());
             if ($body->enable_onetouch_pay) {
                 UserAppService::enableOnetouchPay($u_idx);
             } else {
