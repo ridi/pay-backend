@@ -17,12 +17,3 @@ services:
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
       - .:/app
-  mariadb:
-    image: mariadb:10.3
-    container_name: mariadb
-    environment:
-      - MYSQL_DATABASE=ridi_pay
-      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-  redis:
-    image: redis:latest
-    container_name: redis
