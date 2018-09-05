@@ -28,6 +28,7 @@
         "symfony/flex": "^1.0",
         "symfony/framework-bundle": "^4.1",
         "symfony/lts": "^4@dev",
+        "symfony/validator": "^4.1",
         "symfony/yaml": "^4.1"
     },
     "require-dev": {

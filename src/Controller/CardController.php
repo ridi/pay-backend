@@ -5,6 +5,7 @@ namespace RidiPay\Controller;
 
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
+use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\User\Domain\Exception\AlreadyHadCardException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\UnregisteredUserException;
@@ -20,7 +21,14 @@ class CardController extends Controller
 {
     /**
      * @Route("/users/{u_id}/cards", methods={"POST"})
+     * @ParamValidator(
+     *     {"param"="card_number", "constraints"={{"Regex"="/\d{13,16}/"}}},
+     *     {"param"="card_expiration_date", "constraints"={{"Regex"="/\d{2}(0[1-9]|1[0-2])/"}}},
+     *     {"param"="card_password", "constraints"={{"Regex"="/\d{2}/"}}},
+     *     {"param"="tax_id", "constraints"={{"Regex"="/(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}/"}}}
+     * )
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $u_id
      * @return JsonResponse
@@ -34,17 +42,8 @@ class CardController extends Controller
             return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $body = json_decode($request->getContent());
-        if (is_null($body)
-            || !property_exists($body, 'card_number')
-            || !property_exists($body, 'card_expiration_date')
-            || !property_exists($body, 'card_password')
-            || !property_exists($body, 'tax_id')
-        ) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
-        }
-
         try {
+            $body = json_decode($request->getContent());
             CardAppService::registerCard(
                 $u_idx,
                 $body->card_number,
@@ -64,6 +63,7 @@ class CardController extends Controller
     /**
      * @Route("/users/{u_id}/cards/{payment_method_id}", methods={"DELETE"})
      * @OAuth2()
+     *
      * @param string $u_id
      * @param string $payment_method_id
      * @return JsonResponse

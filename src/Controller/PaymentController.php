@@ -5,6 +5,7 @@ namespace RidiPay\Controller;
 
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
+use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,7 +17,15 @@ class PaymentController extends Controller
 {
     /**
      * @Route("/payments/reserve", methods={"POST"})
+     * @ParamValidator(
+     *     {"param"="payment_method_id", "constraints"={"Uuid"}},
+     *     {"param"="partner_transaction_id", "constraints"={"Uuid"}},
+     *     {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
+     *     {"param"="return_url", "constraints"={"Url"}}
+     * )
      * @OAuth2()
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -33,18 +42,8 @@ class PaymentController extends Controller
             return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
         }
 
-        $body = json_decode($request->getContent());
-        if (is_null($body)
-            || !property_exists($body, 'payment_method_id')
-            || !property_exists($body, 'partner_transaction_id')
-            || !property_exists($body, 'product_name')
-            || !property_exists($body, 'amount')
-            || !property_exists($body, 'return_url')
-        ) {
-            return new JsonResponse(['message' => 'Invalid request'], Response::HTTP_BAD_REQUEST);
-        }
-
         try {
+            $body = json_decode($request->getContent());
             $reservation_id = TransactionAppService::reserveTransaction(
                 $partner_api_key,
                 $partner_secret_key,
@@ -65,6 +64,7 @@ class PaymentController extends Controller
     /**
      * @Route("/payments/{reservation_id}", methods={"POST"})
      * @OAuth2()
+     *
      * @param string $reservation_id
      * @return JsonResponse
      */
@@ -88,6 +88,7 @@ class PaymentController extends Controller
     /**
      * @Route("/payments/{transaction_id}/approve", methods={"POST"})
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $transaction_id
      * @return JsonResponse
@@ -122,6 +123,7 @@ class PaymentController extends Controller
     /**
      * @Route("/payments/{transaction_id}/cancel", methods={"POST"})
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $transaction_id
      * @return JsonResponse
@@ -156,6 +158,7 @@ class PaymentController extends Controller
     /**
      * @Route("/payments/{transaction_id}/status", methods={"GET"})
      * @OAuth2()
+     *
      * @param Request $request
      * @param string $transaction_id
      * @return JsonResponse

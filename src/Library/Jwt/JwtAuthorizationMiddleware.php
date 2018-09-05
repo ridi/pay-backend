@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Library\Jwt;
 
 use Doctrine\Common\Annotations\CachedReader;
-use RidiPay\Library\Jwt\Annotation\Jwt;
+use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-class JwtMiddleware implements EventSubscriberInterface
+class JwtAuthorizationMiddleware implements EventSubscriberInterface
 {
     /** @var CachedReader */
     private $annotation_reader;
@@ -45,7 +45,7 @@ class JwtMiddleware implements EventSubscriberInterface
         }
 
         [$controller, $method_name] = $event->getController();
-        if (!$this->isJwtAnnotated($controller, $method_name)) {
+        if (!$this->isJwtAuthAnnotated($controller, $method_name)) {
             return;
         }
 
@@ -81,21 +81,21 @@ class JwtMiddleware implements EventSubscriberInterface
      * @param string $method_name
      * @return bool
      */
-    private function isJwtAnnotated($controller, string $method_name): bool
+    private function isJwtAuthAnnotated($controller, string $method_name): bool
     {
-        return $this->isJwtAnnotatedOnClass($controller)
-            || $this->isJwtAnnotatedOnMethod($controller, $method_name);
+        return $this->isJwtAuthAnnotatedOnClass($controller)
+            || $this->isJwtAuthAnnotatedOnMethod($controller, $method_name);
     }
 
     /**
      * @param $controller
      * @return bool
      */
-    private function isJwtAnnotatedOnClass($controller): bool
+    private function isJwtAuthAnnotatedOnClass($controller): bool
     {
         $reflection_class = new \ReflectionClass($controller);
 
-        return !is_null($this->annotation_reader->getClassAnnotation($reflection_class, Jwt::class));
+        return !is_null($this->annotation_reader->getClassAnnotation($reflection_class, JwtAuth::class));
     }
 
     /**
@@ -103,11 +103,11 @@ class JwtMiddleware implements EventSubscriberInterface
      * @param $method_name
      * @return bool
      */
-    private function isJwtAnnotatedOnMethod($controller, string $method_name): bool
+    private function isJwtAuthAnnotatedOnMethod($controller, string $method_name): bool
     {
         $reflectionObject = new \ReflectionObject($controller);
         $reflectionMethod = $reflectionObject->getMethod($method_name);
 
-        return !is_null($this->annotation_reader->getMethodAnnotation($reflectionMethod, Jwt::class));
+        return !is_null($this->annotation_reader->getMethodAnnotation($reflectionMethod, JwtAuth::class));
     }
 }

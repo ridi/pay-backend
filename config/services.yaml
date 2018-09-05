@@ -23,10 +23,13 @@ services:
         arguments:
             - '@RidiPay\Library\OAuth2\OAuth2Manager'
             - '@annotation_reader'
-        public: true
 
-    RidiPay\Library\Jwt\JwtMiddleware:
-        class: RidiPay\Library\Jwt\JwtMiddleware
+    RidiPay\Library\Jwt\JwtAuthorizationMiddleware:
+        class: RidiPay\Library\Jwt\JwtAuthorizationMiddleware
         arguments:
             - '@annotation_reader'
-        public: true
+
+    RidiPay\Library\Validation\ParameterValidationMiddleware:
+        class: RidiPay\Library\Validation\ParameterValidationMiddleware
+        arguments:
+            - '@annotation_reader'

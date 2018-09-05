@@ -9,7 +9,7 @@ use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use Ridibooks\Payment\Kcp\Company;
 use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Library\Jwt\JwtMiddleware;
+use RidiPay\Library\Jwt\JwtAuthorizationMiddleware;
 use RidiPay\Library\OAuth2\User\DefaultUserProvider;
 use RidiPay\Library\OAuth2\User\User;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
@@ -129,12 +129,12 @@ class TestUtil
      */
     public static function setUpJwtDoubles(): void
     {
-        test::double(JwtMiddleware::class, ['authorize' => null]);
+        test::double(JwtAuthorizationMiddleware::class, ['authorize' => null]);
     }
 
     public static function tearDownJwtDoubles(): void
     {
-        test::double(JwtMiddleware::class);
+        test::double(JwtAuthorizationMiddleware::class);
     }
 
     /**

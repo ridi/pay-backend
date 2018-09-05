@@ -83,7 +83,7 @@ class OAuth2Middleware implements EventSubscriberInterface
      */
     private function isOAuth2Annotated($controller, string $method_name): bool
     {
-        return $this->isOauth2AnnotatedOnClass($controller)
+        return $this->isOAuth2AnnotatedOnClass($controller)
             || $this->isOAuth2AnnotatedOnMethod($controller, $method_name);
     }
 
@@ -91,7 +91,7 @@ class OAuth2Middleware implements EventSubscriberInterface
      * @param $controller
      * @return bool
      */
-    private function isOauth2AnnotatedOnClass($controller): bool
+    private function isOAuth2AnnotatedOnClass($controller): bool
     {
         $reflection_class = new \ReflectionClass($controller);
 
