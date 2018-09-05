@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Library\Validation;
 
-use Doctrine\Common\Annotations\CachedReader;;
+use Doctrine\Common\Annotations\CachedReader;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
