@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use RidiPay\Library\OAuth2\OAuth2Manager;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -40,5 +41,27 @@ abstract class BaseController extends Controller
         }
 
         return new JsonResponse(['message' => $message], $status_code, $headers);
+    }
+
+    /**
+     * @return int
+     */
+    protected function getUidx(): int
+    {
+        /** @var OAuth2Manager $oauth2_manager */
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+
+        return $oauth2_manager->getUser()->getUidx();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getUid(): string
+    {
+        /** @var OAuth2Manager $oauth2_manager */
+        $oauth2_manager = $this->container->get(OAuth2Manager::class);
+
+        return $oauth2_manager->getUser()->getUid();
     }
 }

@@ -7,7 +7,6 @@ use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
-use RidiPay\Library\OAuth2\OAuth2Manager;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\UnregisteredUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingException;
@@ -33,14 +32,12 @@ class UserController extends BaseController
      */
     public function getPaymentMethods(string $u_id): JsonResponse
     {
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+        if ($u_id !== $this->getUid()) {
             return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
-            $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+            $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx());
         } catch (\Throwable $t) {
             return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -59,16 +56,13 @@ class UserController extends BaseController
      */
     public function updatePin(Request $request, string $u_id)
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+        if ($u_id !== $this->getUid()) {
             return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $body = json_decode($request->getContent());
-            UserAppService::updatePin($u_idx, $body->pin);
+            UserAppService::updatePin($this->getUidx(), $body->pin);
         } catch (UnregisteredUserException | LeavedUserException $e) {
             return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (WrongPinException $e) {
@@ -91,16 +85,13 @@ class UserController extends BaseController
      */
     public function validatePin(Request $request, string $u_id)
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+        if ($u_id !== $this->getUid()) {
             return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $body = json_decode($request->getContent());
-            UserAppService::validatePin($u_idx, $body->pin);
+            UserAppService::validatePin($this->getUidx(), $body->pin);
         } catch (UnregisteredUserException | LeavedUserException $e) {
             return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (UnmatchedPinException $e) {
@@ -125,16 +116,13 @@ class UserController extends BaseController
      */
     public function validatePassword(Request $request, string $u_id)
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+        if ($u_id !== $this->getUid()) {
             return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $body = json_decode($request->getContent());
-            UserAppService::validatePassword($u_idx, $u_id, $body->password);
+            UserAppService::validatePassword($this->getUidx(), $u_id, $body->password);
         } catch (UnregisteredUserException | LeavedUserException $e) {
             return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (UnmatchedPasswordException $e) {
@@ -159,14 +147,12 @@ class UserController extends BaseController
      */
     public function updateOnetouchPay(Request $request, string $u_id)
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+        if ($u_id !== $this->getUid()) {
             return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
+            $u_idx = $this->getUidx();
             $body = json_decode($request->getContent());
             if ($body->enable_onetouch_pay) {
                 UserAppService::enableOnetouchPay($u_idx);

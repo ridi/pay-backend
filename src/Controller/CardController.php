@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
-use RidiPay\Library\OAuth2\OAuth2Manager;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\User\Domain\Exception\AlreadyHadCardException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -34,17 +33,14 @@ class CardController extends BaseController
      */
     public function registerCard(Request $request, string $u_id): JsonResponse
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+        if ($u_id !== $this->getUid()) {
             return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $body = json_decode($request->getContent());
             CardAppService::registerCard(
-                $u_idx,
+                $this->getUidx(),
                 $body->card_number,
                 $body->card_expiration_date,
                 $body->card_password,
@@ -69,15 +65,12 @@ class CardController extends BaseController
      */
     public function deleteCard(string $u_id, string $payment_method_id): JsonResponse
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-        if ($u_id !== $oauth2_manager->getUser()->getUid()) {
+        if ($u_id !== $this->getUid()) {
             return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
-            CardAppService::deleteCard($u_idx, $payment_method_id);
+            CardAppService::deleteCard($this->getUidx(), $payment_method_id);
         } catch (UnregisteredUserException | LeavedUserException | UnregisteredPaymentMethodException $e) {
             return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (\Throwable $t) {
