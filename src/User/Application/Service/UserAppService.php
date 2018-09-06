@@ -83,7 +83,8 @@ class UserAppService
 
     /**
      * @param int $u_idx
-     * @param string $pin
+     * @param string $u_id
+     * @param string $password
      * @throws LeavedUserException
      * @throws UnregisteredUserException
      * @throws PasswordEntryBlockedException
@@ -91,11 +92,11 @@ class UserAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function validatePassword(int $u_idx, string $pin): void
+    public static function validatePassword(int $u_idx, string $u_id, string $password): void
     {
         $user = UserService::getActiveUser($u_idx);
 
-        if (!$user->isPasswordMatched($pin)) {
+        if (!$user->isPasswordMatched($u_id, $password)) {
             $policy = new PasswordEntryAbuseBlockPolicy();
             $abuse_blocker = new AbuseBlocker($policy, $u_idx);
 

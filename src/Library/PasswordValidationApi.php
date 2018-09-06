@@ -13,14 +13,18 @@ class PasswordValidationApi
     private const API_TIME_OUT = 5;
 
     /**
+     * @param string $u_id
      * @param string $password
      * @return bool
      * @throws \Exception
      */
-    public static function isPasswordMatched(string $password): bool
+    public static function isPasswordMatched(string $u_id, string $password): bool
     {
         $client = self::createClient();
-        $data = ['password' => $password];
+        $data = [
+            'u_id' => $u_id,
+            'password' => $password
+        ];
         $headers = JwtAuthorizationHelper::getAuthorizationHeader(
             JwtAuthorizationServiceNameConstant::RIDI_PAY,
             JwtAuthorizationServiceNameConstant::STORE
@@ -28,7 +32,7 @@ class PasswordValidationApi
 
         try {
             $client->post(
-                '/api/account/password/validate',
+                '/api/account/is-loginable',
                 [
                     'json' => $data,
                     'headers' => $headers

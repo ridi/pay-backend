@@ -107,13 +107,14 @@ class UserEntity
     }
 
     /**
+     * @param string $u_id
      * @param string $password
      * @return bool
      * @throws \Exception
      */
-    public function isPasswordMatched(string $password): bool
+    public function isPasswordMatched(string $u_id, string $password): bool
     {
-        return PasswordValidationApi::isPasswordMatched($password);
+        return PasswordValidationApi::isPasswordMatched($u_id, $password);
     }
 
     /**
