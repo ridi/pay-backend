@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
-use RidiPay\Library\OAuth2\OAuth2Manager;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,10 +29,6 @@ class PaymentController extends BaseController
      */
     public function reservePayment(Request $request): JsonResponse
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
@@ -45,7 +40,7 @@ class PaymentController extends BaseController
             $reservation_id = TransactionAppService::reserveTransaction(
                 $partner_api_key,
                 $partner_secret_key,
-                $u_idx,
+                $this->getUidx(),
                 $body->payment_method_id,
                 $body->partner_transaction_id,
                 $body->product_name,
@@ -68,12 +63,8 @@ class PaymentController extends BaseController
      */
     public function createPayment(string $reservation_id): JsonResponse
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-
         try {
-            $result = TransactionAppService::createTransaction($u_idx, $reservation_id);
+            $result = TransactionAppService::createTransaction($this->getUidx(), $reservation_id);
         } catch (\Throwable $t) {
             return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -93,10 +84,6 @@ class PaymentController extends BaseController
      */
     public function approvePayment(Request $request, string $transaction_id): JsonResponse
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
@@ -107,7 +94,7 @@ class PaymentController extends BaseController
             $result = TransactionAppService::approveTransaction(
                 $partner_api_key,
                 $partner_secret_key,
-                $u_idx,
+                $this->getUidx(),
                 $transaction_id
             );
         } catch (\Throwable $t) {
@@ -134,10 +121,6 @@ class PaymentController extends BaseController
      */
     public function cancelPayment(Request $request, string $transaction_id): JsonResponse
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
@@ -148,7 +131,7 @@ class PaymentController extends BaseController
             $result = TransactionAppService::cancelTransaction(
                 $partner_api_key,
                 $partner_secret_key,
-                $u_idx,
+                $this->getUidx(),
                 $transaction_id
             );
         } catch (\Throwable $t) {
@@ -176,10 +159,6 @@ class PaymentController extends BaseController
      */
     public function getPaymentStatus(Request $request, string $transaction_id): JsonResponse
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-        $u_idx = $oauth2_manager->getUser()->getUidx();
-
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
@@ -190,7 +169,7 @@ class PaymentController extends BaseController
             $result = TransactionAppService::getTransactionStatus(
                 $partner_api_key,
                 $partner_secret_key,
-                $u_idx,
+                $this->getUidx(),
                 $transaction_id
             );
         } catch (\Throwable $t) {
