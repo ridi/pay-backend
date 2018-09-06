@@ -160,7 +160,7 @@ class OneTimePaymentTest extends ControllerTestCase
         );
 
         // 계정 비밀번호 인증
-        UserAppService::validatePassword(self::$u_idx, 'abcde@12345');
+        UserAppService::validatePassword(self::$u_idx, 'test', 'abcde@12345');
 
         // 결제 생성
         $this->assertCreatePaymentSuccessfully(self::$reservation_id, $partner_transaction_id, $product_name, $amount);
