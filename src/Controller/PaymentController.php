@@ -5,6 +5,8 @@ namespace RidiPay\Controller;
 
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
+use RidiPay\Library\Validation\ApiSecretValidationException;
+use RidiPay\Library\Validation\ApiSecretValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,17 +31,13 @@ class PaymentController extends BaseController
      */
     public function reservePayment(Request $request): JsonResponse
     {
-        $partner_api_key = $request->headers->get('Api-Key');
-        $partner_secret_key = $request->headers->get('Secret-Key');
-        if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
-        }
-
         try {
+            ApiSecretValidator::validate($request);
+
             $body = json_decode($request->getContent());
             $reservation_id = TransactionAppService::reserveTransaction(
-                $partner_api_key,
-                $partner_secret_key,
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
                 $this->getUidx(),
                 $body->payment_method_id,
                 $body->partner_transaction_id,
@@ -47,6 +45,8 @@ class PaymentController extends BaseController
                 intval($body->amount),
                 $body->return_url
             );
+        } catch (ApiSecretValidationException $e) {
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         } catch (\Throwable $t) {
             return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -84,19 +84,17 @@ class PaymentController extends BaseController
      */
     public function approvePayment(Request $request, string $transaction_id): JsonResponse
     {
-        $partner_api_key = $request->headers->get('Api-Key');
-        $partner_secret_key = $request->headers->get('Secret-Key');
-        if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
-        }
-
         try {
+            ApiSecretValidator::validate($request);
+
             $result = TransactionAppService::approveTransaction(
-                $partner_api_key,
-                $partner_secret_key,
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
                 $this->getUidx(),
                 $transaction_id
             );
+        } catch (ApiSecretValidationException $e) {
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         } catch (\Throwable $t) {
             return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -121,19 +119,17 @@ class PaymentController extends BaseController
      */
     public function cancelPayment(Request $request, string $transaction_id): JsonResponse
     {
-        $partner_api_key = $request->headers->get('Api-Key');
-        $partner_secret_key = $request->headers->get('Secret-Key');
-        if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
-        }
-
         try {
+            ApiSecretValidator::validate($request);
+
             $result = TransactionAppService::cancelTransaction(
-                $partner_api_key,
-                $partner_secret_key,
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
                 $this->getUidx(),
                 $transaction_id
             );
+        } catch (ApiSecretValidationException $e) {
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         } catch (\Throwable $t) {
             return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -159,19 +155,17 @@ class PaymentController extends BaseController
      */
     public function getPaymentStatus(Request $request, string $transaction_id): JsonResponse
     {
-        $partner_api_key = $request->headers->get('Api-Key');
-        $partner_secret_key = $request->headers->get('Secret-Key');
-        if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
-        }
-
         try {
+            ApiSecretValidator::validate($request);
+
             $result = TransactionAppService::getTransactionStatus(
-                $partner_api_key,
-                $partner_secret_key,
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
                 $this->getUidx(),
                 $transaction_id
             );
+        } catch (ApiSecretValidationException $e) {
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         } catch (\Throwable $t) {
             return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
