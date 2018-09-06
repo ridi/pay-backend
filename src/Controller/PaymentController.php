@@ -7,13 +7,12 @@ use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\OAuth2\OAuth2Manager;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class PaymentController extends Controller
+class PaymentController extends BaseController
 {
     /**
      * @Route("/payments/reserve", methods={"POST"})
@@ -37,9 +36,8 @@ class PaymentController extends Controller
 
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
-
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -55,10 +53,10 @@ class PaymentController extends Controller
                 $body->return_url
             );
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['reservation_id' => $reservation_id]);
+        return self::createSuccessResponse(['reservation_id' => $reservation_id]);
     }
 
     /**
@@ -77,10 +75,10 @@ class PaymentController extends Controller
         try {
             $result = TransactionAppService::createTransaction($u_idx, $reservation_id);
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse([
+        return self::createSuccessResponse([
             'return_url' => $result->return_url . '?' . http_build_query(['transaction_id' => $result->transaction_id])
         ]);
     }
@@ -101,9 +99,8 @@ class PaymentController extends Controller
 
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
-
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -114,10 +111,17 @@ class PaymentController extends Controller
                 $transaction_id
             );
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(json_encode($result), Response::HTTP_OK, [], true);
+        return self::createSuccessResponse([
+            'transaction_id' => $result->transaction_id,
+            'partner_transaction_id' => $result->partner_transaction_id,
+            'product_name' => $result->product_name,
+            'amount' => $result->amount,
+            'reserved_at' => $result->reserved_at->format(DATE_ATOM),
+            'approved_at' => $result->approved_at->format(DATE_ATOM)
+        ]);
     }
 
     /**
@@ -136,9 +140,8 @@ class PaymentController extends Controller
 
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
-
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -149,10 +152,18 @@ class PaymentController extends Controller
                 $transaction_id
             );
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(json_encode($result), Response::HTTP_OK, [], true);
+        return self::createSuccessResponse([
+            'transaction_id' => $result->transaction_id,
+            'partner_transaction_id' => $result->partner_transaction_id,
+            'product_name' => $result->product_name,
+            'amount' => $result->amount,
+            'reserved_at' => $result->reserved_at->format(DATE_ATOM),
+            'approved_at' => $result->approved_at->format(DATE_ATOM),
+            'canceled_at' => $result->canceled_at->format(DATE_ATOM)
+        ]);
     }
 
     /**
@@ -171,9 +182,8 @@ class PaymentController extends Controller
 
         $partner_api_key = $request->headers->get('Api-Key');
         $partner_secret_key = $request->headers->get('Secret-Key');
-
         if (is_null($partner_api_key) || is_null($partner_secret_key)) {
-            return new JsonResponse(['message' => "API Credentials don't exist"], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -184,9 +194,27 @@ class PaymentController extends Controller
                 $transaction_id
             );
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(json_encode($result), Response::HTTP_OK, [], true);
+        $data = [
+            'transaction_id' => $result->transaction_id,
+            'partner_transaction_id' => $result->partner_transaction_id,
+            'status' => $result->status,
+            'product_name' => $result->product_name,
+            'amount' => $result->amount,
+            'reserved_at' => $result->reserved_at->format(DATE_ATOM)
+        ];
+        if (!is_null($result->approved_at)) {
+            $data['approved_at'] = $result->approved_at->format(DATE_ATOM);
+        }
+        if (!is_null($result->canceled_at)) {
+            $data['canceled_at'] = $result->canceled_at->format(DATE_ATOM);
+        }
+        if (!is_null($result->card_receipt_url)) {
+            $data['card_receipt_url'] = $result->card_receipt_url;
+        }
+
+        return self::createSuccessResponse($data);
     }
 }

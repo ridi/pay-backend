@@ -16,13 +16,12 @@ use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\WrongPinException;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class UserController extends Controller
+class UserController extends BaseController
 {
     /**
      * @Route("/users/{u_id}/payment-methods", methods={"GET"})
@@ -37,16 +36,16 @@ class UserController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-        } catch (\Exception $e) {
-            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse(['payment_methods' => $payment_methods]);
+        return self::createSuccessResponse(['payment_methods' => $payment_methods]);
     }
 
     /**
@@ -64,21 +63,21 @@ class UserController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $body = json_decode($request->getContent());
             UserAppService::updatePin($u_idx, $body->pin);
         } catch (UnregisteredUserException | LeavedUserException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (WrongPinException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            return self::createErrorResponse(Response::HTTP_BAD_REQUEST, $e->getMessage());
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 
     /**
@@ -96,23 +95,23 @@ class UserController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $body = json_decode($request->getContent());
             UserAppService::validatePin($u_idx, $body->pin);
         } catch (UnregisteredUserException | LeavedUserException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (UnmatchedPinException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            return self::createErrorResponse(Response::HTTP_BAD_REQUEST, $e->getMessage());
         } catch (PasswordEntryBlockedException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
-        } catch (\Exception $e) {
-            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_FORBIDDEN, $e->getMessage());
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 
     /**
@@ -130,23 +129,23 @@ class UserController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             $body = json_decode($request->getContent());
             UserAppService::validatePassword($u_idx, $u_id, $body->password);
         } catch (UnregisteredUserException | LeavedUserException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (UnmatchedPasswordException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+            return self::createErrorResponse(Response::HTTP_BAD_REQUEST, $e->getMessage());
         } catch (PasswordEntryBlockedException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
-        } catch (\Exception $e) {
-            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_FORBIDDEN, $e->getMessage());
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 
     /**
@@ -164,7 +163,7 @@ class UserController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -175,13 +174,13 @@ class UserController extends Controller
                 UserAppService::disableOnetouchPay($u_idx);
             }
         } catch (UnregisteredUserException | LeavedUserException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (OnetouchPaySettingException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], response::HTTP_FORBIDDEN);
+            return self::createErrorResponse(Response::HTTP_FORBIDDEN, $e->getMessage());
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 }
