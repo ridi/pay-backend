@@ -5,7 +5,7 @@ namespace RidiPay\Transaction\Application\Dto;
 
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 
-class ApproveTransactionDto implements \JsonSerializable
+class ApproveTransactionDto
 {
     /** @var string */
     public $transaction_id;
@@ -36,20 +36,5 @@ class ApproveTransactionDto implements \JsonSerializable
         $this->amount = $transaction->getAmount();
         $this->reserved_at = $transaction->getReservedAt();
         $this->approved_at = $transaction->getApprovedAt();
-    }
-
-    /**
-     * @return array
-     */
-    public function jsonSerialize(): array
-    {
-        return [
-            'transaction_id' => $this->transaction_id,
-            'partner_transaction_id' => $this->partner_transaction_id,
-            'product_name' => $this->product_name,
-            'amount' => $this->amount,
-            'reserved_at' => $this->reserved_at->format(DATE_ATOM),
-            'approved_at' => $this->approved_at->format(DATE_ATOM)
-        ];
     }
 }

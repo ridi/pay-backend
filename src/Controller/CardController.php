@@ -11,13 +11,12 @@ use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\UnregisteredUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Application\Service\CardAppService;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class CardController extends Controller
+class CardController extends BaseController
 {
     /**
      * @Route("/users/{u_id}/cards", methods={"POST"})
@@ -39,7 +38,7 @@ class CardController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
@@ -52,12 +51,12 @@ class CardController extends Controller
                 $body->tax_id
             );
         } catch (AlreadyHadCardException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_FORBIDDEN);
+            return self::createErrorResponse(Response::HTTP_FORBIDDEN, $e->getMessage());
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 
     /**
@@ -74,17 +73,17 @@ class CardController extends Controller
         $oauth2_manager = $this->container->get(OAuth2Manager::class);
         $u_idx = $oauth2_manager->getUser()->getUidx();
         if ($u_id !== $oauth2_manager->getUser()->getUid()) {
-            return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
         }
 
         try {
             CardAppService::deleteCard($u_idx, $payment_method_id);
         } catch (UnregisteredUserException | LeavedUserException | UnregisteredPaymentMethodException $e) {
-            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_NOT_FOUND);
+            return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
         } catch (\Throwable $t) {
-            return new JsonResponse(['message' => 'Internal Server Error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 }

@@ -9,7 +9,7 @@ use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 
-class TransactionStatusDto implements \JsonSerializable
+class TransactionStatusDto
 {
     /** @var string */
     public $transaction_id;
@@ -60,32 +60,5 @@ class TransactionStatusDto implements \JsonSerializable
             $pg_handler = PgHandlerFactory::create($pg->name);
             $this->card_receipt_url = $pg_handler->getCardReceiptUrl($transaction);
         }
-    }
-
-    /**
-     * @return array
-     */
-    public function jsonSerialize(): array
-    {
-        $data = [
-            'transaction_id' => $this->transaction_id,
-            'partner_transaction_id' => $this->partner_transaction_id,
-            'status' => $this->status,
-            'product_name' => $this->product_name,
-            'amount' => $this->amount,
-            'reserved_at' => $this->reserved_at->format(DATE_ATOM)
-        ];
-
-        if (!is_null($this->approved_at)) {
-            $data['approved_at'] = $this->approved_at;
-        }
-        if (!is_null($this->canceled_at)) {
-            $data['canceled_at'] = $this->canceled_at;
-        }
-        if (!is_null($this->card_receipt_url)) {
-            $data['card_receipt_url'] = $this->card_receipt_url;
-        }
-
-        return $data;
     }
 }
