@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class CardController extends BaseController
+class PaymentMethodController extends BaseController
 {
     /**
      * @Route("/users/{u_id}/cards", methods={"POST"})
