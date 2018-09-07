@@ -10,13 +10,11 @@ use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 use RidiPay\User\Domain\Service\UserService;
-use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\AlreadyHadCardException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\UnregisteredUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
-use RidiPay\User\Domain\Repository\UserRepository;
 
 class CardAppService
 {
@@ -45,10 +43,9 @@ class CardAppService
 
         try {
             try {
-                $user = UserService::getActiveUser($u_idx);
+                UserService::getActiveUser($u_idx);
             } catch (UnregisteredUserException $e) {
-                $user = new UserEntity($u_idx);
-                UserRepository::getRepository()->save($user);
+                UserAppService::createUser($u_idx);
             }
 
             $payment_method_id = CardService::registerCard(
@@ -60,7 +57,7 @@ class CardAppService
                 $pg->id,
                 $pg_handler
             );
-            UserActionHistoryService::logAddCard($user);
+            UserActionHistoryService::logAddCard($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -83,7 +80,7 @@ class CardAppService
      */
     public static function deleteCard(int $u_idx, string $payment_method_id): void
     {
-        $user = UserService::getActiveUser($u_idx);
+        UserService::getActiveUser($u_idx);
 
         $payment_method_repo = PaymentMethodRepository::getRepository();
         $payment_method = $payment_method_repo->findOneByUuid(Uuid::fromString($payment_method_id));
@@ -98,7 +95,7 @@ class CardAppService
             $payment_method->delete();
             $payment_method_repo->save($payment_method);
 
-            UserActionHistoryService::logDeleteCard($user);
+            UserActionHistoryService::logDeleteCard($u_idx);
             // TODO: first-party 정기 결제 해지 요청
 
             $em->commit();

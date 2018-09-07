@@ -6,6 +6,7 @@ namespace RidiPay\User\Domain\Service;
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Repository\UserActionHistoryRepository;
+use RidiPay\User\Domain\Repository\UserRepository;
 
 class UserActionHistoryService
 {
@@ -16,57 +17,58 @@ class UserActionHistoryService
     private const DISABLE_ONETOUCH_PAY = 'DISABLE_ONETOUCH_PAY';
 
     /**
-     * @param UserEntity $user
+     * @param int $u_idx
      * @throws \Exception
      */
-    public static function logAddCard(UserEntity $user)
+    public static function logAddCard(int $u_idx)
     {
-        self::logUserAction($user, self::ADD_CARD);
+        self::logUserAction($u_idx, self::ADD_CARD);
     }
 
     /**
-     * @param \RidiPay\User\Domain\Entity\UserEntity $user
+     * @param int $u_idx
      * @throws \Exception
      */
-    public static function logDeleteCard(UserEntity $user)
+    public static function logDeleteCard(int $u_idx)
     {
-        self::logUserAction($user, self::DELETE_CARD);
+        self::logUserAction($u_idx, self::DELETE_CARD);
     }
 
     /**
-     * @param \RidiPay\User\Domain\Entity\UserEntity $user
+     * @param int $u_idx
      * @throws \Exception
      */
-    public static function logUpdatePin(UserEntity $user)
+    public static function logUpdatePin(int $u_idx)
     {
-        self::logUserAction($user, self::UPDATE_PIN);
+        self::logUserAction($u_idx, self::UPDATE_PIN);
     }
 
     /**
-     * @param UserEntity $user
+     * @param int $u_idx
      * @throws \Exception
      */
-    public static function logEnableOnetouchPay(UserEntity $user)
+    public static function logEnableOnetouchPay(int $u_idx)
     {
-        self::logUserAction($user, self::ENABLE_ONETOUCH_PAY);
+        self::logUserAction($u_idx, self::ENABLE_ONETOUCH_PAY);
     }
 
     /**
-     * @param \RidiPay\User\Domain\Entity\UserEntity $user
+     * @param int $u_idx
      * @throws \Exception
      */
-    public static function logDisableOnetouchPay(UserEntity $user)
+    public static function logDisableOnetouchPay(int $u_idx)
     {
-        self::logUserAction($user, self::DISABLE_ONETOUCH_PAY);
+        self::logUserAction($u_idx, self::DISABLE_ONETOUCH_PAY);
     }
 
     /**
-     * @param UserEntity $user
+     * @param int $u_idx
      * @param string $action
      * @throws \Exception
      */
-    private static function logUserAction(UserEntity $user, string $action)
+    private static function logUserAction(int $u_idx, string $action)
     {
+        $user = UserRepository::getRepository()->findOneByUidx($u_idx);
         $user_action_history = new UserActionHistoryEntity($user, $action);
         UserActionHistoryRepository::getRepository()->save($user_action_history);
     }

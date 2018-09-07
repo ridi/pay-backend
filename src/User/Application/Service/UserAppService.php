@@ -40,7 +40,7 @@ class UserAppService
             $user->updatePin($pin);
             UserRepository::getRepository()->save($user);
 
-            UserActionHistoryService::logUpdatePin($user);
+            UserActionHistoryService::logUpdatePin($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -132,7 +132,7 @@ class UserAppService
             $user->enableOnetouchPay();
             UserRepository::getRepository()->save($user);
 
-            UserActionHistoryService::logEnableOnetouchPay($user);
+            UserActionHistoryService::logEnableOnetouchPay($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -163,7 +163,7 @@ class UserAppService
             $user->disableOnetouchPay();
             UserRepository::getRepository()->save($user);
 
-            UserActionHistoryService::logDisableOnetouchPay($user);
+            UserActionHistoryService::logDisableOnetouchPay($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -187,21 +187,6 @@ class UserAppService
         $user = UserService::getActiveUser($u_idx);
 
         return $user->isUsingOnetouchPay();
-    }
-
-    /**
-     * @param int $u_idx
-     * @throws LeavedUserException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function createUserIfNotExists(int $u_idx): void
-    {
-        try {
-            UserService::getActiveUser($u_idx);
-        } catch (UnregisteredUserException $e) {
-            self::createUser($u_idx);
-        }
     }
 
     /**

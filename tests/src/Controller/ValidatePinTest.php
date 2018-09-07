@@ -25,7 +25,7 @@ class ValidatePinTest extends ControllerTestCase
         TestUtil::setUpDatabaseDoubles();
 
         self::$u_idx = TestUtil::getRandomUidx();
-        UserAppService::createUserIfNotExists(self::$u_idx);
+        UserAppService::createUser(self::$u_idx);
 
         self::$client = self::createClientWithOAuth2AccessToken();
         TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
