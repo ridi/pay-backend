@@ -26,6 +26,7 @@
         "doctrine/dbal": "^2.8",
         "doctrine/orm": "^2.6",
         "firebase/php-jwt": "^5.0",
+        "monolog/monolog": "^1.23",
         "predis/predis": "^1.1",
         "ramsey/uuid-doctrine": "^1.4",
         "ridibooks/oauth2": "^0.1.3",

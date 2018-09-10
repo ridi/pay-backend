@@ -10,7 +10,8 @@ namespace RidiPay\Library\Pg\Kcp;
  *
  * 정의된 상수들은 임의로 변경할 수 없습니다.
  */
-class Client {
+class Client
+{
     /** @var string KCP 프로덕션 결제 서버 주소 */
     private const GW_URL = 'paygw.kcp.co.kr';
 
