@@ -5,9 +5,12 @@ namespace RidiPay\Transaction\Application\Service;
 
 use Predis\Client;
 use Ramsey\Uuid\Uuid;
+use Ridibooks\Library\SentryHelper;
 use Ridibooks\Library\TimeConstant;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Pg\Application\Service\PgAppService;
+use RidiPay\Pg\Domain\Exception\PgException;
 use RidiPay\Transaction\Application\Dto\ApproveTransactionDto;
 use RidiPay\Transaction\Application\Dto\CancelTransactionDto;
 use RidiPay\Transaction\Application\Dto\TransactionStatusDto;
@@ -37,6 +40,7 @@ class TransactionAppService
      * @throws UnauthorizedPartnerException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
      */
     public static function reserveTransaction(
         string $partner_api_key,
@@ -53,21 +57,28 @@ class TransactionAppService
         $reservation_id = Uuid::uuid4()->toString();
         $reservation_key = self::getReservationKey($reservation_id);
 
-        $redis = self::getRedisClient();
-        $redis->hmset(
-            $reservation_key,
-            [
-                'u_idx' => $u_idx,
-                'payment_method_id' => $payment_method_id,
-                'partner_api_key' => $partner_api_key,
-                'partner_transaction_id' => $partner_transaction_id,
-                'product_name' => $product_name,
-                'amount' => $amount,
-                'return_url' => $return_url,
-                'reserved_at' => (new \DateTime())->format(DATE_ATOM)
-            ]
-        );
-        $redis->expire($reservation_key, TimeConstant::SEC_IN_HOUR);
+        try {
+            $redis = self::getRedisClient();
+            $redis->hmset(
+                $reservation_key,
+                [
+                    'u_idx' => $u_idx,
+                    'payment_method_id' => $payment_method_id,
+                    'partner_api_key' => $partner_api_key,
+                    'partner_transaction_id' => $partner_transaction_id,
+                    'product_name' => $product_name,
+                    'amount' => $amount,
+                    'return_url' => $return_url,
+                    'reserved_at' => (new \DateTime())->format(DATE_ATOM)
+                ]
+            );
+            $redis->expire($reservation_key, TimeConstant::SEC_IN_HOUR);
+        } catch (\Throwable $t) {
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
+
+            throw $t;
+        }
 
         return $reservation_id;
     }
@@ -79,6 +90,7 @@ class TransactionAppService
      * @throws NonTransactionOwnerException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
      */
     public static function createTransaction(int $u_idx, string $reservation_id): CreateTransactionDto
     {
@@ -89,17 +101,24 @@ class TransactionAppService
         $partner_id = PartnerAppService::getPartnerIdByApiKey($reserved_transaction['partner_api_key']);
         $partner_transaction_id = $reserved_transaction['partner_transaction_id'];
 
-        $transaction = new TransactionEntity(
-            $u_idx,
-            $payment_method_id,
-            $pg->id,
-            $partner_id,
-            $partner_transaction_id,
-            $reserved_transaction['product_name'],
-            intval($reserved_transaction['amount']),
-            \DateTime::createFromFormat(DATE_ATOM, $reserved_transaction['reserved_at'])
-        );
-        TransactionRepository::getRepository()->save($transaction);
+        try {
+            $transaction = new TransactionEntity(
+                $u_idx,
+                $payment_method_id,
+                $pg->id,
+                $partner_id,
+                $partner_transaction_id,
+                $reserved_transaction['product_name'],
+                intval($reserved_transaction['amount']),
+                \DateTime::createFromFormat(DATE_ATOM, $reserved_transaction['reserved_at'])
+            );
+            TransactionRepository::getRepository()->save($transaction);
+        } catch (\Throwable $t) {
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
+
+            throw $t;
+        }
 
         return new CreateTransactionDto(
             $transaction->getUuid()->toString(),
@@ -114,6 +133,7 @@ class TransactionAppService
      * @param string $transaction_id
      * @return ApproveTransactionDto
      * @throws NonTransactionOwnerException
+     * @throws PgException
      * @throws UnauthorizedPartnerException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -154,9 +174,24 @@ class TransactionAppService
             $em->rollback();
             $em->close();
 
-            // RIDI Pay 승인 처리 중 오류 발생 시, 결제 승인 건 취소 처리
-            $cancel_reason = '';
-            $pg_handler->cancelTransaction($transaction_id, $cancel_reason);
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
+
+            // 결제 승인 건 취소 처리
+            $cancel_reason = 'RIDI Pay 후속 승인 처리 중 오류 발생';
+            $cancel_transaction_response = $pg_handler->cancelTransaction($transaction_id, $cancel_reason);
+            if (!$cancel_transaction_response->isSuccess()) {
+                $message = 'RIDI Pay 후속 승인 처리 중 오류 발생으로 인한 결제 취소 중 오류 발생';
+
+                $options = [
+                    'extra' => [
+                        'transaction_id' => $transaction_id,
+                        'response_code' => $cancel_transaction_response->getResponseCode(),
+                        'response_message' => $cancel_transaction_response->getResponseMessage()
+                    ]
+                ];
+                SentryHelper::triggerSentryMessage($message, [], $options);
+            }
 
             throw $t;
         }
@@ -171,6 +206,7 @@ class TransactionAppService
      * @param string $transaction_id
      * @return CancelTransactionDto
      * @throws NonTransactionOwnerException
+     * @throws PgException
      * @throws UnauthorizedPartnerException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -189,7 +225,7 @@ class TransactionAppService
 
         $pg = PgAppService::getPgById($transaction->getPgId());
         $pg_handler = PgHandlerFactory::create($pg->name);
-        $cancel_reason = '';
+        $cancel_reason = '고객 결제 취소';
         $response = $pg_handler->cancelTransaction($transaction->getPgTransactionId(), $cancel_reason);
 
         $em = EntityManagerProvider::getEntityManager();
@@ -211,6 +247,9 @@ class TransactionAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
+
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
 
             throw $t;
         }

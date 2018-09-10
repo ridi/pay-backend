@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Service;
 
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Pg\Domain\Exception\PgException;
 use RidiPay\Pg\Domain\Service\PgHandlerInterface;
 use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
@@ -23,6 +24,8 @@ class CardService
      * @param int $pg_id
      * @param PgHandlerInterface $pg_handler
      * @return string
+     * @throws AlreadyHadCardException
+     * @throws PgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable

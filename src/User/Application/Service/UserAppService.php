@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Service;
 
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\User\Domain\Service\UserService;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
@@ -46,6 +47,9 @@ class UserAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
+
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
 
             throw $t;
         }
@@ -139,6 +143,9 @@ class UserAppService
             $em->rollback();
             $em->close();
 
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
+
             throw $t;
         }
     }
@@ -169,6 +176,9 @@ class UserAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
+
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
 
             throw $t;
         }

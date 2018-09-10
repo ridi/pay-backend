@@ -1,8 +1,9 @@
 <?php
 
-use RidiPay\Kernel;
 use Doctrine\DBAL\Types\Type;
 use Ramsey\Uuid\Doctrine\UuidBinaryType;
+use Ridibooks\Library\SentryHelper;
+use RidiPay\Kernel;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,6 +34,20 @@ if ($trustedProxies = $_SERVER['TRUSTED_PROXIES'] ?? false) {
 
 if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? false) {
     Request::setTrustedHosts(explode(',', $trustedHosts));
+}
+
+$sentry_dsn = getenv('SENTRY_DSN');
+if ($sentry_dsn) {
+    $root_path = realpath(__DIR__ . '/../');
+    $options = [
+        'prefixes' => [$root_path],
+    ];
+
+    SentryHelper::enableSentry($sentry_dsn, $options);
+    $client = SentryHelper::getRavenClient();
+    $client->setRelease(getenv('GIT_REVISION'));
+    $client->setEnvironment($env);
+    $client->setProcessors([new Raven_Processor_SanitizeDataProcessor($client)]);
 }
 
 $kernel = new Kernel($env, $is_dev);

@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Infrastructure;
 
+use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Order;
+use RidiPay\Library\Pg\Kcp\Response;
 use RidiPay\Library\Pg\Kcp\Util;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Pg\Domain\Exception\PgException;
@@ -52,6 +54,8 @@ class KcpHandler implements PgHandlerInterface
 
         $response = $this->client->requestBatchKey($card);
         if (!$response->isSuccess()) {
+            self::log(__METHOD__, $response);
+
             throw new PgException('KCP Batch Key 발급 실패');
         }
 
@@ -92,6 +96,8 @@ class KcpHandler implements PgHandlerInterface
 
         $response = $this->client->batchOrder($pg_bill_key, $order);
         if (!$response->isSuccess()) {
+            self::log(__METHOD__, $response);
+
             throw new PgException('KCP 결제 승인 실패');
         }
 
@@ -115,6 +121,8 @@ class KcpHandler implements PgHandlerInterface
     {
         $response = $this->client->cancelTransaction($pg_transaction_id, $cancel_reason);
         if (!$response->isSuccess()) {
+            self::log(__METHOD__, $response);
+
             throw new PgException('KCP 결제 취소 실패');
         }
 
@@ -140,5 +148,16 @@ class KcpHandler implements PgHandlerInterface
             Util::RECEIPT_LANG_KO,
             !$this->is_dev
         );
+    }
+
+    /**
+     * @param string $name
+     * @param Response $response
+     * @throws \Exception
+     */
+    private static function log(string $name, Response $response): void
+    {
+        $logger = new StdoutLogger($name);
+        $logger->error(json_encode(['res_cd' => $response->getResCd(), 'res_msg' => $response->getResMsg()]));
     }
 }
