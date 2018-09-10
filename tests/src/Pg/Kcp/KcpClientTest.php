@@ -24,11 +24,9 @@ class KcpClientTest extends TestCase
     const DUMMY_ORDER_BUYER_TEL1 = '02-000-0000';
     const DUMMY_ORDER_BUYER_TEL2 = '010-0000-0000';
 
-    const LOG_DIR = '/tmp/kcp';
-
     public function testPaymentLifecycle()
     {
-        $client = Client::getTestClient(self::LOG_DIR);
+        $client = Client::getTestClient();
 
         $card = new Card(
             self::DUMMY_CARD_NUMBER_KBCARD,
