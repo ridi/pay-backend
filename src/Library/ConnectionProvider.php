@@ -68,7 +68,6 @@ class ConnectionProvider
             'password' => $params['PASSWORD'],
             'dbname' => $params['DB_NAME'],
             'driver' => 'pdo_mysql',
-            'wrapperClass' => '\Ridibooks\Library\DB\CustomPdoConnection',
             'charset' => 'utf8',
             'driverOptions' => [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8']
         ];
