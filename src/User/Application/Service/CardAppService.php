@@ -5,7 +5,9 @@ namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Pg\Application\Service\PgAppService;
+use RidiPay\Pg\Domain\Exception\PgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
@@ -26,6 +28,7 @@ class CardAppService
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @return string
      * @throws AlreadyHadCardException
+     * @throws PgException
      * @throws \Throwable
      */
     public static function registerCard(
@@ -63,6 +66,9 @@ class CardAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
+
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
 
             throw $t;
         }
@@ -102,6 +108,9 @@ class CardAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
+
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
 
             throw $t;
         }

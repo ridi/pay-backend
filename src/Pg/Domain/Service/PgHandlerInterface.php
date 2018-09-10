@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Domain\Service;
 
+use RidiPay\Pg\Domain\Exception\PgException;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 
 interface PgHandlerInterface
@@ -13,6 +14,7 @@ interface PgHandlerInterface
      * @param string $card_password
      * @param string $tax_id
      * @return RegisterCardResponse
+     * @throws PgException
      */
     public function registerCard(
         string $card_number,
@@ -24,6 +26,7 @@ interface PgHandlerInterface
     /**
      * @param TransactionEntity $transaction
      * @return ApproveTransactionResponse
+     * @throws PgException
      */
     public function approveTransaction(TransactionEntity $transaction): ApproveTransactionResponse;
 
@@ -31,6 +34,7 @@ interface PgHandlerInterface
      * @param string $pg_transaction_id
      * @param string $cancel_reason
      * @return CancelTransactionResponse
+     * @throws PgException
      */
     public function cancelTransaction(string $pg_transaction_id, string $cancel_reason): CancelTransactionResponse;
 

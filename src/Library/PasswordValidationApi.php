@@ -5,6 +5,7 @@ namespace RidiPay\Library;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
+use Ridibooks\Library\SentryHelper;
 use RidiPay\Library\Jwt\JwtAuthorizationHelper;
 use RidiPay\Library\Jwt\JwtAuthorizationServiceNameConstant;
 
@@ -42,7 +43,7 @@ class PasswordValidationApi
             // HTTP 4XX Response
             return false;
         } catch (\Exception $e) {
-            // TODO: Sentry 로깅
+            SentryHelper::triggerSentryException($e);
             return false;
         }
 

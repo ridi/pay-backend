@@ -207,7 +207,7 @@
         }
     },
     "sentry/sentry": {
-        "version": "1.9.1"
+        "version": "1.9.2"
     },
     "squizlabs/php_codesniffer": {
         "version": "3.3.0"
