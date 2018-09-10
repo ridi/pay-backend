@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace RidiPay\Library;
 
+use Doctrine\Common\Cache\ApcuCache;
 use Doctrine\DBAL\Configuration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
-use Ridibooks\Library\AdaptableCache;
 
 class ConnectionProvider
 {
@@ -40,7 +40,7 @@ class ConnectionProvider
     {
         $config = new Configuration();
         $connection = DriverManager::getConnection(self::getConnectionParams($connection_group), $config);
-        $connection->getConfiguration()->setResultCacheImpl(new AdaptableCache());
+        $connection->getConfiguration()->setResultCacheImpl(new ApcuCache());
         $connection->setFetchMode(\PDO::FETCH_OBJ);
 
         return $connection;
