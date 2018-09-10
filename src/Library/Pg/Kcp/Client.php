@@ -84,15 +84,15 @@ class Client {
      * @param string $site_code KCP에서 전달받은 사이트 코드
      * @param string $site_key KCP에서 전달받은 사이트 키
      * @param string $group_id KCP 상점관리자 페이지의 결제관리 > 일반결제 > 배치결제 > 그룹등록 메뉴에서 생성한 그룹 ID
-     * @param string $log_dir 로그 파일들을 쓸 디렉토리
      * @param string $gw_url KCP 결제 서버 주소
+     * @param string $log_dir 로그 파일이 저장될 디렉토리
      */
     public function __construct(
         string $site_code,
         string $site_key,
         string $group_id,
-        string $log_dir,
-        string $gw_url = self::GW_URL
+        string $gw_url = self::GW_URL,
+        string $log_dir = '/dev/stdout'
     ) {
         $this->site_code = $site_code;
         $this->site_key = $site_key;
@@ -103,16 +103,14 @@ class Client {
     }
 
     /**
-     * @param string $log_dir 로그 파일들을 쓸 디렉토리
      * @return Client
      */
-    public static function getTestClient(string $log_dir): Client
+    public static function getTestClient(): Client
     {
         return new self(
             self::TEST_SITE_CODE,
             self::TEST_SITE_KEY,
             self::TEST_GROUP_ID,
-            $log_dir,
             self::TEST_GW_URL
         );
     }
