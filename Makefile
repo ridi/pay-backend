@@ -12,3 +12,6 @@ mkcert:
 
 phpunit:
 	docker exec -it apache vendor/bin/phpunit
+
+phpcs:
+	docker exec -it apache vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml
