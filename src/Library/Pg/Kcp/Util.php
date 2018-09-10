@@ -49,7 +49,7 @@ class Util
     {
         $exploded = \explode("\x1f", $serialized);
 
-        $parsed = \array_reduce($exploded, function ($carry , $item) {
+        $parsed = \array_reduce($exploded, function ($carry, $item) {
             $kv = \explode('=', $item);
             if (count($kv) === 2) {
                 [$k, $v] = $kv;
