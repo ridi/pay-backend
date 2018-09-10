@@ -6,6 +6,30 @@ namespace RidiPay\Library\Pg\Kcp;
 class BatchOrderResponse extends Response
 {
     /**
+     * @return string
+     */
+    public function getResEnMsg(): string
+    {
+        return $this->response['res_en_msg'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getTraceNo(): string
+    {
+        return $this->response['trace_no'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getPayMethod(): string
+    {
+        return $this->response['pay_method'];
+    }
+
+    /**
      * @return string 가맹점 주문 번호
      */
     public function getOrderNo(): string
@@ -46,6 +70,38 @@ class BatchOrderResponse extends Response
     }
 
     /**
+     * @return string
+     */
+    public function getCardNo(): string
+    {
+        return $this->response['card_no'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getMchtTaxno(): string
+    {
+        return $this->response['mcht_taxno'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getMallTaxno(): string
+    {
+        return $this->response['mall_taxno'];
+    }
+
+    /**
+     * @return string 가맹점 주문 번호
+     */
+    public function getCaOrderId(): string
+    {
+        return $this->response['ca_order_id'];
+    }
+
+    /**
      * @return string 결제 완료 후 결제 건에 대한 고유 값, 결제 건 취소 시 이용
      */
     public function getTno(): string
@@ -70,27 +126,27 @@ class BatchOrderResponse extends Response
     }
 
     /**
-     * @return int 비과세 금액
+     * @return int 쿠폰 결제 금액
      */
-    public function getResTaxMny(): int
+    public function getCouponMny(): int
     {
-        return intval($this->response['res_tax_mny']);
+        return intval($this->response['coupon_mny']);
     }
 
     /**
-     * @return int 부가세 금액
+     * @return string
      */
-    public function getResVatMny(): int
+    public function getEscwYn(): string
     {
-        return intval($this->response['res_vat_mny']);
+        return $this->response['escw_yn'];
     }
 
     /**
-     * @return int 할부 개월 수(0 ~ 12, 0: 일시불)
+     * @return string
      */
-    public function getQuota(): int
+    public function getVanCd(): string
     {
-        return intval($this->response['quota']);
+        return $this->response['van_cd'];
     }
 
     /**
@@ -102,28 +158,122 @@ class BatchOrderResponse extends Response
     }
 
     /**
-     * @return array
+     * @return \DateTime
      */
-    public function jsonSerialize(): array
+    public function getVanApptime(): \DateTime
     {
-        $common_data = parent::jsonSerialize();
+        return \DateTime::createFromFormat('YmdHis', $this->response['van_apptime']);
+    }
 
-        return array_merge(
-            $common_data,
-            [
-                'order_no' => $this->getOrderNo(),
-                'card_cd' => $this->getCardCd(),
-                'card_name' => $this->getCardName(),
-                'acqu_cd' => $this->getAcquCd(),
-                'acqu_name' => $this->getAcquName(),
-                'tno' => $this->getTno(),
-                'amount' => $this->getAmount(),
-                'card_mny' => $this->getCardMny(),
-                'res_tax_mny' => $this->getResTaxMny(),
-                'res_vat_mny' => $this->getResVatMny(),
-                'quota' => $this->getQuota(),
-                'app_time' => $this->getAppTime()->format(DATE_ATOM)
-            ]
-        );
+    /**
+     * @return string 정상 결제 거래의 승인 번호, KCP와 카드사에서 공통적으로 관리하는 번호
+     */
+    public function getAppNo(): string
+    {
+        return $this->response['app_no'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getBizxNumb(): string
+    {
+        return $this->response['bizx_numb'];
+    }
+
+    /**
+     * @return int 할부 개월 수(0 ~ 12, 0: 일시불)
+     */
+    public function getQuota(): int
+    {
+        return intval($this->response['quota']);
+    }
+
+    /**
+     * @return bool 무이자 할부 결제 여부
+     */
+    public function isNoinf(): bool
+    {
+        return $this->response['noinf'] === 'Y';
+    }
+
+    /**
+     * @return string
+     */
+    public function getPgTxid(): string
+    {
+        return $this->response['pg_txid'];
+    }
+
+    /**
+     * @return string 가맹점에서 제공한 복합 과세 타입
+     */
+    public function getResTaxFlag(): string
+    {
+        return $this->response['res_tax_flag'];
+    }
+
+    /**
+     * @return int 비과세 금액
+     */
+    public function getResTaxMny(): int
+    {
+        return intval($this->response['res_tax_mny']);
+    }
+
+    /**
+     * @return int
+     */
+    public function getResFreeMny(): int
+    {
+        return intval($this->response['res_free_mny']);
+    }
+
+    /**
+     * @return int 부가세 금액
+     */
+    public function getResVatMny(): int
+    {
+        return intval($this->response['res_vat_mny']);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPartcancYn(): string
+    {
+        return $this->response['partcanc_yn'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getCardBinType01(): string
+    {
+        return $this->response['card_bin_type_01'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getCardBinType02(): string
+    {
+        return $this->response['card_bin_type_02'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getCardBinBankCd(): string
+    {
+        return $this->response['card_bin_bank_cd'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getJoinCd(): string
+    {
+        return $this->response['join_cd'];
     }
 }

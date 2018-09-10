@@ -9,7 +9,6 @@ use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Company;
 use RidiPay\Library\Pg\Kcp\Order;
-use RidiPay\Library\Pg\Kcp\Response;
 use RidiPay\Library\Pg\Kcp\Util;
 
 class KcpClientTest extends TestCase
@@ -52,13 +51,11 @@ class KcpClientTest extends TestCase
 
         $auth_res = $client->requestBatchKey($card);
         $this->assertTrue($auth_res->isSuccess());
-        $this->assertSame(Response::OK, $auth_res->getResCd());
         $this->assertSame($card_company, $auth_res->getCardCd());
         $this->assertSame(Company::getKoreanName($auth_res->getCardCd()), $auth_res->getCardName());
 
         $order_res = $client->batchOrder($auth_res->getBatchKey(), $order);
         $this->assertTrue($order_res->isSuccess());
-        $this->assertSame(Response::OK, $order_res->getResCd());
         $this->assertSame($order_id, $order_res->getOrderNo());
         $this->assertSame($order->getGoodPrice(), $order_res->getAmount());
         $this->assertSame($order->getGoodPrice(), $order_res->getCardMny());
@@ -71,7 +68,6 @@ class KcpClientTest extends TestCase
         $kcp_tno = $order_res->getTno();
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
         $this->assertTrue($cancel_res->isSuccess());
-        $this->assertSame(Response::OK, $cancel_res->getResCd());
         $this->assertSame($order_id, $cancel_res->getOrderNo());
         $this->assertSame($order->getGoodPrice(), $cancel_res->getAmount());
         $this->assertSame($order->getGoodPrice(), $cancel_res->getCardMny());
