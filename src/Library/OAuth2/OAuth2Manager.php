@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RidiPay\Library\OAuth2;
 
-use Ridibooks\Library\TimeConstant;
 use Ridibooks\OAuth2\Authorization\Authorizer;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use Ridibooks\OAuth2\Authorization\Token\JwtToken;
@@ -13,12 +12,13 @@ use Ridibooks\OAuth2\Grant\DataTransferObject\ClientInfo;
 use Ridibooks\OAuth2\Grant\Granter;
 use RidiPay\Library\OAuth2\User\DefaultUserProvider;
 use RidiPay\Library\OAuth2\User\User;
+use RidiPay\Library\TimeUnitConstant;
 use Symfony\Component\HttpFoundation\Request;
 
 class OAuth2Manager
 {
     private const JWT_ALGORITHM = 'HS256';
-    private const JWT_EXPIRE_TERM = 5 * TimeConstant::SEC_IN_MINUTE;
+    private const JWT_EXPIRE_TERM = 5 * TimeUnitConstant::SEC_IN_MINUTE;
 
     private const AUTHORIZATION_URL_PATH = '/ridi/authorize/';
     private const TOKEN_URL_PATH = '/oauth2/token/';

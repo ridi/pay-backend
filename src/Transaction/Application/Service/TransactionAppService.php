@@ -6,9 +6,9 @@ namespace RidiPay\Transaction\Application\Service;
 use Predis\Client;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\Library\SentryHelper;
-use Ridibooks\Library\TimeConstant;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
+use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\PgException;
 use RidiPay\Transaction\Application\Dto\ApproveTransactionDto;
@@ -72,7 +72,7 @@ class TransactionAppService
                     'reserved_at' => (new \DateTime())->format(DATE_ATOM)
                 ]
             );
-            $redis->expire($reservation_key, TimeConstant::SEC_IN_HOUR);
+            $redis->expire($reservation_key, TimeUnitConstant::SEC_IN_HOUR);
         } catch (\Throwable $t) {
             $logger = new StdoutLogger(__METHOD__);
             $logger->error($t->getMessage());
