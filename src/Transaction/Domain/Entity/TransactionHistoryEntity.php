@@ -4,7 +4,12 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Domain\Entity;
 
 /**
- * @Table(name="transaction_history", indexes={@Index(name="idx_transaction_id", columns={"transaction_id"})})
+ * @Table(
+ *   name="transaction_history",
+ *   indexes={
+ *     @Index(name="idx_transaction_id", columns={"transaction_id"})
+ *   }
+ * )
  * @Entity(repositoryClass="RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository")
  */
 class TransactionHistoryEntity
@@ -32,7 +37,17 @@ class TransactionHistoryEntity
     /**
      * @var string
      *
-     * @Column(name="action", type="string", length=0, nullable=false, columnDefinition="ENUM('APPROVE','CANCEL')", options={"default"="APPROVE","comment"="PAY: 결제, CANCEL: 취소"})
+     * @Column(
+     *   name="action",
+     *   type="string",
+     *   length=0,
+     *   nullable=false,
+     *   columnDefinition="ENUM('APPROVE','CANCEL')",
+     *   options={
+     *     "default"="APPROVE",
+     *     "comment"="PAY: 결제, CANCEL: 취소"
+     *   }
+     * )
      */
     private $action;
 
@@ -46,14 +61,30 @@ class TransactionHistoryEntity
     /**
      * @var string|null
      *
-     * @Column(name="pg_response_code", type="string", length=16, nullable=false, options={"comment"="PG사 결제 응답 코드"})
+     * @Column(
+     *   name="pg_response_code",
+     *   type="string",
+     *   length=16,
+     *   nullable=false,
+     *   options={
+     *     "comment"="PG사 결제 응답 코드"
+     *   }
+     * )
      */
     private $pg_response_code;
 
     /**
      * @var string|null
      *
-     * @Column(name="pg_response_message", type="string", length=64, nullable=false, options={"comment"="PG사 결제 응답 메시지"})
+     * @Column(
+     *   name="pg_response_message",
+     *   type="string",
+     *   length=64,
+     *   nullable=false,
+     *   options={
+     *     "comment"="PG사 결제 응답 메시지"
+     *   }
+     * )
      */
     private $pg_response_message;
 

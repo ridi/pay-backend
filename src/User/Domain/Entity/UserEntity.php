@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
@@ -37,14 +38,29 @@ class UserEntity
     /**
      * @var \DateTime
      *
-     * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP","comment"="RIDI PAY 가입 시각(최초 결제 수단 등록일)"})
+     * @Column(
+     *   name="created_at",
+     *   type="datetime",
+     *   nullable=false,
+     *   options={
+     *     "default"="CURRENT_TIMESTAMP",
+     *     "comment"="RIDI PAY 가입 시각(최초 결제 수단 등록일)"
+     *   }
+     * )
      */
     private $created_at;
 
     /**
      * @var \DateTime|null
      *
-     * @Column(name="leaved_at", type="datetime", nullable=true, options={"comment"="회원 탈퇴로 인한 RIDI PAY 해지 시각"})
+     * @Column(
+     *   name="leaved_at",
+     *   type="datetime",
+     *   nullable=true,
+     *   options={
+     *     "comment"="회원 탈퇴로 인한 RIDI PAY 해지 시각"
+     *   }
+     * )
      */
     private $leaved_at;
 

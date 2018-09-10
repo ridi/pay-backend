@@ -7,7 +7,12 @@ use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\PgConstant;
 
 /**
- * @Table(name="pg", uniqueConstraints={@UniqueConstraint(name="uniq_name", columns={"name"})})
+ * @Table(
+ *   name="pg",
+ *   uniqueConstraints={
+ *     @UniqueConstraint(name="uniq_name", columns={"name"})
+ *   }
+ * )
  * @Entity(repositoryClass="RidiPay\Pg\Domain\Repository\PgRepository")
  */
 class PgEntity
@@ -31,14 +36,28 @@ class PgEntity
     /**
      * @var string
      *
-     * @Column(name="status", type="string", length=0, nullable=false, columnDefinition="ENUM('ACTIVE','INACTIVE','KEPT')", options={"default"="ACTIVE","comment"="PG사 이용 상태(ACTIVE: 사용, INACTIVE: 미사용, KEPT: 기존 유저는 사용, 신규 유저는 미사용)"})
+     * @Column(
+     *   name="status",
+     *   type="string",
+     *   length=0,
+     *   nullable=false,
+     *   columnDefinition="ENUM('ACTIVE','INACTIVE','KEPT')",
+     *   options={
+     *     "default"="ACTIVE",
+     *     "comment"="PG사 이용 상태(ACTIVE: 사용, INACTIVE: 미사용, KEPT: 기존 유저는 사용, 신규 유저는 미사용)"
+     *   }
+     * )
      */
     private $status;
 
     /**
      * @var \DateTime
      *
-     * @Column(name="updated_at", type="datetime", columnDefinition="DATETIME on update CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"))
+     * @Column(
+     *   name="updated_at",
+     *   type="datetime",
+     *   columnDefinition="DATETIME on update CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"
+     * )
      */
     private $updated_at;
 
