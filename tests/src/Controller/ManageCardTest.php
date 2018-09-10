@@ -69,11 +69,9 @@ class ManageCardTest extends ControllerTestCase
 
         $card_for_one_time_payment = $payment_method->getCardForOneTimePayment();
         $this->assertNotNull($card_for_one_time_payment);
-        $this->assertTrue($card_for_one_time_payment->isSameCard(self::CARD_A['CARD_NUMBER']));
 
         $card_for_billing_payment = $payment_method->getCardForBillingPayment();
         $this->assertNotNull($card_for_billing_payment);
-        $this->assertTrue($card_for_billing_payment->isSameCard(self::CARD_A['CARD_NUMBER']));
 
         // 카드 추가 등록 시도
         $body = json_encode([

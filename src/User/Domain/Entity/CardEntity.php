@@ -62,13 +62,6 @@ class CardEntity
     /**
      * @var string
      *
-     * @Column(name="hashed_card_number", type="string", length=255, nullable=false)
-     */
-    private $hashed_card_number;
-
-    /**
-     * @var string
-     *
      * @Column(name="iin", type="string", length=255, nullable=false, options={"comment"="Issuer Identification Number(카드 번호 앞 6자리)"})
      */
     private $iin;
@@ -139,7 +132,6 @@ class CardEntity
         $this->card_issuer = $card_issuer;
         $this->pg_id = $pg_id;
         $this->setEncryptedPgBillKey($pg_bill_key);
-        $this->hashed_card_number = self::hashCardNumber($card_number);
         $this->setEncryptedIin(substr($card_number, 0, 6));
         $this->setPurpose($purpose);
     }
@@ -184,24 +176,6 @@ class CardEntity
     private static function getPgBillKeySecret(): string
     {
         return base64_decode(getenv('PG_BILL_KEY_SECRET'));
-    }
-
-    /**
-     * @param string $card_number
-     * @return bool
-     */
-    public function isSameCard(string $card_number): bool
-    {
-        return $this->hashed_card_number === self::hashCardNumber($card_number);
-    }
-
-    /**
-     * @param string $card_number
-     * @return string
-     */
-    private static function hashCardNumber(string $card_number): string
-    {
-        return hash('sha256', $card_number);
     }
 
     /**
