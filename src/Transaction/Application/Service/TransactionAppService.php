@@ -5,9 +5,9 @@ namespace RidiPay\Transaction\Application\Service;
 
 use Predis\Client;
 use Ramsey\Uuid\Uuid;
-use Ridibooks\Library\SentryHelper;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
+use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\PgException;
@@ -183,14 +183,14 @@ class TransactionAppService
             if (!$cancel_transaction_response->isSuccess()) {
                 $message = 'RIDI Pay 후속 승인 처리 중 오류 발생으로 인한 결제 취소 중 오류 발생';
 
-                $options = [
+                $data = [
                     'extra' => [
                         'transaction_id' => $transaction_id,
                         'response_code' => $cancel_transaction_response->getResponseCode(),
                         'response_message' => $cancel_transaction_response->getResponseMessage()
                     ]
                 ];
-                SentryHelper::triggerSentryMessage($message, [], $options);
+                SentryHelper::getClient()->captureMessage($message, [], $data, true);
             }
 
             throw $t;

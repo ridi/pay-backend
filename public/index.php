@@ -2,8 +2,8 @@
 
 use Doctrine\DBAL\Types\Type;
 use Ramsey\Uuid\Doctrine\UuidBinaryType;
-use Ridibooks\Library\SentryHelper;
 use RidiPay\Kernel;
+use RidiPay\Library\SentryHelper;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\HttpFoundation\Request;
@@ -40,14 +40,9 @@ $sentry_dsn = getenv('SENTRY_DSN');
 if ($sentry_dsn) {
     $root_path = realpath(__DIR__ . '/../');
     $options = [
-        'prefixes' => [$root_path],
+        'prefixes' => [$root_path]
     ];
-
-    SentryHelper::enableSentry($sentry_dsn, $options);
-    $client = SentryHelper::getRavenClient();
-    $client->setRelease(getenv('GIT_REVISION'));
-    $client->setEnvironment($env);
-    $client->setProcessors([new Raven_Processor_SanitizeDataProcessor($client)]);
+    SentryHelper::registerClient($sentry_dsn, $options);
 }
 
 $kernel = new Kernel($env, $is_dev);
