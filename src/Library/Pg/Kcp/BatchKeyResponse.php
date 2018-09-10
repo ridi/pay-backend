@@ -14,11 +14,27 @@ class BatchKeyResponse extends Response
     }
 
     /**
-     * @return string 카드 발급사 이름(한글)
+     * @return string
      */
-    public function getCardName(): string
+    public function getCardBankCd(): string
     {
-        return $this->response['card_name'];
+        return $this->response['card_bank_cd'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getVanTxId(): string
+    {
+        return $this->response['van_tx_id'];
+    }
+
+    /**
+     * @return string
+     */
+    public function getCardBinType01(): string
+    {
+        return $this->response['card_bin_type_01'];
     }
 
     /**
@@ -30,19 +46,18 @@ class BatchKeyResponse extends Response
     }
 
     /**
-     * @return array
+     * @return string
      */
-    public function jsonSerialize(): array
+    public function getJoinCd(): string
     {
-        $common_data = parent::jsonSerialize();
+        return $this->response['join_cd'];
+    }
 
-        return array_merge(
-            $common_data,
-            [
-                'card_cd' => $this->getCardCd(),
-                'card_name' => $this->getCardName(),
-                'batch_key' => $this->getBatchKey()
-            ]
-        );
+    /**
+     * @return string 카드 발급사 이름(한글)
+     */
+    public function getCardName(): string
+    {
+        return $this->response['card_name'];
     }
 }

@@ -83,7 +83,7 @@ class Client {
     /**
      * @param string $site_code KCP에서 전달받은 사이트 코드
      * @param string $site_key KCP에서 전달받은 사이트 키
-     * @param string $group_id KCP 상점관리자 페이지의 결제관리 > 일반결제> 배치결제 > 그룹등록 메뉴에서 생성한 그룹 ID
+     * @param string $group_id KCP 상점관리자 페이지의 결제관리 > 일반결제 > 배치결제 > 그룹등록 메뉴에서 생성한 그룹 ID
      * @param string $log_dir 로그 파일들을 쓸 디렉토리
      * @param string $gw_url KCP 결제 서버 주소
      */

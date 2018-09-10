@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 namespace RidiPay\Library\Pg\Kcp;
 
-abstract class Response implements \JsonSerializable
+abstract class Response
 {
+    /** @var string 정상처리 */
+    private const OK = '0000';
+
     /** @var array */
     protected $response;
-
-    /** @var string 정상처리 */
-    public const OK = '0000';
 
     /**
      * @param array $response
@@ -28,6 +28,14 @@ abstract class Response implements \JsonSerializable
     }
 
     /**
+     * @return array
+     */
+    public function getResponse(): array
+    {
+        return $this->response;
+    }
+
+    /**
      * @return string
      */
     public function getResCd(): string
@@ -41,17 +49,5 @@ abstract class Response implements \JsonSerializable
     public function getResMsg(): string
     {
         return $this->response['res_msg'];
-    }
-
-    /**
-     * @return array
-     */
-    public function jsonSerialize(): array
-    {
-        return [
-            'is_success' => $this->isSuccess(),
-            'res_cd' => $this->getResCd(),
-            'res_msg' => $this->getResMsg()
-        ];
     }
 }

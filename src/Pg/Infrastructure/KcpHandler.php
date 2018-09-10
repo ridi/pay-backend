@@ -17,11 +17,11 @@ use RidiPay\User\Application\Service\PaymentMethodAppService;
 
 class KcpHandler implements PgHandlerInterface
 {
-    /** @var Client */
-    private $client;
-
     /** @var bool */
     private $is_dev;
+
+    /** @var Client */
+    private $client;
 
     public function __construct()
     {
@@ -55,6 +55,7 @@ class KcpHandler implements PgHandlerInterface
         string $tax_id
     ): RegisterCardResponse {
         $card = new Card($card_number, $card_expiration_date, $card_password, $tax_id);
+
         $response = $this->client->requestBatchKey($card);
         if (!$response->isSuccess()) {
             throw new PgException('KCP Batch Key 발급 실패');
@@ -94,6 +95,7 @@ class KcpHandler implements PgHandlerInterface
             $buyer_tel2
         );
         $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
+
         $response = $this->client->batchOrder($pg_bill_key, $order);
         if (!$response->isSuccess()) {
             throw new PgException('KCP 결제 승인 실패');
