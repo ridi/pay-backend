@@ -4,7 +4,12 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Entity;
 
 /**
- * @Table(name="user_action_history", indexes={@Index(name="idx_u_idx", columns={"u_idx"})})
+ * @Table(
+ *   name="user_action_history",
+ *   indexes={
+ *     @Index(name="idx_u_idx", columns={"u_idx"})
+ *   }
+ * )
  * @Entity(repositoryClass="RidiPay\User\Domain\Repository\UserActionHistoryRepository")
  */
 class UserActionHistoryEntity

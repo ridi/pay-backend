@@ -6,7 +6,13 @@ namespace RidiPay\Transaction\Domain\Entity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 
 /**
- * @Table(name="subscription", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"})})
+ * @Table(
+ *   name="subscription",
+ *   indexes={
+ *     @Index(name="idx_payment_method_id", columns={"payment_method_id"}),
+ *     @Index(name="idx_partner_id", columns={"partner_id"})
+ *   }
+ * )
  * @Entity
  */
 class SubscriptionEntity

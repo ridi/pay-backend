@@ -4,7 +4,12 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Entity;
 
 /**
- * @Table(name="card_issuer", indexes={@Index(name="idx_pg_id_code", columns={"pg_id", "code"})})
+ * @Table(
+ *   name="card_issuer",
+ *   indexes={
+ *     @Index(name="idx_pg_id_code", columns={"pg_id", "code"})
+ *   }
+ * )
  * @Entity(repositoryClass="RidiPay\User\Domain\Repository\CardIssuerRepository")
  */
 class CardIssuerEntity
@@ -49,7 +54,15 @@ class CardIssuerEntity
     /**
      * @var string
      *
-     * @Column(name="logo_image_url", type="string", length=128, nullable=false, options={"comment"="카드 발급사 로고 이미지 URL"})
+     * @Column(
+     *   name="logo_image_url",
+     *   type="string",
+     *   length=128,
+     *   nullable=false,
+     *   options={
+     *     "comment"="카드 발급사 로고 이미지 URL"
+     *   }
+     * )
     */
     private $logo_image_url;
 

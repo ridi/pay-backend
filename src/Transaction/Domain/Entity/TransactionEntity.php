@@ -8,7 +8,15 @@ use Ramsey\Uuid\UuidInterface;
 use RidiPay\Transaction\Domain\TransactionConstant;
 
 /**
- * @Table(name="transaction", indexes={@Index(name="idx_payment_method_id", columns={"payment_method_id"}), @Index(name="idx_partner_id", columns={"partner_id"}), @Index(name="idx_pg_id", columns={"pg_id"}), @Index(name="idx_u_idx", columns={"u_idx"})})
+ * @Table(
+ *   name="transaction",
+ *   indexes={
+ *     @Index(name="idx_partner_id", columns={"partner_id"}),
+ *     @Index(name="idx_payment_method_id", columns={"payment_method_id"}),
+ *     @Index(name="idx_pg_id", columns={"pg_id"}),
+ *     @Index(name="idx_u_idx", columns={"u_idx"})
+ *   }
+ * )
  * @Entity(repositoryClass="RidiPay\Transaction\Domain\Repository\TransactionRepository")
  */
 class TransactionEntity
@@ -39,7 +47,15 @@ class TransactionEntity
     /**
      * @var int
      *
-     * @Column(name="payment_method_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="payment_method.id"})
+     * @Column(
+     *   name="payment_method_id",
+     *   type="integer",
+     *   nullable=false,
+     *   options={
+     *     "unsigned"=true,
+     *     "comment"="payment_method.id"
+     *   }
+     * )
      */
     private $payment_method_id;
 
@@ -60,7 +76,15 @@ class TransactionEntity
     /**
      * @var string
      *
-     * @Column(name="partner_transaction_id", type="string", length=64, nullable=false, options={"comment"="Partner 주문 번호"})
+     * @Column(
+     *   name="partner_transaction_id",
+     *   type="string",
+     *   length=64,
+     *   nullable=false,
+     *   options={
+     *     "comment"="Partner 주문 번호"
+     *   }
+     * )
      */
     private $partner_transaction_id;
 
@@ -88,7 +112,16 @@ class TransactionEntity
     /**
      * @var string
      *
-     * @Column(name="status", type="string", length=0, nullable=false, columnDefinition="ENUM('RESERVED','APPROVED','CANCELED')", options={"default"="RESERVED","comment"="Transaction 상태"})
+     * @Column(
+     *   name="status",
+     *   type="string",
+     *   length=0,
+     *   nullable=false,
+     *   columnDefinition="ENUM('RESERVED','APPROVED','CANCELED')",
+     *   options={
+     *     "default"="RESERVED","comment"="Transaction 상태"
+     *   }
+     * )
      */
     private $status;
 

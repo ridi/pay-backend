@@ -8,7 +8,13 @@ use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\Crypto;
 
 /**
- * @Table(name="partner", uniqueConstraints={@UniqueConstraint(name="uniq_name", columns={"name"}), @UniqueConstraint(name="uniq_api_key", columns={"api_key"})})
+ * @Table(
+ *   name="partner",
+ *   uniqueConstraints={
+ *     @UniqueConstraint(name="uniq_name", columns={"name"}),
+ *     @UniqueConstraint(name="uniq_api_key", columns={"api_key"})
+ *   }
+ * )
  * @Entity(repositoryClass="RidiPay\Transaction\Domain\Repository\PartnerRepository")
  */
 class PartnerEntity
@@ -32,7 +38,15 @@ class PartnerEntity
     /**
      * @var string
      *
-     * @Column(name="password", type="string", length=255, nullable=false, options={"comment"="가맹점 관리자 로그인 Password"})
+     * @Column(
+     *   name="password",
+     *   type="string",
+     *   length=255,
+     *   nullable=false,
+     *   options={
+     *     "comment"="가맹점 관리자 로그인 Password"
+     *   }
+     * )
      */
     private $password;
 
@@ -60,14 +74,18 @@ class PartnerEntity
     /**
      * @var bool
      *
-     * @Column(name="is_first_party", type="boolean", nullable=false, options={"comment"="First Party(RIDI) 파트너 여부 "})
+     * @Column(name="is_first_party", type="boolean", nullable=false, options={"comment"="First Party(RIDI) 파트너 여부"})
      */
     private $is_first_party;
 
     /**
      * @var \DateTime
      *
-     * @Column(name="updated_at", type="datetime", columnDefinition="DATETIME on update CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"))
+     * @Column(
+     *   name="updated_at",
+     *   type="datetime",
+     *   columnDefinition="DATETIME on update CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL"
+     * )
      */
     private $updated_at;
 

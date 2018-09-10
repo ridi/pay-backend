@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
@@ -8,7 +9,15 @@ use Ramsey\Uuid\UuidInterface;
 use RidiPay\User\Domain\PaymentMethodConstant;
 
 /**
- * @Table(name="payment_method", uniqueConstraints={@UniqueConstraint(name="uniq_uuid", columns={"uuid"})}, indexes={@Index(name="idx_u_idx", columns={"u_idx"})})
+ * @Table(
+ *   name="payment_method",
+ *   uniqueConstraints={
+ *     @UniqueConstraint(name="uniq_uuid", columns={"uuid"})
+ *   },
+ *   indexes={
+ *     @Index(name="idx_u_idx", columns={"u_idx"})
+ *   }
+ * )
  * @Entity(repositoryClass="RidiPay\User\Domain\Repository\PaymentMethodRepository")
  */
 class PaymentMethodEntity
@@ -39,14 +48,32 @@ class PaymentMethodEntity
     /**
      * @var string
      *
-     * @Column(name="type", type="string", length=0, nullable=false, columnDefinition="ENUM('CARD')", options={"default"="CARD","comment"="결제 수단"})
+     * @Column(
+     *   name="type",
+     *   type="string",
+     *   length=0,
+     *   nullable=false,
+     *   columnDefinition="ENUM('CARD')",
+     *   options={
+     *     "default"="CARD",
+     *     "comment"="결제 수단"
+     *   }
+     * )
      */
     private $type;
 
     /**
      * @var \DateTime
      *
-     * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP","comment"="결제 수단 등록 시각"})
+     * @Column(
+     *   name="created_at",
+     *   type="datetime",
+     *   nullable=false,
+     *   options={
+     *     "default"="CURRENT_TIMESTAMP",
+     *     "comment"="결제 수단 등록 시각"
+     *   }
+     * )
      */
     private $created_at;
 
