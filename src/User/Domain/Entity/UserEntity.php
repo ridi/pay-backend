@@ -110,7 +110,7 @@ class UserEntity
      */
     public function isPinMatched(string $pin): bool
     {
-        return $this->pin === self::hashPin($pin);
+        return password_verify($pin, $this->pin);
     }
 
     /**
@@ -119,7 +119,7 @@ class UserEntity
      */
     private static function hashPin(string $pin)
     {
-        return hash('sha256', $pin);
+        return password_hash($pin, PASSWORD_DEFAULT);
     }
 
     /**

@@ -123,7 +123,7 @@ class PartnerEntity
      */
     public function isValidPassword(string $password): bool
     {
-        return $this->password === self::hashPassword($password);
+        return password_verify($password, $this->password);
     }
 
     /**
@@ -132,7 +132,7 @@ class PartnerEntity
      */
     private static function hashPassword(string $password): string
     {
-        return hash('sha256', $password);
+        return password_hash($password, PASSWORD_DEFAULT);
     }
 
     /**
