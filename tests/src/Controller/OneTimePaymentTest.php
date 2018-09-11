@@ -17,9 +17,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OneTimePaymentTest extends ControllerTestCase
 {
-    // 국민카드
+    // 신한카드
     private const CARD = [
-        'CARD_NUMBER' => '5164531234567890',
+        'CARD_NUMBER' => '4499140000000000',
         'CARD_EXPIRATION_DATE' => '2511',
         'CARD_PASSWORD' => '12'
     ];
@@ -184,7 +184,7 @@ class OneTimePaymentTest extends ControllerTestCase
                 'cards' => [
                     [
                         'iin' => substr(self::CARD['CARD_NUMBER'], 0, 6),
-                        'issuer_name' => 'KB국민카드',
+                        'issuer_name' => '신한카드',
                         'payment_method_id' => self::$payment_method_id
                     ]
                 ]
