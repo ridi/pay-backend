@@ -13,7 +13,7 @@ use RidiPay\Library\Pg\Kcp\Util;
 
 class KcpClientTest extends TestCase
 {
-    const DUMMY_CARD_NUMBER_KBCARD = '9490940000000000';
+    const DUMMY_CARD_NUMBER_SHINHAN_CARD = '4499140000000000';
     const DUMMY_CARD_EXPIRY_MAX = '7912';
     const DUMMY_CARD_PASSWORD = '00';
     const DUMMY_CARD_TAX_ID = '000101';
@@ -29,12 +29,12 @@ class KcpClientTest extends TestCase
         $client = Client::getTestClient();
 
         $card = new Card(
-            self::DUMMY_CARD_NUMBER_KBCARD,
+            self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
             self::DUMMY_CARD_EXPIRY_MAX,
             self::DUMMY_CARD_PASSWORD,
             self::DUMMY_CARD_TAX_ID
         );
-        $card_company = Company::KOOKMIN;
+        $card_company = Company::SHINHAN;
 
         $order_id = Uuid::uuid4()->toString();
         $order = new Order(
