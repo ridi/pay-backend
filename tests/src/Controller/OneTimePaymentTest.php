@@ -180,13 +180,11 @@ class OneTimePaymentTest extends ControllerTestCase
         self::$client->request('GET', '/users/' . TestUtil::U_ID . '/payment-methods');
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $expected_response = json_encode([
-            'payment_methods' => [
-                'cards' => [
-                    [
-                        'iin' => substr(self::CARD['CARD_NUMBER'], 0, 6),
-                        'issuer_name' => '신한카드',
-                        'payment_method_id' => self::$payment_method_id
-                    ]
+            'cards' => [
+                [
+                    'iin' => substr(self::CARD['CARD_NUMBER'], 0, 6),
+                    'issuer_name' => '신한카드',
+                    'payment_method_id' => self::$payment_method_id
                 ]
             ]
         ]);
