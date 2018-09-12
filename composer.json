@@ -13,12 +13,6 @@
             "email": "limeburst@ridi.com"
         }
     ],
-    "repositories": [
-        {
-            "type": "composer",
-            "url": "https://satis.ridi.io"
-        }
-    ],
     "require": {
         "php": "^7.2",
         "ext-json": "*",
