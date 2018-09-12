@@ -42,7 +42,7 @@ class UserController extends BaseController
             return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return self::createSuccessResponse(['payment_methods' => $payment_methods]);
+        return self::createSuccessResponse(['cards' => $payment_methods->cards]);
     }
 
     /**
