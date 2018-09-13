@@ -9,6 +9,9 @@ use Symfony\Component\Validator\Validation;
 
 class ApiSecretValidator
 {
+    public const HEADER_API_KEY = 'Api-Key';
+    public const HEADER_SECRET_KEY = 'Secret-Key';
+
     /**
      * @param Request $request
      * @throws ApiSecretValidationException
@@ -17,6 +20,9 @@ class ApiSecretValidator
     {
         $api_key = self::getApiKey($request);
         $secret_key = self::getSecretKey($request);
+        if (is_null($api_key) || is_null($secret_key)) {
+            throw new ApiSecretValidationException();
+        }
 
         $validator = Validation::createValidator();
         $constraint = new Uuid();
@@ -30,19 +36,19 @@ class ApiSecretValidator
 
     /**
      * @param Request $request
-     * @return string
+     * @return null|string
      */
-    public static function getApiKey(Request $request): string
+    public static function getApiKey(Request $request): ?string
     {
-        return $request->headers->get('Api-Key');
+        return $request->headers->get(self::HEADER_API_KEY);
     }
 
     /**
      * @param Request $request
-     * @return string
+     * @return null|string
      */
-    public static function getSecretKey(Request $request): string
+    public static function getSecretKey(Request $request): ?string
     {
-        return $request->headers->get('Secret-Key');
+        return $request->headers->get(self::HEADER_SECRET_KEY);
     }
 }
