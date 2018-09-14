@@ -37,6 +37,7 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
 
     /**
      * @param FilterControllerEvent $event
+     * @throws \ReflectionException
      */
     public function onKernelController(FilterControllerEvent $event): void
     {
@@ -67,8 +68,11 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
     private static function authorize(Request $request)
     {
         $authorization_header = $request->headers->get('Authorization');
-        $jwt = sscanf($authorization_header, 'Bearer %s')[0];
+        if (is_null($authorization_header)) {
+            throw new \Exception("Authorization header doesn't exist");
+        }
 
+        $jwt = sscanf($authorization_header, 'Bearer %s')[0];
         if (is_null($jwt)) {
             throw new \Exception('Invalid authorization header');
         }
@@ -80,6 +84,7 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
      * @param $controller
      * @param string $method_name
      * @return bool
+     * @throws \ReflectionException
      */
     private function isJwtAuthAnnotated($controller, string $method_name): bool
     {
@@ -90,6 +95,7 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
     /**
      * @param $controller
      * @return bool
+     * @throws \ReflectionException
      */
     private function isJwtAuthAnnotatedOnClass($controller): bool
     {
@@ -100,14 +106,15 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
 
     /**
      * @param $controller
-     * @param $method_name
+     * @param string $method_name
      * @return bool
+     * @throws \ReflectionException
      */
     private function isJwtAuthAnnotatedOnMethod($controller, string $method_name): bool
     {
-        $reflectionObject = new \ReflectionObject($controller);
-        $reflectionMethod = $reflectionObject->getMethod($method_name);
+        $reflection_class = new \ReflectionClass($controller);
+        $reflection_method = $reflection_class->getMethod($method_name);
 
-        return !is_null($this->annotation_reader->getMethodAnnotation($reflectionMethod, JwtAuth::class));
+        return !is_null($this->annotation_reader->getMethodAnnotation($reflection_method, JwtAuth::class));
     }
 }
