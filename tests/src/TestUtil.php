@@ -134,7 +134,7 @@ class TestUtil
 
     public static function tearDownJwtDoubles(): void
     {
-        test::double(JwtAuthorizationMiddleware::class);
+        test::clean(JwtAuthorizationMiddleware::class);
     }
 
     /**
