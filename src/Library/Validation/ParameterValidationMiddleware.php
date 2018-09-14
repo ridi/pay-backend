@@ -36,6 +36,7 @@ class ParameterValidationMiddleware implements EventSubscriberInterface
 
     /**
      * @param FilterControllerEvent $event
+     * @throws \ReflectionException
      */
     public function onKernelController(FilterControllerEvent $event): void
     {
@@ -71,12 +72,13 @@ class ParameterValidationMiddleware implements EventSubscriberInterface
      * @param $controller
      * @param string $method_name
      * @return null|ParamValidator
+     * @throws \ReflectionException
      */
     private function getAnnotation($controller, string $method_name): ?ParamValidator
     {
-        $reflectionObject = new \ReflectionObject($controller);
-        $reflectionMethod = $reflectionObject->getMethod($method_name);
+        $reflection_class = new \ReflectionClass($controller);
+        $reflection_method = $reflection_class->getMethod($method_name);
 
-        return $this->annotation_reader->getMethodAnnotation($reflectionMethod, ParamValidator::class);
+        return $this->annotation_reader->getMethodAnnotation($reflection_method, ParamValidator::class);
     }
 }
