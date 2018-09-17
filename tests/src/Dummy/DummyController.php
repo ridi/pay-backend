@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Tests\Dummy;
 
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
+use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,6 +21,18 @@ class DummyController extends Controller
      * @return Response
      */
     public function jwtAuthTest(Request $request): Response
+    {
+        return new Response();
+    }
+
+    /**
+     * @Route("/oauth2", methods={"GET"})
+     * @OAuth2()
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function oauth2Test(Request $request): Response
     {
         return new Response();
     }
