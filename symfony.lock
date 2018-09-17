@@ -263,9 +263,6 @@
     "symfony/http-kernel": {
         "version": "v4.1.1"
     },
-    "symfony/lts": {
-        "version": "4-dev"
-    },
     "symfony/polyfill-ctype": {
         "version": "v1.9.0"
     },

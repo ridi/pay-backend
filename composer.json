@@ -28,9 +28,8 @@
         "sensio/framework-extra-bundle": "^5.2",
         "sentry/sentry": "^1.9",
         "symfony/console": "^4.1",
-        "symfony/flex": "^1.0",
+        "symfony/flex": "^1.1",
         "symfony/framework-bundle": "^4.1",
-        "symfony/lts": "^4@dev",
         "symfony/validator": "^4.1",
         "symfony/yaml": "^4.1"
     },
@@ -62,7 +61,8 @@
     },
     "extra": {
         "symfony": {
-            "allow-contrib": false
+            "allow-contrib": false,
+            "require": "^4.1"
         }
     }
 }
