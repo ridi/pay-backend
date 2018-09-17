@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Tests\Jwt;
+namespace RidiPay\Tests\Dummy;
 
 use RidiPay\Kernel;
 use Symfony\Component\Config\Exception\FileLoaderLoadException;
