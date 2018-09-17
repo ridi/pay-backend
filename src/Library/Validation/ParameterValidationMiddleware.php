@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Library\Validation;
 
 use Doctrine\Common\Annotations\CachedReader;
+use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -57,11 +58,13 @@ class ParameterValidationMiddleware implements EventSubscriberInterface
             $event->setController(function () use ($e) {
                 $message = $e->getMessage();
                 $parameter = $e->getParameter();
-                return new JsonResponse(['message' => "{$parameter}: {$message}"], Response::HTTP_BAD_REQUEST);
-            });
-        } catch (\Exception $e) {
-            $event->setController(function () {
-                return new JsonResponse(['message' => 'Internal server error'], Response::HTTP_INTERNAL_SERVER_ERROR);
+                return new JsonResponse(
+                    [
+                        'code' => 'INVALID_PARAMETER',
+                        'message' => "{$parameter}: {$message}"
+                    ],
+                    Response::HTTP_BAD_REQUEST
+                );
             });
         }
 

@@ -52,12 +52,16 @@ class PartnerAppService
     /**
      * @param string $api_key
      * @return int
+     * @throws UnauthorizedPartnerException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     public static function getPartnerIdByApiKey(string $api_key): int
     {
         $partner = PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($api_key));
+        if (is_null($partner)) {
+            throw new UnauthorizedPartnerException();
+        }
 
         return $partner->getId();
     }

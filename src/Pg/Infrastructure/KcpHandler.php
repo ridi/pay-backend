@@ -9,13 +9,16 @@ use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Order;
 use RidiPay\Library\Pg\Kcp\Response;
 use RidiPay\Library\Pg\Kcp\Util;
+use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
+use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
+use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
-use RidiPay\Pg\Domain\Exception\PgException;
-use RidiPay\Pg\Domain\Service\ApproveTransactionResponse;
-use RidiPay\Pg\Domain\Service\CancelTransactionResponse;
+use RidiPay\Pg\Domain\Service\TransactionApprovalResponse;
+use RidiPay\Pg\Domain\Service\TransactionCancellationResponse;
 use RidiPay\Pg\Domain\Service\PgHandlerInterface;
-use RidiPay\Pg\Domain\Service\RegisterCardResponse;
+use RidiPay\Pg\Domain\Service\CardRegistrationResponse;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class KcpHandler implements PgHandlerInterface
 {
@@ -41,25 +44,25 @@ class KcpHandler implements PgHandlerInterface
      * @param string $card_password 카드 비밀번호 앞 2자리
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
-     * @return RegisterCardResponse
-     * @throws PgException
+     * @return CardRegistrationResponse
+     * @throws CardRegistrationException
      */
     public function registerCard(
         string $card_number,
         string $card_expiration_date,
         string $card_password,
         string $tax_id
-    ): RegisterCardResponse {
+    ): CardRegistrationResponse {
         $card = new Card($card_number, $card_expiration_date, $card_password, $tax_id);
 
         $response = $this->client->requestBatchKey($card);
         if (!$response->isSuccess()) {
             self::log(__METHOD__, $response);
 
-            throw new PgException('KCP Batch Key 발급 실패');
+            throw new CardRegistrationException($response->getResMsg());
         }
 
-        return new RegisterCardResponse(
+        return new CardRegistrationResponse(
             $response->isSuccess(),
             $response->getResCd(),
             $response->getResMsg(),
@@ -70,12 +73,13 @@ class KcpHandler implements PgHandlerInterface
 
     /**
      * @param TransactionEntity $transaction
-     * @return ApproveTransactionResponse
-     * @throws PgException
+     * @return TransactionApprovalResponse
+     * @throws TransactionApprovalException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public function approveTransaction(TransactionEntity $transaction): ApproveTransactionResponse
+    public function approveTransaction(TransactionEntity $transaction): TransactionApprovalResponse
     {
         // TODO: 아래 값 필요 여부 확인
         $buyer_name = '';
@@ -98,10 +102,10 @@ class KcpHandler implements PgHandlerInterface
         if (!$response->isSuccess()) {
             self::log(__METHOD__, $response);
 
-            throw new PgException('KCP 결제 승인 실패');
+            throw new TransactionApprovalException($response->getResMsg());
         }
 
-        return new ApproveTransactionResponse(
+        return new TransactionApprovalResponse(
             $response->isSuccess(),
             $response->getResCd(),
             $response->getResMsg(),
@@ -114,19 +118,19 @@ class KcpHandler implements PgHandlerInterface
     /**
      * @param string $pg_transaction_id
      * @param string $cancel_reason
-     * @return CancelTransactionResponse
-     * @throws PgException
+     * @return TransactionCancellationResponse
+     * @throws TransactionCancellationException
      */
-    public function cancelTransaction(string $pg_transaction_id, string $cancel_reason): CancelTransactionResponse
+    public function cancelTransaction(string $pg_transaction_id, string $cancel_reason): TransactionCancellationResponse
     {
         $response = $this->client->cancelTransaction($pg_transaction_id, $cancel_reason);
         if (!$response->isSuccess()) {
             self::log(__METHOD__, $response);
 
-            throw new PgException('KCP 결제 취소 실패');
+            throw new TransactionCancellationException($response->getResMsg());
         }
 
-        return new CancelTransactionResponse(
+        return new TransactionCancellationResponse(
             $response->isSuccess(),
             $response->getResCd(),
             $response->getResMsg(),

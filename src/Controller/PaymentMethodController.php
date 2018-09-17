@@ -3,16 +3,19 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use RidiPay\Controller\Response\CommonErrorCodeConstant;
+use RidiPay\Controller\Response\PgErrorCodeConstant;
+use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
-use RidiPay\User\Domain\Exception\AlreadyHadCardException;
+use RidiPay\Pg\Domain\Exception\CardRegistrationException;
+use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
-use RidiPay\User\Domain\Exception\UnregisteredUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Application\Service\CardAppService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class PaymentMethodController extends BaseController
@@ -34,7 +37,10 @@ class PaymentMethodController extends BaseController
     public function registerCard(Request $request, string $u_id): JsonResponse
     {
         if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::UNAUTHORIZED
+            );
         }
 
         try {
@@ -46,10 +52,29 @@ class PaymentMethodController extends BaseController
                 $body->card_password,
                 $body->tax_id
             );
-        } catch (AlreadyHadCardException $e) {
-            return self::createErrorResponse(Response::HTTP_FORBIDDEN, $e->getMessage());
+        } catch (CardAlreadyExistsException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::CARD_ALREADY_EXISTS,
+                $e->getMessage()
+            );
+        } catch (LeavedUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::LEAVED_USER,
+                $e->getMessage()
+            );
+        } catch (CardRegistrationException $e) {
+            return self::createErrorResponse(
+                PgErrorCodeConstant::class,
+                PgErrorCodeConstant::CARD_REGISTRATION_FAILED,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
-            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
         return self::createSuccessResponse();
@@ -66,15 +91,37 @@ class PaymentMethodController extends BaseController
     public function deleteCard(string $u_id, string $payment_method_id): JsonResponse
     {
         if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::UNAUTHORIZED
+            );
         }
 
         try {
             CardAppService::deleteCard($this->getUidx(), $payment_method_id);
-        } catch (UnregisteredUserException | LeavedUserException | UnregisteredPaymentMethodException $e) {
-            return self::createErrorResponse(Response::HTTP_NOT_FOUND, $e->getMessage());
+        } catch (LeavedUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::LEAVED_USER,
+                $e->getMessage()
+            );
+        } catch (NotFoundUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::NOT_FOUND_USER,
+                $e->getMessage()
+            );
+        } catch (UnregisteredPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
-            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
         return self::createSuccessResponse();

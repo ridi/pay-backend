@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Exception;
 
-class AlreadyHadCardException extends \Exception
+class CardAlreadyExistsException extends \Exception
 {
     /**
      * @param string $message

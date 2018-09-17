@@ -3,14 +3,24 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use RidiPay\Controller\Response\CommonErrorCodeConstant;
+use RidiPay\Controller\Response\PgErrorCodeConstant;
+use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\Validation\ApiSecretValidationException;
 use RidiPay\Library\Validation\ApiSecretValidator;
+use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
+use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
+use RidiPay\Transaction\Application\Exception\NotOwnedTransactionException;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
+use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
+use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
+use RidiPay\Transaction\Domain\Exception\UnauthorizedPartnerException;
+use RidiPay\Controller\Response\TransactionErrorCodeConstant;
+use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class PaymentController extends BaseController
@@ -45,10 +55,17 @@ class PaymentController extends BaseController
                 intval($body->amount),
                 $body->return_url
             );
-        } catch (ApiSecretValidationException $e) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
-            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
         return self::createSuccessResponse(['reservation_id' => $reservation_id]);
@@ -65,8 +82,35 @@ class PaymentController extends BaseController
     {
         try {
             $result = TransactionAppService::createTransaction($this->getUidx(), $reservation_id);
+        } catch (UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NotOwnedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (NotReservedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (UnregisteredPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
-            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
         return self::createSuccessResponse([
@@ -93,10 +137,35 @@ class PaymentController extends BaseController
                 $this->getUidx(),
                 $transaction_id
             );
-        } catch (ApiSecretValidationException $e) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NonexistentTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (NotOwnedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (TransactionApprovalException $e) {
+            return self::createErrorResponse(
+                PgErrorCodeConstant::class,
+                PgErrorCodeConstant::TRANSACTION_APPROVAL_FAILED,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
-            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
         return self::createSuccessResponse([
@@ -128,10 +197,35 @@ class PaymentController extends BaseController
                 $this->getUidx(),
                 $transaction_id
             );
-        } catch (ApiSecretValidationException $e) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NonexistentTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (NotOwnedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (TransactionCancellationException $e) {
+            return self::createErrorResponse(
+                PgErrorCodeConstant::class,
+                PgErrorCodeConstant::TRANSACTION_CANCELLATION_FAILED,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
-            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
         return self::createSuccessResponse([
@@ -164,10 +258,29 @@ class PaymentController extends BaseController
                 $this->getUidx(),
                 $transaction_id
             );
-        } catch (ApiSecretValidationException $e) {
-            return self::createErrorResponse(Response::HTTP_UNAUTHORIZED);
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NonexistentTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (NotOwnedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
-            return self::createErrorResponse(Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
         $data = [

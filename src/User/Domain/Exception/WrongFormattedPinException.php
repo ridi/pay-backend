@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Exception;
 
-class WrongPinException extends \Exception
+class WrongFormattedPinException extends \Exception
 {
     /**
      * @param string $message

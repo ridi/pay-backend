@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Domain\Service;
 
-class ApproveTransactionResponse extends PgResponse
+class TransactionApprovalResponse extends PgResponse
 {
     /** @var string */
     private $pg_transaction_id;

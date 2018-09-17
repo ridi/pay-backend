@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Exception;
 
-class OnetouchPaySettingException extends \Exception
+class OnetouchPaySettingChangeDeclinedException extends \Exception
 {
     /**
      * @param string $message

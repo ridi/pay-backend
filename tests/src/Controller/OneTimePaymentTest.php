@@ -8,10 +8,10 @@ use Ramsey\Uuid\Uuid;
 use RidiPay\Library\PasswordValidationApi;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Transaction\Application\Service\PartnerAppService;
-use RidiPay\Transaction\Domain\TransactionConstant;
+use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Application\Service\UserAppService;
-use RidiPay\User\Domain\Exception\AlreadyHadCardException;
+use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -246,7 +246,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame(self::$transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
-        $this->assertSame(TransactionConstant::STATUS_RESERVED, $response->status);
+        $this->assertSame(TransactionStatusConstant::RESERVED, $response->status);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
     }
@@ -278,7 +278,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
-        $this->assertSame(TransactionConstant::STATUS_APPROVED, $response->status);
+        $this->assertSame(TransactionStatusConstant::APPROVED, $response->status);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
         $this->assertNotNull($amount, $response->card_receipt_url);
@@ -311,14 +311,14 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
-        $this->assertSame(TransactionConstant::STATUS_CANCELED, $response->status);
+        $this->assertSame(TransactionStatusConstant::CANCELED, $response->status);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
     }
 
     /**
      * @return string
-     * @throws AlreadyHadCardException
+     * @throws CardAlreadyExistsException
      * @throws \Throwable
      */
     private static function createCard(): string

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Library\Jwt;
 
 use Doctrine\Common\Annotations\CachedReader;
+use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -54,7 +55,13 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
             self::authorize($event->getRequest());
         } catch (\Exception $e) {
             $event->setController(function () use ($e) {
-                return new JsonResponse(['message' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+                return new JsonResponse(
+                    [
+                        'code' => 'UNAUTHORIZED',
+                        'message' => $e->getMessage()
+                    ],
+                    Response::HTTP_UNAUTHORIZED
+                );
             });
         }
 

@@ -65,7 +65,7 @@ class JwtAuthorizationHelper
         }
 
         if (!isset($payload->iss)) {
-            throw new \Exception("iss should be defined");
+            throw new \Exception("Field 'iss' should be defined");
         }
 
         $rsa_public_key = self::getKey($payload->iss, $aud, true);

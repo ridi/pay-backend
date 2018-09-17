@@ -7,14 +7,15 @@ use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Pg\Application\Service\PgAppService;
-use RidiPay\Pg\Domain\Exception\PgException;
+use RidiPay\Pg\Domain\Exception\CardRegistrationException;
+use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 use RidiPay\User\Domain\Service\UserService;
-use RidiPay\User\Domain\Exception\AlreadyHadCardException;
+use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
-use RidiPay\User\Domain\Exception\UnregisteredUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 
@@ -27,8 +28,12 @@ class CardAppService
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @return string
-     * @throws AlreadyHadCardException
-     * @throws PgException
+     * @throws CardAlreadyExistsException
+     * @throws LeavedUserException
+     * @throws CardRegistrationException
+     * @throws UnsupportedPgException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
     public static function registerCard(
@@ -47,7 +52,7 @@ class CardAppService
         try {
             try {
                 UserService::getActiveUser($u_idx);
-            } catch (UnregisteredUserException $e) {
+            } catch (NotFoundUserException $e) {
                 UserAppService::createUser($u_idx);
             }
 
@@ -80,8 +85,11 @@ class CardAppService
      * @param int $u_idx
      * @param string $payment_method_id
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
      * @throws UnregisteredPaymentMethodException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
     public static function deleteCard(int $u_idx, string $payment_method_id): void

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Domain\Service;
 
-class RegisterCardResponse extends PgResponse
+class CardRegistrationResponse extends PgResponse
 {
     /** @var string */
     private $pg_bill_key;

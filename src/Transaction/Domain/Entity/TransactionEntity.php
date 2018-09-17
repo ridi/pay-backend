@@ -5,7 +5,7 @@ namespace RidiPay\Transaction\Domain\Entity;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use RidiPay\Transaction\Domain\TransactionConstant;
+use RidiPay\Transaction\Domain\TransactionStatusConstant;
 
 /**
  * @Table(
@@ -176,7 +176,7 @@ class TransactionEntity
         $this->pg_transaction_id = null;
         $this->product_name = $product_name;
         $this->amount = $amount;
-        $this->status = TransactionConstant::STATUS_RESERVED;
+        $this->status = TransactionStatusConstant::RESERVED;
         $this->reserved_at = $reserved_at;
         $this->approved_at = null;
         $this->canceled_at = null;
@@ -251,7 +251,7 @@ class TransactionEntity
      */
     public function isReserved(): bool
     {
-        return $this->status === TransactionConstant::STATUS_RESERVED;
+        return $this->status === TransactionStatusConstant::RESERVED;
     }
 
     /**
@@ -259,7 +259,7 @@ class TransactionEntity
      */
     public function isApproved(): bool
     {
-        return $this->status === TransactionConstant::STATUS_APPROVED;
+        return $this->status === TransactionStatusConstant::APPROVED;
     }
 
     /**
@@ -267,7 +267,7 @@ class TransactionEntity
      */
     public function isCanceled(): bool
     {
-        return $this->status === TransactionConstant::STATUS_CANCELED;
+        return $this->status === TransactionStatusConstant::CANCELED;
     }
 
     /**
@@ -308,13 +308,13 @@ class TransactionEntity
     public function approve(string $pg_transaction_id): void
     {
         $this->pg_transaction_id = $pg_transaction_id;
-        $this->status = TransactionConstant::STATUS_APPROVED;
+        $this->status = TransactionStatusConstant::APPROVED;
         $this->approved_at = new \DateTime();
     }
 
     public function cancel(): void
     {
-        $this->status = TransactionConstant::STATUS_CANCELED;
+        $this->status = TransactionStatusConstant::CANCELED;
         $this->canceled_at = new \DateTime();
     }
 }

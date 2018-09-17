@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Service;
 
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Pg\Domain\Exception\PgException;
+use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Service\PgHandlerInterface;
 use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
-use RidiPay\User\Domain\Exception\AlreadyHadCardException;
+use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Repository\CardIssuerRepository;
 use RidiPay\User\Domain\Repository\CardRepository;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
@@ -24,8 +24,8 @@ class CardService
      * @param int $pg_id
      * @param PgHandlerInterface $pg_handler
      * @return string
-     * @throws AlreadyHadCardException
-     * @throws PgException
+     * @throws CardAlreadyExistsException
+     * @throws CardRegistrationException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -85,7 +85,7 @@ class CardService
 
     /**
      * @param int $u_idx
-     * @throws AlreadyHadCardException
+     * @throws CardAlreadyExistsException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
@@ -102,7 +102,7 @@ class CardService
         );
 
         if (!empty($available_cards)) {
-            throw new AlreadyHadCardException();
+            throw new CardAlreadyExistsException();
         }
     }
 }

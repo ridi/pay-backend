@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Application\Exception;
 
-class NonTransactionOwnerException extends \Exception
+class NotOwnedTransactionException extends \Exception
 {
     /**
      * @param string $message

@@ -19,9 +19,21 @@ class LoginRequiredExceptionHandler implements ExceptionHandlerInterface
     public function handle(AuthorizationException $e, Request $request): ?Response
     {
         if ($e instanceof InsufficientScopeException) {
-            return new JsonResponse(['message' => 'No sufficient scope'], Response::HTTP_FORBIDDEN);
+            return new JsonResponse(
+                [
+                    'code' => 'INVALID_ACCESS_TOKEN',
+                    'message' => 'No sufficient scope'
+                ],
+                Response::HTTP_FORBIDDEN
+            );
         }
 
-        return new JsonResponse(['message' => 'Login required'], Response::HTTP_UNAUTHORIZED);
+        return new JsonResponse(
+            [
+                'code' => 'UNAUTHORIZED',
+                'message' => 'Login required'
+            ],
+            Response::HTTP_UNAUTHORIZED
+        );
     }
 }

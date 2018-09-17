@@ -8,12 +8,12 @@ use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\User\Domain\Service\UserService;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
-use RidiPay\User\Domain\Exception\UnregisteredUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
-use RidiPay\User\Domain\Exception\OnetouchPaySettingException;
+use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
-use RidiPay\User\Domain\Exception\WrongPinException;
+use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Service\AbuseBlocker;
 use RidiPay\User\Domain\Service\PasswordEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
@@ -26,8 +26,10 @@ class UserAppService
      * @param int $u_idx
      * @param string $pin
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
-     * @throws WrongPinException
+     * @throws NotFoundUserException
+     * @throws WrongFormattedPinException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
     public static function updatePin(int $u_idx, string $pin): void
@@ -59,7 +61,7 @@ class UserAppService
      * @param int $u_idx
      * @param string $pin
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
+     * @throws NotFoundUserException
      * @throws UnmatchedPinException
      * @throws PasswordEntryBlockedException
      * @throws \Doctrine\DBAL\DBALException
@@ -90,7 +92,7 @@ class UserAppService
      * @param string $u_id
      * @param string $password
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
+     * @throws NotFoundUserException
      * @throws PasswordEntryBlockedException
      * @throws UnmatchedPasswordException
      * @throws \Doctrine\DBAL\DBALException
@@ -119,8 +121,8 @@ class UserAppService
     /**
      * @param int $u_idx
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
-     * @throws OnetouchPaySettingException
+     * @throws NotFoundUserException
+     * @throws OnetouchPaySettingChangeDeclinedException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -153,8 +155,8 @@ class UserAppService
     /**
      * @param int $u_idx
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
-     * @throws OnetouchPaySettingException
+     * @throws NotFoundUserException
+     * @throws OnetouchPaySettingChangeDeclinedException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -188,7 +190,7 @@ class UserAppService
      * @param int $u_idx
      * @return bool
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
+     * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */

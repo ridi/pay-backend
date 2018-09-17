@@ -10,13 +10,16 @@ use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Pg\Application\Service\PgAppService;
-use RidiPay\Pg\Domain\Exception\PgException;
+use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
+use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Transaction\Application\Dto\ApproveTransactionDto;
 use RidiPay\Transaction\Application\Dto\CancelTransactionDto;
 use RidiPay\Transaction\Application\Dto\TransactionStatusDto;
-use RidiPay\Transaction\Application\Exception\NonTransactionOwnerException;
+use RidiPay\Transaction\Application\Exception\NotOwnedTransactionException;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
+use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
+use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Transaction\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
@@ -24,6 +27,7 @@ use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\Transaction\Application\Dto\CreateTransactionDto;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class TransactionAppService
 {
@@ -87,8 +91,12 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $reservation_id
      * @return CreateTransactionDto
-     * @throws NonTransactionOwnerException
+     * @throws NotReservedTransactionException
+     * @throws NotOwnedTransactionException
+     * @throws UnauthorizedPartnerException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
@@ -132,8 +140,9 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $transaction_id
      * @return ApproveTransactionDto
-     * @throws NonTransactionOwnerException
-     * @throws PgException
+     * @throws NotOwnedTransactionException
+     * @throws NonexistentTransactionException
+     * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -205,8 +214,9 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $transaction_id
      * @return CancelTransactionDto
-     * @throws NonTransactionOwnerException
-     * @throws PgException
+     * @throws NotOwnedTransactionException
+     * @throws NonexistentTransactionException
+     * @throws TransactionCancellationException
      * @throws UnauthorizedPartnerException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -263,7 +273,8 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $transaction_id
      * @return TransactionStatusDto
-     * @throws NonTransactionOwnerException
+     * @throws NotOwnedTransactionException
+     * @throws NonexistentTransactionException
      * @throws UnauthorizedPartnerException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -284,7 +295,8 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $reservation_id
      * @return array
-     * @throws NonTransactionOwnerException
+     * @throws NotReservedTransactionException
+     * @throws NotOwnedTransactionException
      */
     private static function getReservedTransaction(int $u_idx, string $reservation_id): array
     {
@@ -293,7 +305,11 @@ class TransactionAppService
         $redis = self::getRedisClient();
         $reserved_transaction = $redis->hgetall($reservation_key);
         if ($u_idx !== intval($reserved_transaction['u_idx'])) {
-            throw new NonTransactionOwnerException();
+            throw new NotOwnedTransactionException();
+        }
+
+        if (empty($reserved_transaction)) {
+            throw new NotReservedTransactionException();
         }
 
         return $reserved_transaction;
@@ -320,15 +336,19 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $transaction_id
      * @return TransactionEntity
-     * @throws NonTransactionOwnerException
+     * @throws NotOwnedTransactionException
+     * @throws NonexistentTransactionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     private static function getTransaction(int $u_idx, string $transaction_id): TransactionEntity
     {
         $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
+        if (is_null($transaction)) {
+            throw new NonexistentTransactionException();
+        }
         if ($u_idx !== $transaction->getUidx()) {
-            throw new NonTransactionOwnerException();
+            throw new NotOwnedTransactionException();
         }
 
         return $transaction;

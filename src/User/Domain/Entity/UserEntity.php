@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Entity;
 
 use RidiPay\Library\PasswordValidationApi;
-use RidiPay\User\Domain\Exception\OnetouchPaySettingException;
-use RidiPay\User\Domain\Exception\WrongPinException;
+use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
+use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 
 /**
  * @Table(name="user")
@@ -77,7 +77,7 @@ class UserEntity
 
     /**
      * @param string $pin
-     * @throws WrongPinException
+     * @throws WrongFormattedPinException
      */
     public function updatePin(string $pin): void
     {
@@ -87,12 +87,12 @@ class UserEntity
 
     /**
      * @param string $pin
-     * @throws WrongPinException
+     * @throws WrongFormattedPinException
      */
     private static function assertValidPin(string $pin): void
     {
         if (!preg_match('/[0-9]{6}/', $pin)) {
-            throw new WrongPinException();
+            throw new WrongFormattedPinException();
         }
     }
 
@@ -143,26 +143,26 @@ class UserEntity
     }
 
     /**
-     * @throws OnetouchPaySettingException
+     * @throws OnetouchPaySettingChangeDeclinedException
      */
     public function enableOnetouchPay(): void
     {
         // 최초 결제 수단 등록이 아닌 경우, 원터치 결제 활성화 시 결제 비밀번호 소유 필수
         if (!is_null($this->is_using_onetouch_pay) && !$this->hasPin()) {
-            throw new OnetouchPaySettingException();
+            throw new OnetouchPaySettingChangeDeclinedException();
         }
 
         $this->is_using_onetouch_pay = true;
     }
 
     /**
-     * @throws OnetouchPaySettingException
+     * @throws OnetouchPaySettingChangeDeclinedException
      */
     public function disableOnetouchPay(): void
     {
         if (!$this->hasPin()) {
             // 원터치 결제 비활성화 시 결제 비밀번호 소유 필수
-            throw new OnetouchPaySettingException();
+            throw new OnetouchPaySettingChangeDeclinedException();
         }
 
         $this->is_using_onetouch_pay = false;

@@ -5,7 +5,7 @@ namespace RidiPay\User\Domain\Service;
 
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
-use RidiPay\User\Domain\Exception\UnregisteredUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Repository\UserRepository;
 
 class UserService
@@ -14,7 +14,7 @@ class UserService
      * @param int $u_idx
      * @return UserEntity
      * @throws LeavedUserException
-     * @throws UnregisteredUserException
+     * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
@@ -22,7 +22,7 @@ class UserService
     {
         $user = UserRepository::getRepository()->findOneByUidx($u_idx);
         if (is_null($user)) {
-            throw new UnregisteredUserException();
+            throw new NotFoundUserException();
         }
 
         if ($user->isLeaved()) {

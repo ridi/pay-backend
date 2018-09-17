@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Exception;
 
-class UnregisteredUserException extends \Exception
+class NotFoundUserException extends \Exception
 {
     /**
      * @param string $message
