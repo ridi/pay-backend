@@ -27,7 +27,8 @@ jobs:
   include:
     - stage: test
       name: phpunit
-      script: docker exec -it -w /app test /bin/bash -c "vendor/bin/phpunit --colors=never"
+      script: docker exec -it -w /app test bash -c "vendor/bin/phpunit --colors=never --coverage-clover=coverage.xml"
+      after_success: bash <(curl -s https://codecov.io/bash)
     - stage: test
       name: phpcs
-      script: docker exec -it -w /app test /bin/bash -c "vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml"
+      script: docker exec -it -w /app test bash -c "vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml"
