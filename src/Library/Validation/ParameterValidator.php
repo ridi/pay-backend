@@ -21,6 +21,10 @@ class ParameterValidator
             $constraints = $rule->getConstraints();
 
             foreach ($constraints as $constraint) {
+                if (!isset($parameters[$parameter])) {
+                    throw new ParameterValidationException("Parameter doesn't exist", $parameter);
+                }
+
                 $violations = $validator->validate($parameters[$parameter], $constraint);
                 if (count($violations) > 0) {
                     throw new ParameterValidationException($violations->get(0)->getMessage(), $parameter);
