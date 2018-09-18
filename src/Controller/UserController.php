@@ -48,7 +48,6 @@ class UserController extends BaseController
                 unset($card->subscriptions);
             }
         } catch (\Throwable $t) {
-            var_dump($t->getMessage());
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
