@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Transaction\Application\Dto;
+namespace RidiPay\Partner\Application\Dto;
 
-use RidiPay\Transaction\Domain\Entity\PartnerEntity;
+use RidiPay\Partner\Domain\Entity\PartnerEntity;
 
 class RegisterPartnerDto
 {

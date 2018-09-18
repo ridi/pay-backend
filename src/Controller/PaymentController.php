@@ -16,7 +16,7 @@ use RidiPay\Transaction\Application\Exception\NotOwnedTransactionException;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
-use RidiPay\Transaction\Domain\Exception\UnauthorizedPartnerException;
+use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;

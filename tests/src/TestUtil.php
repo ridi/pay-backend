@@ -14,7 +14,7 @@ use RidiPay\Library\OAuth2\User\DefaultUserProvider;
 use RidiPay\Library\OAuth2\User\User;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
-use RidiPay\Transaction\Domain\Entity\PartnerEntity;
+use RidiPay\Partner\Domain\Entity\PartnerEntity;
 use RidiPay\Pg\Domain\Entity\PgEntity;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;

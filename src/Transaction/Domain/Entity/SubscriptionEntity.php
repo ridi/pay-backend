@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Domain\Entity;
 
+use RidiPay\Partner\Domain\Entity\PartnerEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 
 /**
@@ -37,7 +38,7 @@ class SubscriptionEntity
     /**
      * @var PartnerEntity
      *
-     * @ManyToOne(targetEntity="RidiPay\Transaction\Domain\Entity\PartnerEntity")
+     * @ManyToOne(targetEntity="RidiPay\Partner\Domain\Entity\PartnerEntity")
      * @JoinColumn(name="partner_id", referencedColumnName="id", nullable=false)
      */
     private $partner;

@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Transaction\Domain\Repository;
+namespace RidiPay\Partner\Domain\Repository;
 
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Transaction\Domain\Entity\PartnerEntity;
+use RidiPay\Partner\Domain\Entity\PartnerEntity;
 
 class PartnerRepository extends BaseEntityRepository
 {

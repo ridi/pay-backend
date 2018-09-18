@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Transaction\Application\Service;
+namespace RidiPay\Partner\Application\Service;
 
 use Ramsey\Uuid\Uuid;
-use RidiPay\Transaction\Domain\Entity\PartnerEntity;
+use RidiPay\Partner\Application\Dto\RegisterPartnerDto;
+use RidiPay\Partner\Domain\Entity\PartnerEntity;
+use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
+use RidiPay\Partner\Domain\Repository\PartnerRepository;
 use RidiPay\Transaction\Domain\Exception\AlreadyRegisteredPartnerException;
-use RidiPay\Transaction\Domain\Exception\UnauthorizedPartnerException;
-use RidiPay\Transaction\Domain\Repository\PartnerRepository;
-use RidiPay\Transaction\Application\Dto\RegisterPartnerDto;
 
 class PartnerAppService
 {

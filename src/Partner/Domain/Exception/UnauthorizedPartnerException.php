@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Transaction\Domain\Exception;
+namespace RidiPay\Partner\Domain\Exception;
 
 class UnauthorizedPartnerException extends \Exception
 {

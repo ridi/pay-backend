@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Transaction\Domain\Entity;
+namespace RidiPay\Partner\Domain\Entity;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -15,7 +15,7 @@ use RidiPay\Library\Crypto;
  *     @UniqueConstraint(name="uniq_api_key", columns={"api_key"})
  *   }
  * )
- * @Entity(repositoryClass="RidiPay\Transaction\Domain\Repository\PartnerRepository")
+ * @Entity(repositoryClass="RidiPay\Partner\Domain\Repository\PartnerRepository")
  */
 class PartnerEntity
 {

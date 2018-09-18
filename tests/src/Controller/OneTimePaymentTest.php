@@ -7,7 +7,7 @@ use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\PasswordValidationApi;
 use RidiPay\Tests\TestUtil;
-use RidiPay\Transaction\Application\Service\PartnerAppService;
+use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
