@@ -30,10 +30,10 @@ paths:
           $ref: '#/components/responses/SpaResponse'
     post:
       tags:
-      - Private API
+        - Private API
       summary: 결제 Transaction 생성
       parameters:
-      - $ref: '#/components/parameters/ReservationId'
+        - $ref: '#/components/parameters/ReservationId'
       responses:
         200:
           $ref: '#/components/responses/CreatePaymentResponse'
