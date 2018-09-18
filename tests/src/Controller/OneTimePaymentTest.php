@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
-use AspectMock\Test as test;
+use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\PasswordValidationApi;
 use RidiPay\Tests\TestUtil;
@@ -127,7 +127,7 @@ class OneTimePaymentTest extends ControllerTestCase
 
     public function testOneTimePaymentLifeCycleCaseInCaseOfPasswordValidation()
     {
-        test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);
+        Test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);
 
         // 결제 수단 조회
         $this->assertGetPaymentMethodsSuccessfully();
@@ -158,7 +158,7 @@ class OneTimePaymentTest extends ControllerTestCase
         // 결제 취소
         $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
 
-        test::clean(PasswordValidationApi::class);
+        Test::clean(PasswordValidationApi::class);
     }
 
     private function assertGetPaymentMethodsSuccessfully()

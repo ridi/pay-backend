@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests;
 
-use AspectMock\Test as test;
+use AspectMock\Test;
 use Doctrine\ORM\Tools\SchemaTool;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Library\Pg\Kcp\Company;
@@ -96,7 +96,7 @@ class TestUtil
      */
     public static function setUpOAuth2Doubles(int $u_idx, string $u_id): void
     {
-        test::double(
+        Test::double(
             DefaultUserProvider::class,
             [
                 'getUser' => new User(json_encode([
@@ -113,7 +113,7 @@ class TestUtil
 
     public static function tearDownOAuth2Doubles(): void
     {
-        test::clean(DefaultUserProvider::class);
+        Test::clean(DefaultUserProvider::class);
     }
 
     /**
@@ -121,12 +121,12 @@ class TestUtil
      */
     public static function setUpJwtDoubles(): void
     {
-        test::double(JwtAuthorizationMiddleware::class, ['authorize' => null]);
+        Test::double(JwtAuthorizationMiddleware::class, ['authorize' => null]);
     }
 
     public static function tearDownJwtDoubles(): void
     {
-        test::clean(JwtAuthorizationMiddleware::class);
+        Test::clean(JwtAuthorizationMiddleware::class);
     }
 
     /**

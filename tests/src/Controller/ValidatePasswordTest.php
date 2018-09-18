@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
-use AspectMock\Test as test;
+use AspectMock\Test;
 use RidiPay\Library\PasswordValidationApi;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Domain\Service\PasswordEntryAbuseBlockPolicy;
@@ -38,18 +38,18 @@ class ValidatePasswordTest extends ControllerTestCase
 
     public function testEnterPasswordCorrectly()
     {
-        test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);
+        Test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);
 
         $body = json_encode(['password' => self::VALID_PASSWORD]);
         self::$client->request('POST', '/users/' . TestUtil::U_ID . '/password/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         
-        test::clean(PasswordValidationApi::class);
+        Test::clean(PasswordValidationApi::class);
     }
 
     public function testEnterPasswordIncorrectly()
     {
-        test::double(PasswordValidationApi::class, ['isPasswordMatched' => false]);
+        Test::double(PasswordValidationApi::class, ['isPasswordMatched' => false]);
 
         // PASSWORD 입력 불일치
         $policy = new PasswordEntryAbuseBlockPolicy();
@@ -69,6 +69,6 @@ class ValidatePasswordTest extends ControllerTestCase
         self::$client->request('POST', '/users/' . TestUtil::U_ID . '/password/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
         
-        test::clean(PasswordValidationApi::class);
+        Test::clean(PasswordValidationApi::class);
     }
 }
