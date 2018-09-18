@@ -13,16 +13,16 @@ use RidiPay\Library\Pg\Kcp\Util;
 
 class KcpClientTest extends TestCase
 {
-    const DUMMY_CARD_NUMBER_SHINHAN_CARD = '4499140000000000';
-    const DUMMY_CARD_EXPIRY_MAX = '7912';
-    const DUMMY_CARD_PASSWORD = '00';
-    const DUMMY_CARD_TAX_ID = '000101';
+    private const DUMMY_CARD_NUMBER_SHINHAN_CARD = '4499140000000000';
+    private const DUMMY_CARD_EXPIRY_MAX = '7912';
+    private const DUMMY_CARD_PASSWORD = '00';
+    private const DUMMY_CARD_TAX_ID = '000101';
 
-    const DUMMY_ORDER_GOOD_NAME = '테스트 상품';
-    const DUMMY_ORDER_BUYER_NAME = '테스트 구매자';
-    const DUMMY_ORDER_BUYER_EMAIL = 'test@example.com';
-    const DUMMY_ORDER_BUYER_TEL1 = '02-000-0000';
-    const DUMMY_ORDER_BUYER_TEL2 = '010-0000-0000';
+    private const DUMMY_ORDER_GOOD_NAME = '테스트 상품';
+    private const DUMMY_ORDER_BUYER_NAME = '테스트 구매자';
+    private const DUMMY_ORDER_BUYER_EMAIL = 'test@example.com';
+    private const DUMMY_ORDER_BUYER_TEL1 = '02-000-0000';
+    private const DUMMY_ORDER_BUYER_TEL2 = '010-0000-0000';
 
     public function testPaymentLifecycle()
     {
@@ -55,21 +55,38 @@ class KcpClientTest extends TestCase
         $order_res = $client->batchOrder($auth_res->getBatchKey(), $order);
         $this->assertTrue($order_res->isSuccess());
         $this->assertSame($order_id, $order_res->getOrderNo());
+        $this->assertSame($order_id, $order_res->getCaOrderId());
         $this->assertSame($order->getGoodPrice(), $order_res->getAmount());
         $this->assertSame($order->getGoodPrice(), $order_res->getCardMny());
+        $this->assertSame(0, $order_res->getCouponMny());
         $this->assertSame(0, $order_res->getQuota());
         $this->assertSame(90, $order_res->getResTaxMny());
         $this->assertSame(10, $order_res->getResVatMny());
+        $this->assertSame(0, $order_res->getResFreeMny());
+        $this->assertFalse($order_res->isNoinf());
+        $this->assertFalse($order_res->isEscwYn());
+        $this->assertSame($card_company, $order_res->getCardCd());
+        $this->assertSame(Company::getKoreanName($order_res->getCardCd()), $order_res->getCardName());
         $this->assertSame(Company::getAcquirerFromIssuer($card_company), $order_res->getAcquCd());
         $this->assertSame(Company::getKoreanName($order_res->getAcquCd()), $order_res->getAcquName());
+        $this->assertSame(self::DUMMY_CARD_NUMBER_SHINHAN_CARD, $order_res->getCardNo());
 
         $kcp_tno = $order_res->getTno();
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
         $this->assertTrue($cancel_res->isSuccess());
         $this->assertSame($order_id, $cancel_res->getOrderNo());
+        $this->assertSame($order_id, $cancel_res->getCaOrderId());
+        $this->assertSame($kcp_tno, $cancel_res->getTno());
         $this->assertSame($order->getGoodPrice(), $cancel_res->getAmount());
         $this->assertSame($order->getGoodPrice(), $cancel_res->getCardMny());
+        $this->assertSame(0, $cancel_res->getCouponMny());
         $this->assertSame(0, $cancel_res->getQuota());
+        $this->assertFalse($cancel_res->isNoinf());
+        $this->assertFalse($cancel_res->isEscwYn());
+        $this->assertSame($card_company, $cancel_res->getCardCd());
+        $this->assertSame(Company::getKoreanName($cancel_res->getCardCd()), $cancel_res->getCardName());
+        $this->assertSame(Company::getAcquirerFromIssuer($card_company), $cancel_res->getAcquCd());
+        $this->assertSame(Company::getKoreanName($cancel_res->getAcquCd()), $cancel_res->getAcquName());
 
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
         $this->assertFalse($cancel_res->isSuccess());

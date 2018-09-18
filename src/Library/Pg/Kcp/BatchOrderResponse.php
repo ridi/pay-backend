@@ -134,11 +134,11 @@ class BatchOrderResponse extends Response
     }
 
     /**
-     * @return string
+     * @return bool
      */
-    public function getEscwYn(): string
+    public function isEscwYn(): bool
     {
-        return $this->response['escw_yn'];
+        return $this->response['escw_yn'] === 'Y';
     }
 
     /**
@@ -238,11 +238,11 @@ class BatchOrderResponse extends Response
     }
 
     /**
-     * @return string
+     * @return bool
      */
-    public function getPartcancYn(): string
+    public function isPartcancYn(): bool
     {
-        return $this->response['partcanc_yn'];
+        return $this->response['partcanc_yn'] === 'Y';
     }
 
     /**
