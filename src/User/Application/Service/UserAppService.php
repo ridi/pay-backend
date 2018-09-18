@@ -5,6 +5,8 @@ namespace RidiPay\User\Application\Service;
 
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
+use RidiPay\User\Application\Dto\UserInformationDto;
+use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Service\UserService;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
@@ -22,6 +24,23 @@ use RidiPay\User\Domain\Service\UserActionHistoryService;
 
 class UserAppService
 {
+    /**
+     * @param int $u_idx
+     * @return UserInformationDto
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws UnsupportedPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getUserInformation(int $u_idx): UserInformationDto
+    {
+        $user = UserService::getActiveUser($u_idx);
+        $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+
+        return new UserInformationDto($payment_methods, $user);
+    }
+
     /**
      * @param int $u_idx
      * @param string $pin

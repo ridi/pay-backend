@@ -42,7 +42,13 @@ class UserController extends BaseController
 
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx());
+            foreach ($payment_methods->cards as $card) {
+                unset($card->color);
+                unset($card->logo_image_url);
+                unset($card->subscriptions);
+            }
         } catch (\Throwable $t) {
+            var_dump($t->getMessage());
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -50,6 +56,50 @@ class UserController extends BaseController
         }
 
         return self::createSuccessResponse(['cards' => $payment_methods->cards]);
+    }
+
+    /**
+     * @Route("/users/{u_id}", methods={"GET"})
+     * @OAuth2()
+     *
+     * @param string $u_id
+     * @return JsonResponse
+     */
+    public function getUserInformation(string $u_id): JsonResponse
+    {
+        if ($u_id !== $this->getUid()) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::UNAUTHORIZED
+            );
+        }
+
+        try {
+            $user_information = UserAppService::getUserInformation($this->getUidx());
+        } catch (LeavedUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::LEAVED_USER,
+                $e->getMessage()
+            );
+        } catch (NotFoundUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::NOT_FOUND_USER,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse([
+            'payment_methods' => $user_information->payment_methods,
+            'has_pin' => $user_information->has_pin,
+            'is_using_onetouch_pay' => $user_information->is_using_onetouch_pay
+        ]);
     }
 
     /**

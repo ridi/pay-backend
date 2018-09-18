@@ -9,22 +9,12 @@ use RidiPay\Library\PasswordValidationApi;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Transaction\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
-use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Application\Service\UserAppService;
-use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Response;
 
 class OneTimePaymentTest extends ControllerTestCase
 {
-    // 신한카드
-    private const CARD = [
-        'CARD_NUMBER' => '4499140000000000',
-        'CARD_EXPIRATION_DATE' => '2511',
-        'CARD_PASSWORD' => '12'
-    ];
-    private const TAX_ID = '940101';
-
     /** @var Client */
     private static $client;
 
@@ -45,7 +35,7 @@ class OneTimePaymentTest extends ControllerTestCase
         self::$u_idx = TestUtil::getRandomUidx();
         UserAppService::createUser(self::$u_idx);
 
-        self::$payment_method_id = self::createCard();
+        self::$payment_method_id = TestUtil::createCard(self::$u_idx);
         $partner = PartnerAppService::registerPartner('test', 'test@12345', true);
 
         self::$client = self::createClientWithOAuth2AccessToken(
@@ -179,7 +169,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $expected_response = json_encode([
             'cards' => [
                 [
-                    'iin' => substr(self::CARD['CARD_NUMBER'], 0, 6),
+                    'iin' => substr(TestUtil::CARD['CARD_NUMBER'], 0, 6),
                     'issuer_name' => '신한카드',
                     'payment_method_id' => self::$payment_method_id
                 ]
@@ -311,23 +301,5 @@ class OneTimePaymentTest extends ControllerTestCase
         $this->assertSame(TransactionStatusConstant::CANCELED, $response->status);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
-    }
-
-    /**
-     * @return string
-     * @throws CardAlreadyExistsException
-     * @throws \Throwable
-     */
-    private static function createCard(): string
-    {
-        $payment_method_id = CardAppService::registerCard(
-            self::$u_idx,
-            self::CARD['CARD_NUMBER'],
-            self::CARD['CARD_EXPIRATION_DATE'],
-            self::CARD['CARD_PASSWORD'],
-            self::TAX_ID
-        );
-
-        return $payment_method_id;
     }
 }

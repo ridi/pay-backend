@@ -13,6 +13,15 @@ class CardDto extends PaymentMethodDto
     /** @var string 카드 발급사명 */
     public $issuer_name;
 
+    /** @var string 카드 플레이트 색상 */
+    public $color;
+
+    /** @var string 카드 발급사 로고 이미지 URL */
+    public $logo_image_url;
+
+    /** @var string[] 연결된 정기 결제 서비스명 */
+    public $subscriptions;
+
     /**
      * @param CardEntity $card
      * @throws \Exception
@@ -23,5 +32,8 @@ class CardDto extends PaymentMethodDto
         
         $this->iin = $card->getIin();
         $this->issuer_name = $card->getCardIssuer()->getName();
+        $this->color = $card->getCardIssuer()->getColor();
+        $this->logo_image_url = $card->getCardIssuer()->getLogoImageUrl();
+        $this->subscriptions = []; // TODO: 구현
     }
 }

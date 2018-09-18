@@ -12,21 +12,33 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Jwt\JwtAuthorizationMiddleware;
 use RidiPay\Library\OAuth2\User\DefaultUserProvider;
 use RidiPay\Library\OAuth2\User\User;
+use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Domain\Entity\PartnerEntity;
 use RidiPay\Pg\Domain\Entity\PgEntity;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
+use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\CardIssuerEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
 use RidiPay\User\Domain\Entity\UserEntity;
+use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
+use RidiPay\User\Domain\Exception\LeavedUserException;
 
 class TestUtil
 {
     public const U_ID = 'ridipay';
+
+    // 신한카드
+    public const CARD = [
+        'CARD_NUMBER' => '4499140000000000',
+        'CARD_EXPIRATION_DATE' => '2511',
+        'CARD_PASSWORD' => '12'
+    ];
+    public const TAX_ID = '940101';
 
     /**
      * @throws UnsupportedPgException
@@ -126,5 +138,29 @@ class TestUtil
         $max = 5000000;
 
         return rand($min, $max);
+    }
+
+    /**
+     * @param int $u_idx
+     * @return string
+     * @throws CardAlreadyExistsException
+     * @throws CardRegistrationException
+     * @throws LeavedUserException
+     * @throws UnsupportedPgException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function createCard(int $u_idx): string
+    {
+        $payment_method_id = CardAppService::registerCard(
+            $u_idx,
+            self::CARD['CARD_NUMBER'],
+            self::CARD['CARD_EXPIRATION_DATE'],
+            self::CARD['CARD_PASSWORD'],
+            self::TAX_ID
+        );
+
+        return $payment_method_id;
     }
 }

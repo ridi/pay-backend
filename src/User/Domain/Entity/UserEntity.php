@@ -99,7 +99,7 @@ class UserEntity
     /**
      * @return bool
      */
-    private function hasPin(): bool
+    public function hasPin(): bool
     {
         return !is_null($this->pin);
     }
