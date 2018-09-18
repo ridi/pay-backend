@@ -4,9 +4,9 @@ info:
   title: RIDI Pay API
   description: RIDI Pay API
 servers:
-  - url: https://pay.local.ridi.io
+  - url: https://api.pay.local.ridi.io
     description: Local Server
-  - url: https://pay.ridi.com
+  - url: https://api.pay.ridi.com
     description: Production Server
 tags:
   - name: SPA End-point
