@@ -6,21 +6,21 @@ namespace RidiPay\User\Application\Service;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\User\Application\Dto\UserInformationDto;
-use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
-use RidiPay\User\Domain\Service\UserService;
 use RidiPay\User\Domain\Entity\UserEntity;
-use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
-use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
+use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
+use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
+use RidiPay\User\Domain\Repository\UserRepository;
 use RidiPay\User\Domain\Service\AbuseBlocker;
 use RidiPay\User\Domain\Service\PasswordEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
-use RidiPay\User\Domain\Repository\UserRepository;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
+use RidiPay\User\Domain\Service\UserService;
 
 class UserAppService
 {

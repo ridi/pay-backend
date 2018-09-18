@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Domain\Service;
 
+use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
-use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 
 interface PgHandlerInterface

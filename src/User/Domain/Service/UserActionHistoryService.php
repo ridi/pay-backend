@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Service;
 
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
-use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Repository\UserActionHistoryRepository;
 use RidiPay\User\Domain\Repository\UserRepository;
 

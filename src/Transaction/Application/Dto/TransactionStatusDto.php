@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Application\Dto;
 
 use RidiPay\Pg\Application\Service\PgAppService;
-use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
+use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class TransactionStatusDto
 {
@@ -40,6 +41,7 @@ class TransactionStatusDto
 
     /**
      * @param TransactionEntity $transaction
+     * @throws UnregisteredPaymentMethodException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException

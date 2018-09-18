@@ -10,14 +10,14 @@ use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
-use RidiPay\User\Domain\Service\CardService;
-use RidiPay\User\Domain\Service\UserActionHistoryService;
-use RidiPay\User\Domain\Service\UserService;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
+use RidiPay\User\Domain\Service\CardService;
+use RidiPay\User\Domain\Service\UserActionHistoryService;
+use RidiPay\User\Domain\Service\UserService;
 
 class CardAppService
 {
@@ -29,8 +29,8 @@ class CardAppService
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @return string
      * @throws CardAlreadyExistsException
-     * @throws LeavedUserException
      * @throws CardRegistrationException
+     * @throws LeavedUserException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException

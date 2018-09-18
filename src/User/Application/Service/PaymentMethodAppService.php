@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
-use RidiPay\User\Application\Dto\PaymentMethodDto;
 use RidiPay\User\Application\Dto\AvailablePaymentMethodsDto;
+use RidiPay\User\Application\Dto\PaymentMethodDto;
 use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
