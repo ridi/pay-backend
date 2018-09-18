@@ -37,8 +37,6 @@ class TestUtil
      */
     public static function prepareDatabaseFixture()
     {
-        self::setUpDatabaseDoubles();
-
         $conn = ConnectionProvider::getConnection();
         $conn->getSchemaManager()->dropAndCreateDatabase($conn->getDatabase());
         $conn->close();
@@ -77,24 +75,6 @@ class TestUtil
             $em->persist($card_issuer);
         }
         $em->flush();
-
-        self::tearDownDatabaseDoubles();
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public static function setUpDatabaseDoubles(): void
-    {
-        test::double(
-            ConnectionProvider::class,
-            ['getConnectionParams' => ['url' => \getenv('PHPUNIT_DATABASE_URL')]]
-        );
-    }
-
-    public static function tearDownDatabaseDoubles(): void
-    {
-        test::clean(ConnectionProvider::class);
     }
 
     /**

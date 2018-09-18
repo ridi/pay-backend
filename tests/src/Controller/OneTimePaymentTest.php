@@ -42,8 +42,6 @@ class OneTimePaymentTest extends ControllerTestCase
 
     public static function setUpBeforeClass()
     {
-        TestUtil::setUpDatabaseDoubles();
-
         self::$u_idx = TestUtil::getRandomUidx();
         UserAppService::createUser(self::$u_idx);
 
@@ -65,7 +63,6 @@ class OneTimePaymentTest extends ControllerTestCase
     {
         TestUtil::tearDownJwtDoubles();
         TestUtil::tearDownOAuth2Doubles();
-        TestUtil::tearDownDatabaseDoubles();
     }
 
     public function testOneTimePaymentLifeCycleInCaseOfOnetouchPay()

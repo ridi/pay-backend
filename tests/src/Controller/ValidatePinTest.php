@@ -22,8 +22,6 @@ class ValidatePinTest extends ControllerTestCase
 
     public static function setUpBeforeClass()
     {
-        TestUtil::setUpDatabaseDoubles();
-
         self::$u_idx = TestUtil::getRandomUidx();
         UserAppService::createUser(self::$u_idx);
 
@@ -34,7 +32,6 @@ class ValidatePinTest extends ControllerTestCase
     public static function tearDownAfterClass()
     {
         TestUtil::tearDownOAuth2Doubles();
-        TestUtil::tearDownDatabaseDoubles();
     }
 
     public function testEnterPinCorrectly()
