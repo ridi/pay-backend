@@ -17,7 +17,6 @@ use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
-use RidiPay\User\Domain\Service\UserService;
 
 class CardAppService
 {
@@ -51,7 +50,7 @@ class CardAppService
 
         try {
             try {
-                UserService::getActiveUser($u_idx);
+                UserAppService::validateUser($u_idx);
             } catch (NotFoundUserException $e) {
                 UserAppService::createUser($u_idx);
             }
@@ -94,7 +93,7 @@ class CardAppService
      */
     public static function deleteCard(int $u_idx, string $payment_method_id): void
     {
-        UserService::getActiveUser($u_idx);
+        UserAppService::validateUser($u_idx);
 
         $payment_method_repo = PaymentMethodRepository::getRepository();
         $payment_method = $payment_method_repo->findOneByUuid(Uuid::fromString($payment_method_id));

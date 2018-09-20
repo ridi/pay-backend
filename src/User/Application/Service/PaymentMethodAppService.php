@@ -4,9 +4,12 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Application\Dto\AvailablePaymentMethodsDto;
 use RidiPay\User\Application\Dto\PaymentMethodDto;
 use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
+use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
@@ -22,6 +25,12 @@ class PaymentMethodAppService
      */
     public static function getAvailablePaymentMethods(int $u_idx): AvailablePaymentMethodsDto
     {
+        try {
+            UserAppService::validateUser($u_idx);
+        } catch (LeavedUserException | NotFoundUserException $e) {
+            return new AvailablePaymentMethodsDto([]);
+        }
+
         $payment_methods = PaymentMethodRepository::getRepository()->getAvailablePaymentMethods($u_idx);
 
         return new AvailablePaymentMethodsDto($payment_methods);
@@ -97,5 +106,34 @@ class PaymentMethodAppService
         }
 
         return $payment_method->getCardForOneTimePayment()->getPgBillKey();
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function deletePaymentMethods(int $u_idx): void
+    {
+        $payment_method_repo = PaymentMethodRepository::getRepository();
+        $payment_methods = $payment_method_repo->getAvailablePaymentMethods($u_idx);
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            foreach ($payment_methods as $payment_method) {
+                $payment_method->delete();
+                $payment_method_repo->save($payment_method);
+            }
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
     }
 }

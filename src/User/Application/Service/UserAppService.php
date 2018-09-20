@@ -20,7 +20,6 @@ use RidiPay\User\Domain\Service\AbuseBlocker;
 use RidiPay\User\Domain\Service\PasswordEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
-use RidiPay\User\Domain\Service\UserService;
 
 class UserAppService
 {
@@ -35,8 +34,8 @@ class UserAppService
      */
     public static function getUserInformation(int $u_idx): UserInformationDto
     {
-        $user = UserService::getActiveUser($u_idx);
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+        $user = self::getUser($u_idx);
 
         return new UserInformationDto($payment_methods, $user);
     }
@@ -53,7 +52,7 @@ class UserAppService
      */
     public static function updatePin(int $u_idx, string $pin): void
     {
-        $user = UserService::getActiveUser($u_idx);
+        $user = self::getUser($u_idx);
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -88,7 +87,7 @@ class UserAppService
      */
     public static function validatePin(int $u_idx, string $pin): void
     {
-        $user = UserService::getActiveUser($u_idx);
+        $user = self::getUser($u_idx);
 
         if (!$user->isPinMatched($pin)) {
             $policy = new PinEntryAbuseBlockPolicy();
@@ -119,7 +118,7 @@ class UserAppService
      */
     public static function validatePassword(int $u_idx, string $u_id, string $password): void
     {
-        $user = UserService::getActiveUser($u_idx);
+        $user = self::getUser($u_idx);
 
         if (!$user->isPasswordMatched($u_id, $password)) {
             $policy = new PasswordEntryAbuseBlockPolicy();
@@ -148,7 +147,7 @@ class UserAppService
      */
     public static function enableOnetouchPay(int $u_idx): void
     {
-        $user = UserService::getActiveUser($u_idx);
+        $user = self::getUser($u_idx);
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -182,7 +181,7 @@ class UserAppService
      */
     public static function disableOnetouchPay(int $u_idx): void
     {
-        $user = UserService::getActiveUser($u_idx);
+        $user = self::getUser($u_idx);
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -215,9 +214,21 @@ class UserAppService
      */
     public static function isUsingOnetouchPay(int $u_idx): bool
     {
-        $user = UserService::getActiveUser($u_idx);
+        $user = self::getUser($u_idx);
 
         return $user->isUsingOnetouchPay();
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function validateUser(int $u_idx): void
+    {
+        self::getUser($u_idx);
     }
 
     /**
@@ -237,11 +248,48 @@ class UserAppService
      * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
      */
     public static function deleteUser(int $u_idx): void
     {
-        $user = UserService::getActiveUser($u_idx);
-        $user->leave();
-        UserRepository::getRepository()->save($user);
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $user = self::getUser($u_idx);
+            $user->leave();
+            UserRepository::getRepository()->save($user);
+
+            PaymentMethodAppService::deletePaymentMethods($u_idx);
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
+    }
+
+    /**
+     * @param int $u_idx
+     * @return UserEntity
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    private static function getUser(int $u_idx): UserEntity
+    {
+        $user = UserRepository::getRepository()->findOneByUidx($u_idx);
+        if (is_null($user)) {
+            throw new NotFoundUserException();
+        }
+
+        if ($user->isLeaved()) {
+            throw new LeavedUserException();
+        }
+
+        return $user;
     }
 }
