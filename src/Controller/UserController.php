@@ -24,24 +24,16 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends BaseController
 {
     /**
-     * @Route("/users/{u_id}/payment-methods", methods={"GET"})
-     * @OAuth2()
+     * @Route("/users/{u_idx}/payment-methods", methods={"GET"}, requirements={"u_idx"="\d+"})
      * @JwtAuth()
      *
-     * @param string $u_id
+     * @param int $u_idx
      * @return JsonResponse
      */
-    public function getPaymentMethods(string $u_id): JsonResponse
+    public function getPaymentMethods(int $u_idx): JsonResponse
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
-            $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx());
+            $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
             foreach ($payment_methods->cards as $card) {
                 unset($card->color);
                 unset($card->logo_image_url);

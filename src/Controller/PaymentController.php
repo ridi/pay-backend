@@ -12,7 +12,6 @@ use RidiPay\Library\Validation\ApiSecretValidationException;
 use RidiPay\Library\Validation\ApiSecretValidator;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
-use RidiPay\Transaction\Application\Exception\NotOwnedTransactionException;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
@@ -34,7 +33,6 @@ class PaymentController extends BaseController
      *     {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
      *     {"param"="return_url", "constraints"={"Url"}}
      * )
-     * @OAuth2()
      *
      * @param Request $request
      * @return JsonResponse
@@ -48,7 +46,6 @@ class PaymentController extends BaseController
             $reservation_id = TransactionAppService::reserveTransaction(
                 ApiSecretValidator::getApiKey($request),
                 ApiSecretValidator::getSecretKey($request),
-                $this->getUidx(),
                 $body->payment_method_id,
                 $body->partner_transaction_id,
                 $body->product_name,
@@ -88,12 +85,6 @@ class PaymentController extends BaseController
                 TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
-        } catch (NotOwnedTransactionException $e) {
-            return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
-                $e->getMessage()
-            );
         } catch (NotReservedTransactionException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
@@ -120,7 +111,6 @@ class PaymentController extends BaseController
 
     /**
      * @Route("/payments/{transaction_id}/approve", methods={"POST"})
-     * @OAuth2()
      *
      * @param Request $request
      * @param string $transaction_id
@@ -134,7 +124,6 @@ class PaymentController extends BaseController
             $result = TransactionAppService::approveTransaction(
                 ApiSecretValidator::getApiKey($request),
                 ApiSecretValidator::getSecretKey($request),
-                $this->getUidx(),
                 $transaction_id
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
@@ -147,12 +136,6 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
-                $e->getMessage()
-            );
-        } catch (NotOwnedTransactionException $e) {
-            return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {
@@ -180,7 +163,6 @@ class PaymentController extends BaseController
 
     /**
      * @Route("/payments/{transaction_id}/cancel", methods={"POST"})
-     * @OAuth2()
      *
      * @param Request $request
      * @param string $transaction_id
@@ -194,7 +176,6 @@ class PaymentController extends BaseController
             $result = TransactionAppService::cancelTransaction(
                 ApiSecretValidator::getApiKey($request),
                 ApiSecretValidator::getSecretKey($request),
-                $this->getUidx(),
                 $transaction_id
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
@@ -207,12 +188,6 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
-                $e->getMessage()
-            );
-        } catch (NotOwnedTransactionException $e) {
-            return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionCancellationException $e) {
@@ -241,7 +216,6 @@ class PaymentController extends BaseController
 
     /**
      * @Route("/payments/{transaction_id}/status", methods={"GET"})
-     * @OAuth2()
      *
      * @param Request $request
      * @param string $transaction_id
@@ -255,7 +229,6 @@ class PaymentController extends BaseController
             $result = TransactionAppService::getTransactionStatus(
                 ApiSecretValidator::getApiKey($request),
                 ApiSecretValidator::getSecretKey($request),
-                $this->getUidx(),
                 $transaction_id
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
@@ -268,12 +241,6 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
-                $e->getMessage()
-            );
-        } catch (NotOwnedTransactionException $e) {
-            return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::NOT_OWNED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {

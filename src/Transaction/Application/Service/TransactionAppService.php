@@ -20,7 +20,6 @@ use RidiPay\Transaction\Application\Dto\ApproveTransactionDto;
 use RidiPay\Transaction\Application\Dto\CancelTransactionDto;
 use RidiPay\Transaction\Application\Dto\CreateTransactionDto;
 use RidiPay\Transaction\Application\Dto\TransactionStatusDto;
-use RidiPay\Transaction\Application\Exception\NotOwnedTransactionException;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
 use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
@@ -35,7 +34,6 @@ class TransactionAppService
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
-     * @param int $u_idx
      * @param string $payment_method_id
      * @param string $partner_transaction_id
      * @param string $product_name
@@ -50,7 +48,6 @@ class TransactionAppService
     public static function reserveTransaction(
         string $partner_api_key,
         string $partner_secret_key,
-        int $u_idx,
         string $payment_method_id,
         string $partner_transaction_id,
         string $product_name,
@@ -67,7 +64,6 @@ class TransactionAppService
             $redis->hmset(
                 $reservation_key,
                 [
-                    'u_idx' => $u_idx,
                     'payment_method_id' => $payment_method_id,
                     'partner_api_key' => $partner_api_key,
                     'partner_transaction_id' => $partner_transaction_id,
@@ -93,7 +89,6 @@ class TransactionAppService
      * @param string $reservation_id
      * @return CreateTransactionDto
      * @throws NotReservedTransactionException
-     * @throws NotOwnedTransactionException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
@@ -103,7 +98,7 @@ class TransactionAppService
      */
     public static function createTransaction(int $u_idx, string $reservation_id): CreateTransactionDto
     {
-        $reserved_transaction = self::getReservedTransaction($u_idx, $reservation_id);
+        $reserved_transaction = self::getReservedTransaction($reservation_id);
 
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($reserved_transaction['payment_method_id']);
         $pg = PgAppService::getActivePg();
@@ -141,7 +136,6 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $transaction_id
      * @return ApproveTransactionDto
-     * @throws NotOwnedTransactionException
      * @throws NonexistentTransactionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
@@ -153,12 +147,11 @@ class TransactionAppService
     public static function approveTransaction(
         string $partner_api_key,
         string $partner_secret_key,
-        int $u_idx,
         string $transaction_id
     ): ApproveTransactionDto {
         PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
-        $transaction = self::getTransaction($u_idx, $transaction_id);
+        $transaction = self::getTransaction($transaction_id);
 
         $pg = PgAppService::getPgById($transaction->getPgId());
         $pg_handler = PgHandlerFactory::create($pg->name);
@@ -212,10 +205,8 @@ class TransactionAppService
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
-     * @param int $u_idx
      * @param string $transaction_id
      * @return CancelTransactionDto
-     * @throws NotOwnedTransactionException
      * @throws NonexistentTransactionException
      * @throws TransactionCancellationException
      * @throws UnauthorizedPartnerException
@@ -227,12 +218,11 @@ class TransactionAppService
     public static function cancelTransaction(
         string $partner_api_key,
         string $partner_secret_key,
-        int $u_idx,
         string $transaction_id
     ): CancelTransactionDto {
         PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
-        $transaction = self::getTransaction($u_idx, $transaction_id);
+        $transaction = self::getTransaction($transaction_id);
 
         $pg = PgAppService::getPgById($transaction->getPgId());
         $pg_handler = PgHandlerFactory::create($pg->name);
@@ -271,12 +261,11 @@ class TransactionAppService
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
-     * @param int $u_idx
      * @param string $transaction_id
      * @return TransactionStatusDto
-     * @throws NotOwnedTransactionException
      * @throws NonexistentTransactionException
      * @throws UnauthorizedPartnerException
+     * @throws UnregisteredPaymentMethodException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -284,31 +273,24 @@ class TransactionAppService
     public static function getTransactionStatus(
         string $partner_api_key,
         string $partner_secret_key,
-        int $u_idx,
         string $transaction_id
     ): TransactionStatusDto {
         PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
-        return new TransactionStatusDto(self::getTransaction($u_idx, $transaction_id));
+        return new TransactionStatusDto(self::getTransaction($transaction_id));
     }
 
     /**
-     * @param int $u_idx
      * @param string $reservation_id
      * @return array
      * @throws NotReservedTransactionException
-     * @throws NotOwnedTransactionException
      */
-    private static function getReservedTransaction(int $u_idx, string $reservation_id): array
+    private static function getReservedTransaction(string $reservation_id): array
     {
         $reservation_key = self::getReservationKey($reservation_id);
 
         $redis = self::getRedisClient();
         $reserved_transaction = $redis->hgetall($reservation_key);
-        if ($u_idx !== intval($reserved_transaction['u_idx'])) {
-            throw new NotOwnedTransactionException();
-        }
-
         if (empty($reserved_transaction)) {
             throw new NotReservedTransactionException();
         }
@@ -334,22 +316,17 @@ class TransactionAppService
     }
 
     /**
-     * @param int $u_idx
      * @param string $transaction_id
      * @return TransactionEntity
-     * @throws NotOwnedTransactionException
      * @throws NonexistentTransactionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    private static function getTransaction(int $u_idx, string $transaction_id): TransactionEntity
+    private static function getTransaction(string $transaction_id): TransactionEntity
     {
         $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
         if (is_null($transaction)) {
             throw new NonexistentTransactionException();
-        }
-        if ($u_idx !== $transaction->getUidx()) {
-            throw new NotOwnedTransactionException();
         }
 
         return $transaction;

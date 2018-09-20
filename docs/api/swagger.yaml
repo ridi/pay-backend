@@ -422,13 +422,13 @@ paths:
           $ref: '#/components/responses/NotFound'
         500:
           $ref: '#/components/responses/InternalServerError'
-  /users/{u_id}/payment-methods:
+  /users/{u_idx}/payment-methods:
     get:
       tags:
         - Private API (Only First-party)
       summary: 등록된 결제 수단 목록 조회
       parameters:
-        - $ref: '#/components/parameters/Uid'
+        - $ref: '#/components/parameters/Uidx'
       responses:
         200:
           $ref: '#/components/responses/getPaymentMethodsResponse'
@@ -638,6 +638,13 @@ components:
       description: Ridibooks 유저 ID
       schema:
         type: string
+    Uidx:
+      name: u_idx
+      in: path
+      required: true
+      description: Ridibooks 유저 고유 번호(IDX)
+      schema:
+        type: integer
   responses:
     SpaResponse:
       description: OK(200)

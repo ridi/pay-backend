@@ -6,6 +6,7 @@ namespace RidiPay\Tests\Controller;
 use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\PasswordValidationApi;
+use RidiPay\Partner\Application\Dto\RegisterPartnerDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
@@ -17,6 +18,9 @@ class OneTimePaymentTest extends ControllerTestCase
 {
     /** @var Client */
     private static $client;
+
+    /** @var RegisterPartnerDto */
+    private static $partner;
 
     /** @var int */
     private static $u_idx;
@@ -36,13 +40,13 @@ class OneTimePaymentTest extends ControllerTestCase
         UserAppService::createUser(self::$u_idx);
 
         self::$payment_method_id = TestUtil::createCard(self::$u_idx);
-        $partner = PartnerAppService::registerPartner('test', 'test@12345', true);
+        self::$partner = PartnerAppService::registerPartner('test', 'test@12345', true);
 
-        self::$client = self::createClientWithOAuth2AccessToken(
+        self::$client = self::createClient(
             [],
             [
-                'HTTP_Api-Key' => $partner->api_key,
-                'HTTP_Secret-Key' => $partner->secret_key
+                'HTTP_Api-Key' => self::$partner->api_key,
+                'HTTP_Secret-Key' => self::$partner->secret_key
             ]
         );
         TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
@@ -164,7 +168,7 @@ class OneTimePaymentTest extends ControllerTestCase
     private function assertGetPaymentMethodsSuccessfully()
     {
         // 결제 수단 조회
-        self::$client->request('GET', '/users/' . TestUtil::U_ID . '/payment-methods');
+        self::$client->request('GET', '/users/' . self::$u_idx . '/payment-methods');
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $expected_response = json_encode([
             'cards' => [
@@ -219,10 +223,17 @@ class OneTimePaymentTest extends ControllerTestCase
         int $amount
     ): void {
         // 결제 생성
-        self::$client->request('POST', "/payments/${reservation_id}");
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $client = self::createClientWithOAuth2AccessToken(
+            [],
+            [
+                'HTTP_Api-Key' => self::$partner->api_key,
+                'HTTP_Secret-Key' => self::$partner->secret_key
+            ]
+        );
+        $client->request('POST', "/payments/${reservation_id}");
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
-        $return_url = json_decode(self::$client->getResponse()->getContent())->return_url;
+        $return_url = json_decode($client->getResponse()->getContent())->return_url;
         $query_strings = [];
         parse_str(parse_url($return_url)['query'], $query_strings);
         self::$transaction_id = $query_strings['transaction_id'];
