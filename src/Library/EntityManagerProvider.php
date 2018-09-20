@@ -42,7 +42,9 @@ class EntityManagerProvider
         $is_dev_mode = getenv('APP_ENV') !== 'prod';
         $config = Setup::createAnnotationMetadataConfiguration([__DIR__ . '/..'], $is_dev_mode);
 
-        if (!$is_dev_mode) {
+        if ($is_dev_mode) {
+            $config->setAutoGenerateProxyClasses(ProxyFactory::AUTOGENERATE_EVAL);
+        } else {
             $entity_version = getenv('GIT_REVISION');
 
             /** @var \Doctrine\Common\Cache\CacheProvider $metadata_cache */
