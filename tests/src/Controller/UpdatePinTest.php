@@ -3,53 +3,98 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
+use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
+use RidiPay\Controller\Response\CommonErrorCodeConstant;
+use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Application\Service\UserAppService;
-use Symfony\Bundle\FrameworkBundle\Client;
+use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class UpdatePinTest extends ControllerTestCase
 {
-    /** @var Client */
-    private static $client;
-
-    /** @var int */
-    private static $u_idx;
-
-    public static function setUpBeforeClass()
+    /**
+     * @dataProvider userAndPinProvider
+     *
+     * @param int $u_idx
+     * @param string $pin
+     * @param int $http_status_code
+     * @param null|string $error_code
+     * @throws AuthorizationException
+     */
+    public function testUpdatePin(int $u_idx, string $pin, int $http_status_code, ?string $error_code)
     {
-        self::$u_idx = TestUtil::getRandomUidx();
-        UserAppService::createUser(self::$u_idx);
+        TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
-        self::$client = self::createClientWithOAuth2AccessToken();
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-    }
+        $client = self::createClientWithOAuth2AccessToken();
 
-    public static function tearDownAfterClass()
-    {
+        $body = json_encode(['pin' => $pin]);
+        $client->request(Request::METHOD_PUT, '/me/pin', [], [], [], $body);
+        $this->assertSame($http_status_code, $client->getResponse()->getStatusCode());
+
+        $response_content = json_decode($client->getResponse()->getContent());
+        if (isset($response_content->code)) {
+            $this->assertSame($error_code, $response_content->code);
+        }
+
         TestUtil::tearDownOAuth2Doubles();
     }
 
-    public function testUpdateValidPin()
+    /**
+     * @return array
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public function userAndPinProvider(): array
     {
-        $body = json_encode(['pin' => self::getValidPin()]);
-        self::$client->request(Request::METHOD_PUT, '/me/pin', [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-    }
+        $user_indices = [];
+        for ($i = 0; $i < 4; $i++) {
+            $user_indices[] = TestUtil::getRandomUidx();
+        }
 
-    public function testPreventUpdatingInvalidPinWithShortLength()
-    {
-        $body = json_encode(['pin' => self::getInvalidPinWithShortLength()]);
-        self::$client->request(Request::METHOD_PUT, '/me/pin', [], [], [], $body);
-        $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
-    }
+        UserAppService::createUser($user_indices[0]);
 
-    public function testPreventUpdatingInvalidPinIncludingUnsupportedCharacters()
-    {
-        $body = json_encode(['pin' => self::getInvalidPinIncludingUnsupportedCharacters()]);
-        self::$client->request(Request::METHOD_PUT, '/me/pin', [], [], [], $body);
-        $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
+        UserAppService::createUser($user_indices[1]);
+        UserAppService::deleteUser($user_indices[1]);
+
+        UserAppService::createUser($user_indices[3]);
+
+        return [
+            [
+                $user_indices[0],
+                self::getValidPin(),
+                Response::HTTP_OK,
+                null
+            ],
+            [
+                $user_indices[1],
+                self::getValidPin(),
+                Response::HTTP_FORBIDDEN,
+                UserErrorCodeConstant::LEAVED_USER
+            ],
+            [
+                $user_indices[2],
+                self::getValidPin(),
+                Response::HTTP_NOT_FOUND,
+                UserErrorCodeConstant::NOT_FOUND_USER
+            ],
+            [
+                $user_indices[3],
+                self::getInvalidPinWithShortLength(),
+                Response::HTTP_BAD_REQUEST,
+                CommonErrorCodeConstant::INVALID_PARAMETER
+            ],
+            [
+                $user_indices[3],
+                self::getInvalidPinIncludingUnsupportedCharacters(),
+                Response::HTTP_BAD_REQUEST,
+                CommonErrorCodeConstant::INVALID_PARAMETER
+            ]
+        ];
     }
 
     /**

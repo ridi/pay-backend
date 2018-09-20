@@ -60,7 +60,7 @@ class ParameterValidationMiddleware implements EventSubscriberInterface
                 $parameter = $e->getParameter();
                 return new JsonResponse(
                     [
-                        'code' => 'INVALID_PARAMETER',
+                        'code' => CommonErrorCodeConstant::INVALID_PARAMETER,
                         'message' => "{$parameter}: {$message}"
                     ],
                     Response::HTTP_BAD_REQUEST

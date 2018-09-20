@@ -7,9 +7,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CommonErrorCodeConstant
 {
+    public const INVALID_PARAMETER = 'INVALID_PARAMETER';
     public const INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR';
 
     public const HTTP_STATUS_CODES = [
+        self::INVALID_PARAMETER => Response::HTTP_BAD_REQUEST,
         self::INTERNAL_SERVER_ERROR => Response::HTTP_INTERNAL_SERVER_ERROR
     ];
 }
