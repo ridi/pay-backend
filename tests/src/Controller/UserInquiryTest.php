@@ -37,7 +37,7 @@ class UserInquiryTest extends ControllerTestCase
 
     public function testUserInquiry()
     {
-        self::$client->request(Request::METHOD_GET, '/users/' . TestUtil::U_ID);
+        self::$client->request(Request::METHOD_GET, '/me');
         $expected_response = json_encode([
             'payment_methods' => [
                 'cards' => [

@@ -54,7 +54,7 @@ class ManageCardTest extends ControllerTestCase
             'card_password' => self::CARD_A['CARD_PASSWORD'],
             'tax_id' => self::TAX_ID
         ]);
-        self::$client->request('POST', '/users/' . TestUtil::U_ID . '/cards', [], [], [], $body);
+        self::$client->request('POST', '/me/cards', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods(self::$u_idx);
@@ -77,11 +77,11 @@ class ManageCardTest extends ControllerTestCase
             'card_password' => self::CARD_B['CARD_PASSWORD'],
             'tax_id' => self::TAX_ID
         ]);
-        self::$client->request('POST', '/users/' . TestUtil::U_ID . '/cards', [], [], [], $body);
+        self::$client->request('POST', '/me/cards', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
 
         // 카드 삭제
-        self::$client->request('DELETE', '/users/' . TestUtil::U_ID . '/cards/' . $card->payment_method_id);
+        self::$client->request('DELETE', "/me/cards/{$card->payment_method_id}");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods(self::$u_idx);

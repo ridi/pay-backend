@@ -50,21 +50,13 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_id}", methods={"GET"})
+     * @Route("/me", methods={"GET"})
      * @OAuth2()
      *
-     * @param string $u_id
      * @return JsonResponse
      */
-    public function getUserInformation(string $u_id): JsonResponse
+    public function getMyInformation(): JsonResponse
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
             $user_information = UserAppService::getUserInformation($this->getUidx());
         } catch (LeavedUserException $e) {
@@ -94,23 +86,15 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_id}/pin", methods={"PUT"})
+     * @Route("/me/pin", methods={"PUT"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
      *
      * @param Request $request
-     * @param string $u_id
      * @return JsonResponse
      */
-    public function updatePin(Request $request, string $u_id)
+    public function updatePin(Request $request)
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
             $body = json_decode($request->getContent());
             UserAppService::updatePin($this->getUidx(), $body->pin);
@@ -143,23 +127,15 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_id}/pin/validate", methods={"POST"})
+     * @Route("/me/pin/validate", methods={"POST"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
      *
      * @param Request $request
-     * @param string $u_id
      * @return JsonResponse
      */
-    public function validatePin(Request $request, string $u_id)
+    public function validatePin(Request $request)
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
             $body = json_decode($request->getContent());
             UserAppService::validatePin($this->getUidx(), $body->pin);
@@ -198,26 +174,18 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_id}/password/validate", methods={"POST"})
+     * @Route("/me/password/validate", methods={"POST"})
      * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
      * @OAuth2()
      *
      * @param Request $request
-     * @param string $u_id
      * @return JsonResponse
      */
-    public function validatePassword(Request $request, string $u_id)
+    public function validatePassword(Request $request)
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
             $body = json_decode($request->getContent());
-            UserAppService::validatePassword($this->getUidx(), $u_id, $body->password);
+            UserAppService::validatePassword($this->getUidx(), $this->getUid(), $body->password);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -253,30 +221,21 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_id}/onetouch", methods={"PUT"})
+     * @Route("/me/onetouch", methods={"PUT"})
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
      *
      * @param Request $request
-     * @param string $u_id
      * @return JsonResponse
      */
-    public function updateOnetouchPay(Request $request, string $u_id)
+    public function updateOnetouchPay(Request $request)
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
-            $u_idx = $this->getUidx();
             $body = json_decode($request->getContent());
             if ($body->enable_onetouch_pay) {
-                UserAppService::enableOnetouchPay($u_idx);
+                UserAppService::enableOnetouchPay($this->getUidx());
             } else {
-                UserAppService::disableOnetouchPay($u_idx);
+                UserAppService::disableOnetouchPay($this->getUidx());
             }
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(

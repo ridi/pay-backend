@@ -21,7 +21,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class PaymentMethodController extends BaseController
 {
     /**
-     * @Route("/users/{u_id}/cards", methods={"POST"})
+     * @Route("/me/cards", methods={"POST"})
      * @ParamValidator(
      *     {"param"="card_number", "constraints"={{"Regex"="/\d{13,16}/"}}},
      *     {"param"="card_expiration_date", "constraints"={{"Regex"="/\d{2}(0[1-9]|1[0-2])/"}}},
@@ -31,18 +31,10 @@ class PaymentMethodController extends BaseController
      * @OAuth2()
      *
      * @param Request $request
-     * @param string $u_id
      * @return JsonResponse
      */
-    public function registerCard(Request $request, string $u_id): JsonResponse
+    public function registerCard(Request $request): JsonResponse
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
             $body = json_decode($request->getContent());
             CardAppService::registerCard(
@@ -81,22 +73,14 @@ class PaymentMethodController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_id}/cards/{payment_method_id}", methods={"DELETE"})
+     * @Route("/me/cards/{payment_method_id}", methods={"DELETE"})
      * @OAuth2()
      *
-     * @param string $u_id
      * @param string $payment_method_id
      * @return JsonResponse
      */
-    public function deleteCard(string $u_id, string $payment_method_id): JsonResponse
+    public function deleteCard(string $payment_method_id): JsonResponse
     {
-        if ($u_id !== $this->getUid()) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::UNAUTHORIZED
-            );
-        }
-
         try {
             CardAppService::deleteCard($this->getUidx(), $payment_method_id);
         } catch (LeavedUserException $e) {

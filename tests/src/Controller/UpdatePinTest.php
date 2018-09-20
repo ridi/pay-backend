@@ -33,21 +33,21 @@ class UpdatePinTest extends ControllerTestCase
     public function testUpdateValidPin()
     {
         $body = json_encode(['pin' => self::getValidPin()]);
-        self::$client->request('PUT', '/users/' . TestUtil::U_ID . '/pin', [], [], [], $body);
+        self::$client->request('PUT', '/me/pin', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
     }
 
     public function testPreventUpdatingInvalidPinWithShortLength()
     {
         $body = json_encode(['pin' => self::getInvalidPinWithShortLength()]);
-        self::$client->request('PUT', '/users/' . TestUtil::U_ID . '/pin', [], [], [], $body);
+        self::$client->request('PUT', '/me/pin', [], [], [], $body);
         $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
     }
 
     public function testPreventUpdatingInvalidPinIncludingUnsupportedCharacters()
     {
         $body = json_encode(['pin' => self::getInvalidPinIncludingUnsupportedCharacters()]);
-        self::$client->request('PUT', '/users/' . TestUtil::U_ID . '/pin', [], [], [], $body);
+        self::$client->request('PUT', '/me/pin', [], [], [], $body);
         $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
     }
 
