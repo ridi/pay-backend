@@ -24,6 +24,39 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends BaseController
 {
     /**
+     * @Route("/users/{u_idx}", methods={"DELETE"}, requirements={"u_idx"="\d+"})
+     * @JwtAuth()
+     *
+     * @param int $u_idx
+     * @return JsonResponse
+     */
+    public function deleteUser(int $u_idx): JsonResponse
+    {
+        try {
+            UserAppService::deleteUser($u_idx);
+        } catch (LeavedUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::LEAVED_USER,
+                $e->getMessage()
+            );
+        } catch (NotFoundUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::NOT_FOUND_USER,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse();
+    }
+
+    /**
      * @Route("/users/{u_idx}/payment-methods", methods={"GET"}, requirements={"u_idx"="\d+"})
      * @JwtAuth()
      *

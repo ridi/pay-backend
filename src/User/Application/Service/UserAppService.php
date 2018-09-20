@@ -230,4 +230,18 @@ class UserAppService
         $user = new UserEntity($u_idx);
         UserRepository::getRepository()->save($user);
     }
+
+    /**
+     * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function deleteUser(int $u_idx): void
+    {
+        $user = UserService::getActiveUser($u_idx);
+        $user->leave();
+        UserRepository::getRepository()->save($user);
+    }
 }

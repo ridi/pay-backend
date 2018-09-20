@@ -73,6 +73,7 @@ class UserEntity
         $this->pin = null;
         $this->is_using_onetouch_pay = null;
         $this->created_at = new \DateTime();
+        $this->leaved_at = null;
     }
 
     /**
@@ -174,5 +175,10 @@ class UserEntity
     public function isLeaved(): bool
     {
         return !is_null($this->leaved_at);
+    }
+
+    public function leave(): void
+    {
+        $this->leaved_at = new \DateTime();
     }
 }
