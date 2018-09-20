@@ -28,6 +28,24 @@ class PaymentMethodAppService
     }
 
     /**
+     * @param int $payment_method_id
+     * @return PaymentMethodDto
+     * @throws UnregisteredPaymentMethodException
+     * @throws UnsupportedPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getPaymentMethodById(int $payment_method_id): PaymentMethodDto
+    {
+        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+        if (is_null($payment_method)) {
+            throw new UnregisteredPaymentMethodException();
+        }
+
+        return PaymentMethodDtoFactory::create($payment_method);
+    }
+
+    /**
      * @param string $payment_method_uuid
      * @return PaymentMethodDto
      * @throws UnregisteredPaymentMethodException
@@ -79,22 +97,5 @@ class PaymentMethodAppService
         }
 
         return $payment_method->getCardForOneTimePayment()->getPgBillKey();
-    }
-
-    /**
-     * @param int $payment_method_id
-     * @return bool
-     * @throws UnregisteredPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function isCard(int $payment_method_id): bool
-    {
-        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
-
-        return $payment_method->isCard();
     }
 }

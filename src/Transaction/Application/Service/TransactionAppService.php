@@ -28,6 +28,7 @@ use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
+use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 
 class TransactionAppService
 {
@@ -266,6 +267,7 @@ class TransactionAppService
      * @throws NonexistentTransactionException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
+     * @throws UnsupportedPaymentMethodException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException

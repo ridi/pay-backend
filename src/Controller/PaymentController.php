@@ -253,6 +253,8 @@ class PaymentController extends BaseController
         $data = [
             'transaction_id' => $result->transaction_id,
             'partner_transaction_id' => $result->partner_transaction_id,
+            'payment_method_id' => $result->payment_method_id,
+            'payment_method_type' => $result->payment_method_type,
             'status' => $result->status,
             'product_name' => $result->product_name,
             'amount' => $result->amount,

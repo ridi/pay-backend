@@ -11,6 +11,7 @@ use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\PaymentMethodConstant;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -245,6 +246,8 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame(self::$transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        $this->assertSame(self::$payment_method_id, $response->payment_method_id);
+        $this->assertSame(PaymentMethodConstant::TYPE_CARD, $response->payment_method_type);
         $this->assertSame(TransactionStatusConstant::RESERVED, $response->status);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
@@ -277,6 +280,8 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        $this->assertSame(self::$payment_method_id, $response->payment_method_id);
+        $this->assertSame(PaymentMethodConstant::TYPE_CARD, $response->payment_method_type);
         $this->assertSame(TransactionStatusConstant::APPROVED, $response->status);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
@@ -310,6 +315,8 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        $this->assertSame(self::$payment_method_id, $response->payment_method_id);
+        $this->assertSame(PaymentMethodConstant::TYPE_CARD, $response->payment_method_type);
         $this->assertSame(TransactionStatusConstant::CANCELED, $response->status);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
