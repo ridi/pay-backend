@@ -9,7 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class UserInquiryTest extends ControllerTestCase
+class UserInformationInquiryTest extends ControllerTestCase
 {
     /** @var Client */
     private static $client;
@@ -35,7 +35,7 @@ class UserInquiryTest extends ControllerTestCase
         TestUtil::tearDownOAuth2Doubles();
     }
 
-    public function testUserInquiry()
+    public function testUserInformationInquiry()
     {
         self::$client->request(Request::METHOD_GET, '/me');
         $expected_response = json_encode([
