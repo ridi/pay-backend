@@ -9,6 +9,7 @@ use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ManageCardTest extends ControllerTestCase
@@ -54,7 +55,7 @@ class ManageCardTest extends ControllerTestCase
             'card_password' => self::CARD_A['CARD_PASSWORD'],
             'tax_id' => self::TAX_ID
         ]);
-        self::$client->request('POST', '/me/cards', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/cards', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods(self::$u_idx);
@@ -77,11 +78,11 @@ class ManageCardTest extends ControllerTestCase
             'card_password' => self::CARD_B['CARD_PASSWORD'],
             'tax_id' => self::TAX_ID
         ]);
-        self::$client->request('POST', '/me/cards', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/cards', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
 
         // 카드 삭제
-        self::$client->request('DELETE', "/me/cards/{$card->payment_method_id}");
+        self::$client->request(Request::METHOD_DELETE, "/me/cards/{$card->payment_method_id}");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods(self::$u_idx);

@@ -7,6 +7,7 @@ use RidiPay\Tests\TestUtil;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ValidatePinTest extends ControllerTestCase
@@ -39,7 +40,7 @@ class ValidatePinTest extends ControllerTestCase
         UserAppService::updatePin(self::$u_idx, self::VALID_PIN);
 
         $body = json_encode(['pin' => self::VALID_PIN]);
-        self::$client->request('POST', '/me/pin/validate', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
     }
 
@@ -51,18 +52,18 @@ class ValidatePinTest extends ControllerTestCase
         $policy = new PinEntryAbuseBlockPolicy();
         for ($try_count = 0; $try_count < $policy->getBlockThreshold() - 1; $try_count++) {
             $body = json_encode(['pin' => self::INVALID_PIN]);
-            self::$client->request('POST', '/me/pin/validate', [], [], [], $body);
+            self::$client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
             $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
         }
 
         // PIN 연속 입력 불일치 => 일정 시간 입력 제한
         $body = json_encode(['pin' => self::INVALID_PIN]);
-        self::$client->request('POST', '/me/pin/validate', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
 
         // 일정 시간 입력 제한 이후 시도
         $body = json_encode(['pin' => self::INVALID_PIN]);
-        self::$client->request('POST', '/me/pin/validate', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
     }
 }

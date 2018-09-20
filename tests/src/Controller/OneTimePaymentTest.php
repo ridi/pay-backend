@@ -12,6 +12,7 @@ use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class OneTimePaymentTest extends ControllerTestCase
@@ -168,7 +169,7 @@ class OneTimePaymentTest extends ControllerTestCase
     private function assertGetPaymentMethodsSuccessfully()
     {
         // 결제 수단 조회
-        self::$client->request('GET', '/users/' . self::$u_idx . '/payment-methods');
+        self::$client->request(Request::METHOD_GET, '/users/' . self::$u_idx . '/payment-methods');
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $expected_response = json_encode([
             'cards' => [
@@ -204,7 +205,7 @@ class OneTimePaymentTest extends ControllerTestCase
             'amount' => $amount,
             'return_url' => $return_url
         ]);
-        self::$client->request('POST', '/payments/reserve', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/payments/reserve', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         self::$reservation_id = json_decode(self::$client->getResponse()->getContent())->reservation_id;
@@ -230,7 +231,7 @@ class OneTimePaymentTest extends ControllerTestCase
                 'HTTP_Secret-Key' => self::$partner->secret_key
             ]
         );
-        $client->request('POST', "/payments/${reservation_id}");
+        $client->request(Request::METHOD_POST, "/payments/${reservation_id}");
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         $return_url = json_decode($client->getResponse()->getContent())->return_url;
@@ -239,7 +240,7 @@ class OneTimePaymentTest extends ControllerTestCase
         self::$transaction_id = $query_strings['transaction_id'];
 
         // 결제 상태 확인
-        self::$client->request('GET', '/payments/' . self::$transaction_id . '/status');
+        self::$client->request(Request::METHOD_GET, '/payments/' . self::$transaction_id . '/status');
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame(self::$transaction_id, $response->transaction_id);
@@ -262,7 +263,7 @@ class OneTimePaymentTest extends ControllerTestCase
         int $amount
     ): void {
         // 결제 승인
-        self::$client->request('POST', "/payments/{$transaction_id}/approve");
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/approve");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
@@ -271,7 +272,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $this->assertSame($amount, $response->amount);
 
         // 결제 상태 확인
-        self::$client->request('GET', "/payments/{$transaction_id}/status");
+        self::$client->request(Request::METHOD_GET, "/payments/{$transaction_id}/status");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
@@ -295,7 +296,7 @@ class OneTimePaymentTest extends ControllerTestCase
         int $amount
     ): void {
         // 결제 취소
-        self::$client->request('POST', "/payments/{$transaction_id}/cancel");
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
@@ -304,7 +305,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $this->assertSame($amount, $response->amount);
 
         // 결제 상태 확인
-        self::$client->request('GET', "/payments/{$transaction_id}/status");
+        self::$client->request(Request::METHOD_GET, "/payments/{$transaction_id}/status");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);

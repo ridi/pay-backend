@@ -6,6 +6,7 @@ namespace RidiPay\Tests\Controller;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class UpdateOnetouchPayTest extends ControllerTestCase
@@ -33,7 +34,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
     public function testEnableOnetouchPayWhenAddingFirstPaymentMethod()
     {
         $body = json_encode(['enable_onetouch_pay' => true]);
-        self::$client->request('PUT', '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertTrue(UserAppService::isUsingOnetouchPay(self::$u_idx));
     }
@@ -41,7 +42,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
     public function testDisableOnetouchPayWhenAddingFirstPaymentMethodAndNotHavingPin()
     {
         $body = json_encode(['enable_onetouch_pay' => false]);
-        self::$client->request('PUT', '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
     }
 
@@ -50,7 +51,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         UserAppService::updatePin(self::$u_idx, '123456');
 
         $body = json_encode(['enable_onetouch_pay' => false]);
-        self::$client->request('PUT', '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertFalse(UserAppService::isUsingOnetouchPay(self::$u_idx));
     }
@@ -60,12 +61,12 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         UserAppService::updatePin(self::$u_idx, '123456');
 
         $body = json_encode(['enable_onetouch_pay' => false]);
-        self::$client->request('PUT', '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertFalse(UserAppService::isUsingOnetouchPay(self::$u_idx));
 
         $body = json_encode(['enable_onetouch_pay' => true]);
-        self::$client->request('PUT', '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertTrue(UserAppService::isUsingOnetouchPay(self::$u_idx));
     }
@@ -75,12 +76,12 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         UserAppService::updatePin(self::$u_idx, '123456');
 
         $body = json_encode(['enable_onetouch_pay' => true]);
-        self::$client->request('PUT', '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertTrue(UserAppService::isUsingOnetouchPay(self::$u_idx));
 
         $body = json_encode(['enable_onetouch_pay' => false]);
-        self::$client->request('PUT', '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertFalse(UserAppService::isUsingOnetouchPay(self::$u_idx));
     }

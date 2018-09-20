@@ -9,6 +9,7 @@ use RidiPay\Tests\TestUtil;
 use RidiPay\User\Domain\Service\PasswordEntryAbuseBlockPolicy;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class ValidatePasswordTest extends ControllerTestCase
@@ -41,7 +42,7 @@ class ValidatePasswordTest extends ControllerTestCase
         Test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);
 
         $body = json_encode(['password' => self::VALID_PASSWORD]);
-        self::$client->request('POST', '/me/password/validate', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/password/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         
         Test::clean(PasswordValidationApi::class);
@@ -55,18 +56,18 @@ class ValidatePasswordTest extends ControllerTestCase
         $policy = new PasswordEntryAbuseBlockPolicy();
         for ($try_count = 0; $try_count < $policy->getBlockThreshold() - 1; $try_count++) {
             $body = json_encode(['password' => self::INVALID_PASSWORD]);
-            self::$client->request('POST', '/me/password/validate', [], [], [], $body);
+            self::$client->request(Request::METHOD_POST, '/me/password/validate', [], [], [], $body);
             $this->assertSame(Response::HTTP_BAD_REQUEST, self::$client->getResponse()->getStatusCode());
         }
 
         // PASSWORD 연속 입력 불일치 => 일정 시간 입력 제한
         $body = json_encode(['password' => self::INVALID_PASSWORD]);
-        self::$client->request('POST', '/me/password/validate', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/password/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
 
         // 일정 시간 입력 제한 이후 시도
         $body = json_encode(['password' => self::INVALID_PASSWORD]);
-        self::$client->request('POST', '/me/password/validate', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/password/validate', [], [], [], $body);
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
         
         Test::clean(PasswordValidationApi::class);
