@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Dummy;
 
+use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
@@ -54,6 +55,18 @@ class DummyController extends Controller
      * @return Response
      */
     public function paramValidatorTest(Request $request): Response
+    {
+        return new Response();
+    }
+
+    /**
+     * @Route("/cors", methods={"GET", "OPTIONS"})
+     * @Cors(methods={"GET"})
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function corsTest(Request $request): Response
     {
         return new Response();
     }
