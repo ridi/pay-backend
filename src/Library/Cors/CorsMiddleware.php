@@ -116,10 +116,8 @@ class CorsMiddleware implements EventSubscriberInterface
      */
     private static function getAccessControlAllowOrigins(): array
     {
-        $domain = getenv('DOMAIN');
-
         return [
-            "https://{$domain}"
+            getenv('RIDI_PAY_URL')
         ];
     }
 }
