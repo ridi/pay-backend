@@ -17,7 +17,7 @@ if ($env === false) {
     throw new \RuntimeException('APP_ENV environment variables is not defined.');
 }
 
-$is_dev = ($env === 'dev');
+$is_dev = ($env !== 'prod');
 if ($is_dev) {
     $dotenv_file_path = __DIR__ . '/../.env';
     if (file_exists($dotenv_file_path)) {

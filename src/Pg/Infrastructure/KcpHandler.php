@@ -30,7 +30,7 @@ class KcpHandler implements PgHandlerInterface
 
     public function __construct()
     {
-        $this->is_dev = getenv('APP_ENV') === 'dev';
+        $this->is_dev = getenv('APP_ENV') !== 'prod';
 
         if ($this->is_dev) {
             $this->client = Client::getTestClient();
