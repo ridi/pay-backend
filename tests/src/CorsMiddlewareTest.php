@@ -59,7 +59,7 @@ class CorsMiddlewareTest extends WebTestCase
         $ridi_pay_url = getenv('RIDI_PAY_URL');
 
         return [
-            [['HTTP_Origin' => $ridi_pay_url], $ridi_pay_url, true],
+            [['HTTP_Origin' => $ridi_pay_url], $ridi_pay_url, 'true'],
             [['HTTP_Origin' => 'https://wrong.io'], null, null]
         ];
     }

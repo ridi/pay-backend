@@ -93,7 +93,7 @@ class CorsMiddleware implements EventSubscriberInterface
             }
 
             $response->headers->set('Access-Control-Allow-Origin', $origin);
-            $response->headers->set('Access-Control-Allow-Credentials', true);
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
         }
     }
 
