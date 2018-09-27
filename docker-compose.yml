@@ -7,7 +7,7 @@ services:
     build:
       context: .
       args:
-        SITE: api.pay.ridi.io
+        DOMAIN: api.pay.ridi.io
     ports:
       - 80:80
       - 443:443

@@ -5,6 +5,7 @@ namespace RidiPay\Controller;
 
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
+use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
@@ -83,8 +84,9 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me", methods={"GET"})
+     * @Route("/me", methods={"GET", "OPTIONS"})
      * @OAuth2()
+     * @Cors(methods={"GET"})
      *
      * @return JsonResponse
      */
@@ -119,9 +121,10 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/pin", methods={"PUT"})
+     * @Route("/me/pin", methods={"PUT", "OPTIONS"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
+     * @Cors(methods={"PUT"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -160,9 +163,10 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/pin/validate", methods={"POST"})
+     * @Route("/me/pin/validate", methods={"POST", "OPTIONS"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -207,9 +211,10 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/password/validate", methods={"POST"})
+     * @Route("/me/password/validate", methods={"POST", "OPTIONS"})
      * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -254,9 +259,10 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/onetouch", methods={"PUT"})
+     * @Route("/me/onetouch", methods={"PUT", "OPTIONS"})
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
+     * @Cors(methods={"PUT"})
      *
      * @param Request $request
      * @return JsonResponse

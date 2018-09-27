@@ -6,6 +6,7 @@ namespace RidiPay\Controller;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
+use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\Validation\ApiSecretValidationException;
@@ -69,8 +70,9 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"POST"})
+     * @Route("/payments/{reservation_id}", methods={"POST", "OPTIONS"})
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @param string $reservation_id
      * @return JsonResponse

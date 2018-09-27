@@ -28,17 +28,18 @@ RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache
 
 RUN pip3 install awscli
 
-ARG SITE
+ARG DOMAIN
+ENV DOMAIN ${DOMAIN}
 
 RUN a2enmod rewrite ssl
 RUN a2dissite 000-default && rm /etc/apache2/sites-available/000-default.conf
-COPY /config/docker/apache/${SITE}.conf /tmp/${SITE}.conf
-RUN envsubst < /tmp/${SITE}.conf > /etc/apache2/sites-available/${SITE}.conf
-RUN a2ensite $SITE
+COPY /config/docker/apache/${DOMAIN}.conf /tmp/${DOMAIN}.conf
+RUN envsubst < /tmp/${DOMAIN}.conf > /etc/apache2/sites-available/${DOMAIN}.conf
+RUN a2ensite ${DOMAIN}
 
 # Install composer
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
-    php -r "if (hash_file('SHA384', 'composer-setup.php') === '544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" && \
+    php -r "if (hash_file('SHA384', 'composer-setup.php') === '93b54496392c062774670ac18b134c3b3a95e5a5e5c8f1a9f115f203b75bf9a129d5daa8ba6a13e2cc8a1da0806388a8') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" && \
     php composer-setup.php && \
     php -r "unlink('composer-setup.php');" && \
     mv composer.phar /usr/local/bin/composer
