@@ -14,17 +14,9 @@ use RidiPay\Library\OAuth2\User\DefaultUserProvider;
 use RidiPay\Library\OAuth2\User\User;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
-use RidiPay\Partner\Domain\Entity\PartnerEntity;
 use RidiPay\Pg\Domain\Entity\PgEntity;
-use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
-use RidiPay\Transaction\Domain\Entity\TransactionEntity;
-use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
 use RidiPay\User\Application\Service\CardAppService;
-use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\CardIssuerEntity;
-use RidiPay\User\Domain\Entity\PaymentMethodEntity;
-use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
-use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 
@@ -54,26 +46,8 @@ class TestUtil
         $conn->close();
 
         $em = EntityManagerProvider::getEntityManager();
-        $schemaTool = new SchemaTool($em);
-
-        $classes = array_map(
-            function (string $class_name) use ($em) {
-                return $em->getClassMetadata($class_name);
-            },
-            [
-                UserEntity::class,
-                UserActionHistoryEntity::class,
-                PaymentMethodEntity::class,
-                CardEntity::class,
-                CardIssuerEntity::class,
-                TransactionEntity::class,
-                TransactionHistoryEntity::class,
-                SubscriptionEntity::class,
-                PgEntity::class,
-                PartnerEntity::class
-            ]
-        );
-        $schemaTool->createSchema($classes);
+        $schema_tool = new SchemaTool($em);
+        $schema_tool->createSchema($em->getMetadataFactory()->getAllMetadata());
 
         // Pg Fixture 생성
         $pg = PgEntity::createKcp();

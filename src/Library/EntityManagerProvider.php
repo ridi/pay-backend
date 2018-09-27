@@ -40,7 +40,15 @@ class EntityManagerProvider
     protected static function createEntityManager(string $connection_group): EntityManager
     {
         $is_dev_mode = getenv('APP_ENV') !== 'prod';
-        $config = Setup::createAnnotationMetadataConfiguration([__DIR__ . '/..'], $is_dev_mode);
+        $config = Setup::createAnnotationMetadataConfiguration(
+            [
+                __DIR__ . '/../Partner',
+                __DIR__ . '/../Pg',
+                __DIR__ . '/../Transaction',
+                __DIR__ . '/../User',
+            ],
+            $is_dev_mode
+        );
 
         if ($is_dev_mode) {
             $config->setAutoGenerateProxyClasses(ProxyFactory::AUTOGENERATE_EVAL);
