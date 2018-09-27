@@ -24,12 +24,12 @@ class CorsMiddlewareTest extends WebTestCase
      *
      * @param array $header
      * @param null|string $access_control_allow_origin
-     * @param null|bool $access_control_allow_credentials
+     * @param null|string $access_control_allow_credentials
      */
     public function testMiddleware(
         array $header,
         ?string $access_control_allow_origin,
-        ?bool $access_control_allow_credentials
+        ?string $access_control_allow_credentials
     ) {
         $client = self::createClient([], $header);
         $client->request(Request::METHOD_OPTIONS, '/cors');
