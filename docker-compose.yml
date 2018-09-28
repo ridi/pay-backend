@@ -1,6 +1,15 @@
 version: "3"
 
 services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./config/certs:/etc/nginx/certs:ro
+    ports:
+      - 80:80
+      - 443:443
   apache:
     image: ridi/pay:latest
     container_name: apache
@@ -9,9 +18,9 @@ services:
       args:
         DOMAIN: api.pay.ridi.io
     ports:
-      - 80:80
-      - 443:443
+      - 80
     environment:
+      - VIRTUAL_HOST=api.pay.ridi.io
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}

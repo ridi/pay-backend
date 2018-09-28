@@ -31,9 +31,9 @@ RUN pip3 install awscli
 ARG DOMAIN
 ENV DOMAIN ${DOMAIN}
 
-RUN a2enmod rewrite ssl
+RUN a2enmod rewrite
 RUN a2dissite 000-default && rm /etc/apache2/sites-available/000-default.conf
-COPY /config/docker/apache/${DOMAIN}.conf /tmp/${DOMAIN}.conf
+COPY /config/docker/apache/ridi-pay.conf.template /tmp/${DOMAIN}.conf
 RUN envsubst < /tmp/${DOMAIN}.conf > /etc/apache2/sites-available/${DOMAIN}.conf
 RUN a2ensite ${DOMAIN}
 
