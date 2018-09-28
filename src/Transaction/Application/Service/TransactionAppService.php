@@ -24,38 +24,48 @@ use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
 use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
+use RidiPay\Transaction\Domain\Exception\UnvalidatedTransactionException;
 use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 
 class TransactionAppService
 {
+    private const VALIDATION_PASSWORD = 'PASSWORD';
+    private const VALIDATION_PIN = 'PIN';
+
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
-     * @param string $payment_method_id
+     * @param string $payment_method_uuid
      * @param string $partner_transaction_id
      * @param string $product_name
      * @param int $amount
      * @param string $return_url
      * @return string
      * @throws UnauthorizedPartnerException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
     public static function reserveTransaction(
         string $partner_api_key,
         string $partner_secret_key,
-        string $payment_method_id,
+        string $payment_method_uuid,
         string $partner_transaction_id,
         string $product_name,
         int $amount,
         string $return_url
     ): string {
-        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
 
         $reservation_id = Uuid::uuid4()->toString();
         $reservation_key = self::getReservationKey($reservation_id);
@@ -66,7 +76,7 @@ class TransactionAppService
                 $reservation_key,
                 [
                     'payment_method_id' => $payment_method_id,
-                    'partner_api_key' => $partner_api_key,
+                    'partner_id' => $partner_id,
                     'partner_transaction_id' => $partner_transaction_id,
                     'product_name' => $product_name,
                     'amount' => $amount,
@@ -86,33 +96,83 @@ class TransactionAppService
     }
 
     /**
-     * @param int $u_idx
      * @param string $reservation_id
-     * @return CreateTransactionDto
+     * @param int $u_idx
+     * @return null|string
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
      * @throws NotReservedTransactionException
-     * @throws UnauthorizedPartnerException
-     * @throws UnregisteredPaymentMethodException
+     * @throws UnsupportedPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
      */
-    public static function createTransaction(int $u_idx, string $reservation_id): CreateTransactionDto
+    public static function getRequiredValidation(string $reservation_id, int $u_idx): ?string
     {
         $reserved_transaction = self::getReservedTransaction($reservation_id);
 
-        $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($reserved_transaction['payment_method_id']);
+        $amount = intval($reserved_transaction['amount']);
+        if ($amount > 100000) {
+            return self::VALIDATION_PASSWORD;
+        }
+
+        $user = UserAppService::getUserInformation($u_idx);
+        if ($user->is_using_onetouch_pay) {
+            return null;
+        }
+        if ($user->has_pin) {
+            return self::VALIDATION_PIN;
+        } else {
+            return self::VALIDATION_PASSWORD;
+        }
+    }
+
+    /**
+     * @param string $reservation_id
+     * @return string
+     * @throws \Exception
+     */
+    public static function generateValidationToken(string $reservation_id): string
+    {
+        $reservation_key = self::getReservationKey($reservation_id);
+        $validation_token = Uuid::uuid4()->toString();
+
+        $redis = self::getRedisClient();
+        $redis->hset($reservation_key, 'validation_token', $validation_token);
+        $redis->expire($reservation_key, TimeUnitConstant::SEC_IN_HOUR);
+
+        return $validation_token;
+    }
+
+    /**
+     * @param int $u_idx
+     * @param string $reservation_id
+     * @param string $validation_token
+     * @return CreateTransactionDto
+     * @throws NotReservedTransactionException
+     * @throws UnvalidatedTransactionException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function createTransaction(
+        int $u_idx,
+        string $reservation_id,
+        string $validation_token
+    ): CreateTransactionDto {
+        $reserved_transaction = self::getReservedTransaction($reservation_id);
+        if ($reserved_transaction['validation_token'] !== $validation_token) {
+            throw new UnvalidatedTransactionException();
+        }
+
         $pg = PgAppService::getActivePg();
-        $partner_id = PartnerAppService::getPartnerIdByApiKey($reserved_transaction['partner_api_key']);
-        $partner_transaction_id = $reserved_transaction['partner_transaction_id'];
 
         try {
             $transaction = new TransactionEntity(
                 $u_idx,
-                $payment_method_id,
+                intval($reserved_transaction['payment_method_id']),
                 $pg->id,
-                $partner_id,
-                $partner_transaction_id,
+                intval($reserved_transaction['partner_id']),
+                $reserved_transaction['partner_transaction_id'],
                 $reserved_transaction['product_name'],
                 intval($reserved_transaction['amount']),
                 \DateTime::createFromFormat(DATE_ATOM, $reserved_transaction['reserved_at'])
@@ -134,7 +194,6 @@ class TransactionAppService
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
-     * @param int $u_idx
      * @param string $transaction_id
      * @return ApproveTransactionDto
      * @throws NonexistentTransactionException

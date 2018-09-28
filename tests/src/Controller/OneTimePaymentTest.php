@@ -9,6 +9,7 @@ use RidiPay\Library\PasswordValidationApi;
 use RidiPay\Partner\Application\Dto\RegisterPartnerDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
+use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\PaymentMethodConstant;
@@ -84,9 +85,16 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 원터치 결제 인증
         $this->assertTrue(UserAppService::isUsingOnetouchPay(self::$u_idx));
+        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
 
         // 결제 생성
-        $this->assertCreatePaymentSuccessfully(self::$reservation_id, $partner_transaction_id, $product_name, $amount);
+        $this->assertCreatePaymentSuccessfully(
+            $validation_token,
+            self::$reservation_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
 
         // 결제 승인
         $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
@@ -120,9 +128,16 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 결제 비밀번호 인증
         UserAppService::validatePin(self::$u_idx, $pin);
+        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
 
         // 결제 생성
-        $this->assertCreatePaymentSuccessfully(self::$reservation_id, $partner_transaction_id, $product_name, $amount);
+        $this->assertCreatePaymentSuccessfully(
+            $validation_token,
+            self::$reservation_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
 
         // 결제 승인
         $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
@@ -154,9 +169,16 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 계정 비밀번호 인증
         UserAppService::validatePassword(self::$u_idx, 'test', 'abcde@12345');
+        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
 
         // 결제 생성
-        $this->assertCreatePaymentSuccessfully(self::$reservation_id, $partner_transaction_id, $product_name, $amount);
+        $this->assertCreatePaymentSuccessfully(
+            $validation_token,
+            self::$reservation_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
 
         // 결제 승인
         $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
@@ -213,12 +235,14 @@ class OneTimePaymentTest extends ControllerTestCase
     }
 
     /**
+     * @param string $validation_token
      * @param string $reservation_id
      * @param string $partner_transaction_id
      * @param string $product_name
      * @param int $amount
      */
     private function assertCreatePaymentSuccessfully(
+        string $validation_token,
         string $reservation_id,
         string $partner_transaction_id,
         string $product_name,
@@ -232,7 +256,8 @@ class OneTimePaymentTest extends ControllerTestCase
                 'HTTP_Secret-Key' => self::$partner->secret_key
             ]
         );
-        $client->request(Request::METHOD_POST, "/payments/${reservation_id}");
+        $body = json_encode(['validation_token' => $validation_token]);
+        $client->request(Request::METHOD_POST, "/payments/${reservation_id}", [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         $return_url = json_decode($client->getResponse()->getContent())->return_url;

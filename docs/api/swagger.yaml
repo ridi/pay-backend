@@ -9,8 +9,6 @@ servers:
   - url: https://api.pay.ridibooks.com
     description: Production Server
 tags:
-  - name: SPA End-point
-    description: SPA 페이지 렌더링용 End-point
   - name: Public API
     description: 모든 가맹점 서비스에서 호출 가능한 API
   - name: Private API
@@ -18,85 +16,6 @@ tags:
   - name: Private API (Only First-party)
     description: RIDI 서비스에서 호출 가능한 API
 paths:
-  /payments/{reservation_id}:
-    get:
-      tags:
-        - SPA End-point
-      summary: 결제 페이지
-      parameters:
-        - $ref: '#/components/parameters/ReservationId'
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
-    post:
-      tags:
-        - Private API
-      summary: 결제 Transaction 생성
-      parameters:
-        - $ref: '#/components/parameters/ReservationId'
-      responses:
-        200:
-          $ref: '#/components/responses/CreatePaymentResponse'
-        401:
-          $ref: '#/components/responses/Unauthorized'
-        500:
-          $ref: '#/components/responses/InternalServerError'
-  /legal/terms:
-    get:
-      tags:
-        - SPA End-point
-      summary: 약관 페이지
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
-  /settings:
-    get:
-      tags:
-        - SPA End-point
-      summary: RIDI Pay 설정 페이지
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
-  /settings/cards/add:
-    get:
-      tags:
-        - SPA End-point
-      summary: 카드 등록 페이지
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
-  /settings/onetouch:
-    get:
-      tags:
-        - SPA End-point
-      summary: 원터치 결제 설정 페이지
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
-  /settings/pin/register:
-    get:
-      tags:
-        - SPA End-point
-      summary: 결제 비밀번호 등록 페이지
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
-  /validate/password:
-    get:
-      tags:
-        - SPA End-point
-      summary: 계정 비밀번호 검증 페이지
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
-  /validate/pin:
-    get:
-      tags:
-        - SPA End-point
-      summary: 결제 비밀번호 검증 페이지
-      responses:
-        200:
-          $ref: '#/components/responses/SpaResponse'
   /payments/reserve:
     post:
       tags:
@@ -115,6 +34,38 @@ paths:
           $ref: '#/components/responses/ReservePaymentResponse'
         400:
           $ref: '#/components/responses/BadRequest'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  /payments/{reservation_id}:
+    get:
+      tags:
+        - Private API
+      summary: 결제 예약 정보 조회
+      parameters:
+        - $ref: '#/components/parameters/ReservationId'
+      responses:
+        200:
+          $ref: '#/components/responses/getReservationResponse'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Private API
+      summary: 결제 생성
+      parameters:
+        - $ref: '#/components/parameters/ReservationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        200:
+          $ref: '#/components/responses/CreatePaymentResponse'
         401:
           $ref: '#/components/responses/Unauthorized'
         500:
@@ -512,6 +463,15 @@ components:
         - partner_transaction_id
         - amount
         - return_url
+    CreatePaymentRequest:
+      type: object
+      properties:
+        validation_token:
+          type: string
+          description: 결제 인증 완료 시 발급된 토큰
+          example: 550E8400-E29B-41D4-A716-446655440000
+      required:
+        - validation_token
     SubscriptionRequest:
       type: object
       properties:
@@ -519,9 +479,9 @@ components:
           type: string
           description: 결제 수단 ID
           example: 550E8400-E29B-41D4-A716-446655440000
-        purpose:
+        product_name:
           type: string
-          description: 정기 결제 목적
+          description: 정기 결제 상품명
           example: 리디캐시 자동충전
         amount:
           type: integer
@@ -529,7 +489,7 @@ components:
           example: 10000
       required:
         - payment_method_id
-        - purpose
+        - product_name
         - amount
     ApproveSubscriptionPaymentRequest:
       type: object
@@ -627,12 +587,6 @@ components:
       schema:
         type: integer
   responses:
-    SpaResponse:
-      description: OK(200)
-      content:
-        text/html:
-          schema:
-            type: string
     Success:
       description: OK(200)
       content:
@@ -682,6 +636,24 @@ components:
                 example: 880E8200-A29B-24B2-8716-42B65544A000
             required:
               - reservation_id
+    getReservationResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              required_validation:
+                type: string
+                enum: [PASSWORD, PIN]
+                nullable: true
+                description: 결제 생성을 위해 필요한 인증 방식(null => 원터치 결제)
+              validation_token:
+                type: string
+                description: 결제 인증 완료 시 발급된 토큰(required_validation = null인 경우, 이 field가 설정)
+                example: 880E8200-A29B-24B2-8716-42B65544A000
+            required:
+              - required_validation
     CreatePaymentResponse:
       description: 'OK'
       content:

@@ -8,6 +8,7 @@ use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
+use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
 use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -176,6 +177,10 @@ class UserController extends BaseController
         try {
             $body = json_decode($request->getContent());
             UserAppService::validatePin($this->getUidx(), $body->pin);
+
+            if (isset($body->reservation_id)) {
+                $validation_token = TransactionAppService::generateValidationToken($body->reservation_id);
+            }
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -207,7 +212,12 @@ class UserController extends BaseController
             );
         }
 
-        return self::createSuccessResponse();
+        $data = [];
+        if (isset($validation_token)) {
+            $data['validation_token'] = $validation_token;
+        }
+
+        return self::createSuccessResponse($data);
     }
 
     /**
@@ -224,6 +234,10 @@ class UserController extends BaseController
         try {
             $body = json_decode($request->getContent());
             UserAppService::validatePassword($this->getUidx(), $this->getUid(), $body->password);
+
+            if (isset($body->reservation_id)) {
+                $validation_token = TransactionAppService::generateValidationToken($body->reservation_id);
+            }
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -255,7 +269,12 @@ class UserController extends BaseController
             );
         }
 
-        return self::createSuccessResponse();
+        $data = [];
+        if (isset($validation_token)) {
+            $data['validation_token'] = $validation_token;
+        }
+
+        return self::createSuccessResponse($data);
     }
 
     /**

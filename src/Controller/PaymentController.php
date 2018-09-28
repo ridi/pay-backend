@@ -18,6 +18,9 @@ use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
+use RidiPay\Transaction\Domain\Exception\UnvalidatedTransactionException;
+use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,6 +62,12 @@ class PaymentController extends BaseController
                 TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
+        } catch (UnregisteredPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
         } catch (\Throwable $t) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -70,21 +79,30 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"POST", "OPTIONS"})
+     * @Route("/payments/{reservation_id}", methods={"GET", "OPTIONS"})
      * @OAuth2()
-     * @Cors(methods={"POST"})
+     * @Cors(methods={"GET"})
      *
      * @param string $reservation_id
      * @return JsonResponse
      */
-    public function createPayment(string $reservation_id): JsonResponse
+    public function getReservation(string $reservation_id): JsonResponse
     {
         try {
-            $result = TransactionAppService::createTransaction($this->getUidx(), $reservation_id);
-        } catch (UnauthorizedPartnerException $e) {
+            $required_validation = TransactionAppService::getRequiredValidation($reservation_id, $this->getUidx());
+            if (is_null($required_validation)) {
+                $validation_token = TransactionAppService::generateValidationToken($reservation_id);
+            }
+        } catch (LeavedUserException $e) {
             return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::LEAVED_USER,
+                $e->getMessage()
+            );
+        } catch (NotFoundUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
         } catch (NotReservedTransactionException $e) {
@@ -93,11 +111,50 @@ class PaymentController extends BaseController
                 TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
                 $e->getMessage()
             );
-        } catch (UnregisteredPaymentMethodException $e) {
+        } catch (\Throwable $t) {
             return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        $data = ['required_validation' => $required_validation];
+        if (isset($validation_token)) {
+            $data['validation_token'] = $validation_token;
+        }
+
+        return self::createSuccessResponse($data);
+    }
+
+    /**
+     * @Route("/payments/{reservation_id}", methods={"POST", "OPTIONS"})
+     * @ParamValidator({"param"="validation_token", "constraints"={"Uuid"}})
+     * @OAuth2()
+     * @Cors(methods={"POST"})
+     *
+     * @param Request $request
+     * @param string $reservation_id
+     * @return JsonResponse
+     */
+    public function createPayment(Request $request, string $reservation_id): JsonResponse
+    {
+        try {
+            $body = json_decode($request->getContent());
+            $result = TransactionAppService::createTransaction(
+                $this->getUidx(),
+                $reservation_id,
+                $body->validation_token
+            );
+        } catch (NotReservedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
                 $e->getMessage()
+            );
+        } catch (UnvalidatedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::UNVALIDATED_TRANSACTION
             );
         } catch (\Throwable $t) {
             return self::createErrorResponse(
