@@ -87,7 +87,7 @@ class UserController extends BaseController
     /**
      * @Route("/me", methods={"GET", "OPTIONS"})
      * @OAuth2()
-     * @Cors(methods={"GET"})
+     * @Cors(methods={"GET", "OPTIONS"})
      *
      * @return JsonResponse
      */
@@ -125,7 +125,7 @@ class UserController extends BaseController
      * @Route("/me/pin", methods={"PUT", "OPTIONS"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
-     * @Cors(methods={"PUT"})
+     * @Cors(methods={"PUT", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -167,7 +167,7 @@ class UserController extends BaseController
      * @Route("/me/pin/validate", methods={"POST", "OPTIONS"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
-     * @Cors(methods={"POST"})
+     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -224,7 +224,7 @@ class UserController extends BaseController
      * @Route("/me/password/validate", methods={"POST", "OPTIONS"})
      * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
      * @OAuth2()
-     * @Cors(methods={"POST"})
+     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -281,7 +281,7 @@ class UserController extends BaseController
      * @Route("/me/onetouch", methods={"PUT", "OPTIONS"})
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
-     * @Cors(methods={"PUT"})
+     * @Cors(methods={"PUT", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse

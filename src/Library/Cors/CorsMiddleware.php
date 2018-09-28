@@ -84,14 +84,15 @@ class CorsMiddleware implements EventSubscriberInterface
         $response = $event->getResponse();
         $http_method = $request->getRealMethod();
 
+        $origin = $request->headers->get('Origin');
+        if (!in_array($origin, self::getAccessControlAllowOrigins())) {
+            return;
+        }
+
         if ($http_method === Request::METHOD_OPTIONS) {
+            $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Methods', implode(', ', $this->access_control_allow_methods));
         } else {
-            $origin = $request->headers->get('Origin');
-            if (!in_array($origin, self::getAccessControlAllowOrigins())) {
-                return;
-            }
-
             $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Credentials', 'true');
         }

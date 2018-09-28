@@ -24,11 +24,13 @@ class CorsMiddlewareTest extends WebTestCase
      *
      * @param array $header
      * @param null|string $access_control_allow_origin
+     * @param null|string $access_control_allow_methods
      * @param null|string $access_control_allow_credentials
      */
     public function testMiddleware(
         array $header,
         ?string $access_control_allow_origin,
+        ?string $access_control_allow_methods,
         ?string $access_control_allow_credentials
     ) {
         $client = self::createClient([], $header);
@@ -36,7 +38,11 @@ class CorsMiddlewareTest extends WebTestCase
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $this->assertSame('', $client->getResponse()->getContent());
         $this->assertSame(
-            Request::METHOD_GET,
+            $access_control_allow_origin,
+            $client->getResponse()->headers->get('Access-Control-Allow-Origin')
+        );
+        $this->assertSame(
+            $access_control_allow_methods,
             $client->getResponse()->headers->get('Access-Control-Allow-Methods')
         );
 
@@ -59,8 +65,18 @@ class CorsMiddlewareTest extends WebTestCase
         $ridi_pay_url = getenv('RIDI_PAY_URL');
 
         return [
-            [['HTTP_Origin' => $ridi_pay_url], $ridi_pay_url, 'true'],
-            [['HTTP_Origin' => 'https://wrong.io'], null, null]
+            [
+                ['HTTP_Origin' => $ridi_pay_url],
+                $ridi_pay_url,
+                implode(', ', [Request::METHOD_GET, Request::METHOD_OPTIONS]),
+                'true'
+            ],
+            [
+                ['HTTP_Origin' => 'https://wrong.io'],
+                null,
+                null,
+                null
+            ]
         ];
     }
 }

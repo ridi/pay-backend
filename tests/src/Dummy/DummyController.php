@@ -61,7 +61,7 @@ class DummyController extends Controller
 
     /**
      * @Route("/cors", methods={"GET", "OPTIONS"})
-     * @Cors(methods={"GET"})
+     * @Cors(methods={"GET", "OPTIONS"})
      *
      * @param Request $request
      * @return Response

@@ -81,7 +81,7 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/{reservation_id}", methods={"GET", "OPTIONS"})
      * @OAuth2()
-     * @Cors(methods={"GET"})
+     * @Cors(methods={"GET", "OPTIONS"})
      *
      * @param string $reservation_id
      * @return JsonResponse
@@ -130,7 +130,7 @@ class PaymentController extends BaseController
      * @Route("/payments/{reservation_id}", methods={"POST", "OPTIONS"})
      * @ParamValidator({"param"="validation_token", "constraints"={"Uuid"}})
      * @OAuth2()
-     * @Cors(methods={"POST"})
+     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @param string $reservation_id

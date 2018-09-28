@@ -30,7 +30,7 @@ class PaymentMethodController extends BaseController
      *     {"param"="tax_id", "constraints"={{"Regex"="/(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}/"}}}
      * )
      * @OAuth2()
-     * @Cors(methods={"POST"})
+     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -77,7 +77,7 @@ class PaymentMethodController extends BaseController
     /**
      * @Route("/me/cards/{payment_method_id}", methods={"DELETE", "OPTIONS"})
      * @OAuth2()
-     * @Cors(methods={"DELETE"})
+     * @Cors(methods={"DELETE", "OPTIONS"})
      *
      * @param string $payment_method_id
      * @return JsonResponse
