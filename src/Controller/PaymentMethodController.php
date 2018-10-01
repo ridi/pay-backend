@@ -22,7 +22,18 @@ use Symfony\Component\Routing\Annotation\Route;
 class PaymentMethodController extends BaseController
 {
     /**
-     * @Route("/me/cards", methods={"POST", "OPTIONS"})
+     * @Route("/me/cards", methods={"OPTIONS"})
+     * @Cors(methods={"POST"})
+     *
+     * @return JsonResponse
+     */
+    public function registerCardPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/cards", methods={"POST"})
      * @ParamValidator(
      *     {"param"="card_number", "constraints"={{"Regex"="/\d{13,16}/"}}},
      *     {"param"="card_expiration_date", "constraints"={{"Regex"="/\d{2}(0[1-9]|1[0-2])/"}}},
@@ -30,7 +41,6 @@ class PaymentMethodController extends BaseController
      *     {"param"="tax_id", "constraints"={{"Regex"="/(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}/"}}}
      * )
      * @OAuth2()
-     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -75,9 +85,19 @@ class PaymentMethodController extends BaseController
     }
 
     /**
-     * @Route("/me/cards/{payment_method_id}", methods={"DELETE", "OPTIONS"})
+     * @Route("/me/cards/{payment_method_id}", methods={"OPTIONS"})
+     * @Cors(methods={"DELETE"})
+     *
+     * @return JsonResponse
+     */
+    public function deleteCardPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/cards/{payment_method_id}", methods={"DELETE"})
      * @OAuth2()
-     * @Cors(methods={"DELETE", "OPTIONS"})
      *
      * @param string $payment_method_id
      * @return JsonResponse

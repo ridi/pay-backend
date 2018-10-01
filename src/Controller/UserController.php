@@ -85,9 +85,19 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me", methods={"GET", "OPTIONS"})
+     * @Route("/me", methods={"OPTIONS"})
+     * @Cors(methods={"GET"})
+     *
+     * @return JsonResponse
+     */
+    public function getMyInformationPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me", methods={"GET"})
      * @OAuth2()
-     * @Cors(methods={"GET", "OPTIONS"})
      *
      * @return JsonResponse
      */
@@ -122,10 +132,20 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/pin", methods={"PUT", "OPTIONS"})
+     * @Route("/me/pin", methods={"OPTIONS"})
+     * @Cors(methods={"PUT"})
+     *
+     * @return JsonResponse
+     */
+    public function updatePinPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/pin", methods={"PUT"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
-     * @Cors(methods={"PUT", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -164,10 +184,20 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/pin/validate", methods={"POST", "OPTIONS"})
+     * @Route("/me/pin/validate", methods={"OPTIONS"})
+     * @Cors(methods={"POST"})
+     *
+     * @return JsonResponse
+     */
+    public function validatePinPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/pin/validate", methods={"POST"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
-     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -221,10 +251,20 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/password/validate", methods={"POST", "OPTIONS"})
+     * @Route("/me/password/validate", methods={"OPTIONS"})
+     * @Cors(methods={"POST"})
+     *
+     * @return JsonResponse
+     */
+    public function validatePasswordPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/password/validate", methods={"POST"})
      * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
      * @OAuth2()
-     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse
@@ -278,10 +318,20 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/me/onetouch", methods={"PUT", "OPTIONS"})
+     * @Route("/me/onetouch", methods={"OPTIONS"})
+     * @Cors(methods={"PUT"})
+     *
+     * @return JsonResponse
+     */
+    public function updateOnetouchPayPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/onetouch", methods={"PUT"})
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
-     * @Cors(methods={"PUT", "OPTIONS"})
      *
      * @param Request $request
      * @return JsonResponse

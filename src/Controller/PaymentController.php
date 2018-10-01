@@ -79,9 +79,19 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"GET", "OPTIONS"})
+     * @Route("/payments/{reservation_id}", methods={"OPTIONS"})
+     * @Cors(methods={"GET"})
+     *
+     * @return JsonResponse
+     */
+    public function getReservationPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/payments/{reservation_id}", methods={"GET"})
      * @OAuth2()
-     * @Cors(methods={"GET", "OPTIONS"})
      *
      * @param string $reservation_id
      * @return JsonResponse
@@ -127,10 +137,20 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"POST", "OPTIONS"})
+     * @Route("/payments/{reservation_id}", methods={"OPTIONS"})
+     * @Cors(methods={"POST"})
+     *
+     * @return JsonResponse
+     */
+    public function createPaymentPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/payments/{reservation_id}", methods={"POST"})
      * @ParamValidator({"param"="validation_token", "constraints"={"Uuid"}})
      * @OAuth2()
-     * @Cors(methods={"POST", "OPTIONS"})
      *
      * @param Request $request
      * @param string $reservation_id

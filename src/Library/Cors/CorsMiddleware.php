@@ -14,6 +14,8 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 class CorsMiddleware implements EventSubscriberInterface
 {
+    private const ACCESS_CONTROL_ALLOW_HEADERS = ['Content-Type'];
+
     /** @var CachedReader */
     private $annotation_reader;
 
@@ -61,13 +63,6 @@ class CorsMiddleware implements EventSubscriberInterface
 
         $this->access_control_allow_methods = $annotation->getMethods();
 
-        $http_method = $event->getRequest()->getRealMethod();
-        if ($http_method === Request::METHOD_OPTIONS) {
-            $event->setController(function () {
-                return new Response();
-            });
-        }
-
         return;
     }
 
@@ -89,12 +84,11 @@ class CorsMiddleware implements EventSubscriberInterface
             return;
         }
 
+        $response->headers->set('Access-Control-Allow-Origin', $origin);
+        $response->headers->set('Access-Control-Allow-Credentials', 'true');
         if ($http_method === Request::METHOD_OPTIONS) {
-            $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Methods', implode(', ', $this->access_control_allow_methods));
-        } else {
-            $response->headers->set('Access-Control-Allow-Origin', $origin);
-            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            $response->headers->set('Access-Control-Allow-Headers', implode(', ', self::ACCESS_CONTROL_ALLOW_HEADERS));
         }
     }
 
