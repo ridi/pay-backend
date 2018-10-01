@@ -37,23 +37,27 @@ class CorsMiddlewareTest extends WebTestCase
         $client->request(Request::METHOD_OPTIONS, '/cors');
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $this->assertSame('', $client->getResponse()->getContent());
-        $this->assertSame(
+        $this->assertValidAccessControlAllowOrigin(
             $access_control_allow_origin,
-            $client->getResponse()->headers->get('Access-Control-Allow-Origin')
+            $client->getResponse()
         );
-        $this->assertSame(
+        $this->assertValidAccessControlAllowCredentials(
+            $access_control_allow_credentials,
+            $client->getResponse()
+        );
+        $this->assertValidAccessControlAllowMethods(
             $access_control_allow_methods,
-            $client->getResponse()->headers->get('Access-Control-Allow-Methods')
+            $client->getResponse()
         );
 
         $client->request(Request::METHOD_GET, '/cors');
-        $this->assertSame(
+        $this->assertValidAccessControlAllowOrigin(
             $access_control_allow_origin,
-            $client->getResponse()->headers->get('Access-Control-Allow-Origin')
+            $client->getResponse()
         );
-        $this->assertSame(
+        $this->assertValidAccessControlAllowCredentials(
             $access_control_allow_credentials,
-            $client->getResponse()->headers->get('Access-Control-Allow-Credentials')
+            $client->getResponse()
         );
     }
 
@@ -78,5 +82,47 @@ class CorsMiddlewareTest extends WebTestCase
                 null
             ]
         ];
+    }
+
+    /**
+     * @param null|string $access_control_allow_origin
+     * @param Response $response
+     */
+    private function assertValidAccessControlAllowOrigin(
+        ?string $access_control_allow_origin,
+        Response $response
+    ): void {
+        $this->assertSame(
+            $access_control_allow_origin,
+            $response->headers->get('Access-Control-Allow-Origin')
+        );
+    }
+
+    /**
+     * @param null|string $access_control_allow_credentials
+     * @param Response $response
+     */
+    private function assertValidAccessControlAllowCredentials(
+        ?string $access_control_allow_credentials,
+        Response $response
+    ): void {
+        $this->assertSame(
+            $access_control_allow_credentials,
+            $response->headers->get('Access-Control-Allow-Credentials')
+        );
+    }
+
+    /**
+     * @param null|string $access_control_allow_methods
+     * @param Response $response
+     */
+    private function assertValidAccessControlAllowMethods(
+        ?string $access_control_allow_methods,
+        Response $response
+    ): void {
+        $this->assertSame(
+            $access_control_allow_methods,
+            $response->headers->get('Access-Control-Allow-Methods')
+        );
     }
 }
