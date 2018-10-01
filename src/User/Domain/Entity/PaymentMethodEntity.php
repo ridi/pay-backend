@@ -206,5 +206,4 @@ class PaymentMethodEntity
     {
         $this->cards = [$card_for_one_time_payment, $card_for_billing_payment];
     }
-
 }
