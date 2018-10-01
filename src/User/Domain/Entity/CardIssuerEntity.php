@@ -47,7 +47,7 @@ class CardIssuerEntity
     /**
      * @var string
      *
-     * @Column(name="color", type="string", length=6, nullable=false, options={"comment"="카드 발급사 색상"})
+     * @Column(name="color", type="string", length=7, nullable=false, options={"comment"="카드 발급사 색상"})
      */
     private $color;
 
