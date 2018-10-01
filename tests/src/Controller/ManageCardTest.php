@@ -207,7 +207,7 @@ class ManageCardTest extends ControllerTestCase
         }
 
         UserAppService::createUser($user_indices[0]);
-        $payment_method_id_of_normal_user = CardAppService::registerCard(
+        $payment_method_of_normal_user = CardAppService::registerCard(
             $user_indices[0],
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
@@ -216,7 +216,7 @@ class ManageCardTest extends ControllerTestCase
         );
 
         UserAppService::createUser($user_indices[1]);
-        $payment_method_id_of_leaved_user = CardAppService::registerCard(
+        $payment_method_of_leaved_user = CardAppService::registerCard(
             $user_indices[1],
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
@@ -228,13 +228,13 @@ class ManageCardTest extends ControllerTestCase
         return [
             [
                 $user_indices[0],
-                $payment_method_id_of_normal_user,
+                $payment_method_of_normal_user->payment_method_id,
                 Response::HTTP_OK,
                 null
             ],
             [
                 $user_indices[1],
-                $payment_method_id_of_leaved_user,
+                $payment_method_of_leaved_user->payment_method_id,
                 Response::HTTP_FORBIDDEN,
                 UserErrorCodeConstant::LEAVED_USER
             ],

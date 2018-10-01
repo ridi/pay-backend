@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\PersistentCollection;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -85,7 +87,7 @@ class PaymentMethodEntity
     private $deleted_at;
 
     /**
-     * @var PersistentCollection
+     * @var Collection
      *
      * @OneToMany(targetEntity="RidiPay\User\Domain\Entity\CardEntity", mappedBy="payment_method")
      */
@@ -113,6 +115,7 @@ class PaymentMethodEntity
         $this->type = $type;
         $this->created_at = new \DateTime();
         $this->deleted_at = null;
+        $this->cards = new ArrayCollection();
     }
 
     /**
@@ -156,15 +159,15 @@ class PaymentMethodEntity
     }
 
     /**
-     * @return CardEntity[]
+     * @return array|Collection
      */
-    public function getCards(): array
+    public function getCards()
     {
         if (!$this->isCard()) {
             return [];
         }
 
-        return $this->cards->getValues();
+        return $this->cards;
     }
 
     /**
@@ -194,4 +197,14 @@ class PaymentMethodEntity
 
         return null;
     }
+
+    /**
+     * @param CardEntity $card_for_one_time_payment
+     * @param CardEntity $card_for_billing_payment
+     */
+    public function setCards(CardEntity $card_for_one_time_payment, CardEntity $card_for_billing_payment): void
+    {
+        $this->cards = [$card_for_one_time_payment, $card_for_billing_payment];
+    }
+
 }

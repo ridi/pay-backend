@@ -23,7 +23,7 @@ class CardService
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @param int $pg_id
      * @param PgHandlerInterface $pg_handler
-     * @return string
+     * @return PaymentMethodEntity
      * @throws CardAlreadyExistsException
      * @throws CardRegistrationException
      * @throws \Doctrine\DBAL\DBALException
@@ -38,7 +38,7 @@ class CardService
         string $tax_id,
         int $pg_id,
         PgHandlerInterface $pg_handler
-    ): string {
+    ): PaymentMethodEntity {
         self::assertNotHavingCard($u_idx);
 
         $response = $pg_handler->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
@@ -72,6 +72,9 @@ class CardService
             $card_repo->save($card_for_one_time_payment);
             $card_repo->save($card_for_billing_payment);
 
+            $payment_method->setCards($card_for_one_time_payment, $card_for_billing_payment);
+            PaymentMethodRepository::getRepository()->save($payment_method);
+
             $em->commit();
         } catch (\Throwable $t) {
             $em->rollback();
@@ -80,7 +83,7 @@ class CardService
             throw $t;
         }
 
-        return $payment_method->getUuid()->toString();
+        return $payment_method;
     }
 
     /**

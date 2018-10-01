@@ -10,6 +10,8 @@ use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
+use RidiPay\User\Application\Dto\PaymentMethodDto;
+use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -26,7 +28,7 @@ class CardAppService
      * @param string $card_password 카드 비밀번호 앞 2자리
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
-     * @return string
+     * @return PaymentMethodDto
      * @throws CardAlreadyExistsException
      * @throws CardRegistrationException
      * @throws LeavedUserException
@@ -41,7 +43,7 @@ class CardAppService
         string $card_expiration_date,
         string $card_password,
         string $tax_id
-    ): string {
+    ): PaymentMethodDto {
         $pg = PgAppService::getActivePg();
         $pg_handler = PgHandlerFactory::create($pg->name);
 
@@ -55,7 +57,7 @@ class CardAppService
                 UserAppService::createUser($u_idx);
             }
 
-            $payment_method_id = CardService::registerCard(
+            $payment_method = CardService::registerCard(
                 $u_idx,
                 $card_number,
                 $card_expiration_date,
@@ -77,7 +79,7 @@ class CardAppService
             throw $t;
         }
 
-        return $payment_method_id;
+        return PaymentMethodDtoFactory::create($payment_method);
     }
 
     /**

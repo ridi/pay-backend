@@ -49,7 +49,7 @@ class PaymentMethodController extends BaseController
     {
         try {
             $body = json_decode($request->getContent());
-            CardAppService::registerCard(
+            $result = CardAppService::registerCard(
                 $this->getUidx(),
                 $body->card_number,
                 $body->card_expiration_date,
@@ -81,7 +81,7 @@ class PaymentMethodController extends BaseController
             );
         }
 
-        return self::createSuccessResponse();
+        return self::createSuccessResponse(['card' => $result]);
     }
 
     /**

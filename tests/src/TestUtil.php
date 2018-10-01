@@ -57,7 +57,7 @@ class TestUtil
         // CardIssuer Fixture 생성
         foreach (Company::COMPANY_NAME_MAPPING_KO as $code => $name) {
             // TODO: 색상, 로고 Image URL 채우기
-            $card_issuer = new CardIssuerEntity($pg->getId(), $code, $name, '000000', '');
+            $card_issuer = new CardIssuerEntity($pg->getId(), $code, $name, '#000000', '');
             $em->persist($card_issuer);
         }
         $em->flush();
@@ -127,7 +127,7 @@ class TestUtil
      */
     public static function createCard(int $u_idx): string
     {
-        $payment_method_id = CardAppService::registerCard(
+        $payment_method = CardAppService::registerCard(
             $u_idx,
             self::CARD['CARD_NUMBER'],
             self::CARD['CARD_EXPIRATION_DATE'],
@@ -135,6 +135,6 @@ class TestUtil
             self::TAX_ID
         );
 
-        return $payment_method_id;
+        return $payment_method->payment_method_id;
     }
 }

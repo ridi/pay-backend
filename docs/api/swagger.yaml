@@ -205,7 +205,7 @@ paths:
               $ref: '#/components/schemas/RegisterCardRequest'
       responses:
         200:
-          $ref: '#/components/responses/Success'
+          $ref: '#/components/responses/RegisterCardResponse'
         400:
           $ref: '#/components/responses/BadRequest'
         401:
@@ -503,15 +503,15 @@ components:
     RegisterCardRequest:
       type: object
       properties:
-        number:
+        card_number:
           type: string
           description: 카드 번호
           example: 5416543210231427
-        password:
+        card_password:
           type: string
           description: 카드 비밀번호 앞 2자리
           example: 12
-        expiration_date:
+        card_expiration_date:
           type: string
           description: 카드 유효 기한(YYMM)
           example: 2111
@@ -520,9 +520,9 @@ components:
           description: 개인 - 생년월일(YYMMDD) / 법인 - 사업자 번호 10자리
           example: 940101
       required:
-        - number
-        - password
-        - expiration_date
+        - card_number
+        - card_password
+        - card_expiration_date
         - tax_id
     FailureResponse:
       type: object
@@ -863,6 +863,19 @@ components:
                 type: string
                 description: 승인 일시 (ISO 8601 Format)
                 example: '2018-06-07T01:59:59+09:00'
+    RegisterCardResponse:
+      description: 'OK'
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              card:
+                type: object
+                description: 등록된 카드 정보
+                $ref: '#/components/schemas/RegisteredCard'
+            required:
+              - card
     getUserResponse:
       description: 'OK'
       content:
