@@ -3,17 +3,33 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Application\Dto;
 
+use OpenApi\Annotations as OA;
 use RidiPay\User\Domain\Entity\UserEntity;
 
+/**
+ * @OA\Schema()
+ */
 class UserInformationDto
 {
-    /** @var AvailablePaymentMethodsDto */
+    /**
+     * @OA\Property()
+     *
+     * @var AvailablePaymentMethodsDto
+     */
     public $payment_methods;
 
-    /** @var bool */
+    /**
+     * @OA\Property(example=true)
+     *
+     * @var bool
+     */
     public $has_pin;
 
-    /** @var bool */
+    /**
+     * @OA\Property(example=false)
+     *
+     * @var bool
+     */
     public $is_using_onetouch_pay;
 
     /**

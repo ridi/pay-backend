@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use OpenApi\Annotations as OA;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
+use RidiPay\Controller\Response\PartnerErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
@@ -38,6 +40,64 @@ class PaymentController extends BaseController
      *     {"param"="return_url", "constraints"={"Url"}}
      * )
      *
+     * @OA\Post(
+     *   path="/payments/reserve",
+     *   summary="결제 예약",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"payment_method_id", "partner_transaction_id", "product_name", "amount", "return_url"},
+     *       @OA\Property(
+     *         property="payment_method_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 수단 ID",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호"),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="return_url",
+     *         type="string",
+     *         description="RIDI Pay 결제 인증 성공/실패 후, Redirect 되는 가맹점 URL",
+     *         example="https://ridibooks.com/payment/callback/ridi-pay"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"reservation_id"},
+     *       @OA\Property(property="reservation_id", type="string", example="880E8200-A29B-24B2-8716-42B65544A000")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -59,7 +119,7 @@ class PaymentController extends BaseController
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {
@@ -92,6 +152,70 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/{reservation_id}", methods={"GET"})
      * @OAuth2()
+     *
+     * @OA\Get(
+     *   path="/payments/{reservation_id}",
+     *   summary="결제 예약 정보 조회",
+     *   tags={"private-api"},
+     *   @OA\Parameter(
+     *     name="reservation_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 결제 예약 ID, [POST] /payments/reserve API 참고",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"required_validation"},
+     *       @OA\Property(
+     *         property="required_validation",
+     *         type="string",
+     *         enum={"PASSWORD", "PIN"},
+     *         nullable=true,
+     *         description="결제 생성을 위해 필요한 인증 방식(null인 경우, 원터치 결제)"
+     *       ),
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 인증 후 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotFoundUser"),
+     *         @OA\Schema(ref="#/components/schemas/NotReservedTransaction")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
      *
      * @param string $reservation_id
      * @return JsonResponse
@@ -152,6 +276,74 @@ class PaymentController extends BaseController
      * @ParamValidator({"param"="validation_token", "constraints"={"Uuid"}})
      * @OAuth2()
      *
+     * @OA\Post(
+     *   path="/payments/{reservation_id}",
+     *   summary="결제 인증 성공 후, 결제 생성",
+     *   tags={"private-api"},
+     *   @OA\Parameter(
+     *     name="reservation_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 결제 예약 ID, [POST] /payments/reserve API 참고",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"validation_token"},
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 인증 후 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"return_url"},
+     *       @OA\Property(
+     *         property="return_url",
+     *         type="string",
+     *         example="https://ridibooks.com/payment/callback/ridi-pay?transaction_id=550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/UnvalidatedTransaction")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotReservedTransaction")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
      * @param Request $request
      * @param string $reservation_id
      * @return JsonResponse
@@ -191,6 +383,90 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/{transaction_id}/approve", methods={"POST"})
      *
+     * @OA\Post(
+     *   path="/payments/{transaction_id}/approve",
+     *   summary="결제 승인",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\Parameter(
+     *     name="transaction_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 주문 번호",
+     *     example="550E8400-E29B-41D4-A716-446655440000",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"validation_token"},
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 인증 후 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "transaction_id",
+     *         "partner_transaction_id",
+     *         "product_name",
+     *         "amount",
+     *         "reserved_at",
+     *         "approved_at"
+     *       },
+     *       @OA\Property(
+     *         property="transaction_id",
+     *         type="string",
+     *         description="RIDI Pay 주문 번호",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호"),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="reserved_at",
+     *         type="string",
+     *         description="결제 예약 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="approved_at",
+     *         type="string",
+     *         description="결제 승인 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:59+09:00"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner"),
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NonexistentTransaction")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/TransactionApprovalFailed"),
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
+     *   )
+     * )
+     *
      * @param Request $request
      * @param string $transaction_id
      * @return JsonResponse
@@ -208,7 +484,7 @@ class PaymentController extends BaseController
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NonexistentTransactionException $e) {
@@ -243,6 +519,85 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/{transaction_id}/cancel", methods={"POST"})
      *
+     * @OA\Post(
+     *   path="/payments/{transaction_id}/cancel",
+     *   summary="결제 취소",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\Parameter(
+     *     name="transaction_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 주문 번호",
+     *     example="550E8400-E29B-41D4-A716-446655440000",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "transaction_id",
+     *         "partner_transaction_id",
+     *         "product_name",
+     *         "amount",
+     *         "reserved_at",
+     *         "approved_at",
+     *         "canceled_at",
+     *       },
+     *       @OA\Property(
+     *         property="transaction_id",
+     *         type="string",
+     *         description="RIDI Pay 주문 번호",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호"),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="reserved_at",
+     *         type="string",
+     *         description="결제 예약 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="approved_at",
+     *         type="string",
+     *         description="결제 승인 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:59+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="canceled_at",
+     *         type="string",
+     *         description="결제 취소 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:59+09:00"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner"),
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NonexistentTransaction")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/TransactionCancellationFailed"),
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
+     *   )
+     * )
+     *
      * @param Request $request
      * @param string $transaction_id
      * @return JsonResponse
@@ -260,7 +615,7 @@ class PaymentController extends BaseController
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NonexistentTransactionException $e) {
@@ -296,6 +651,95 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/{transaction_id}/status", methods={"GET"})
      *
+     * @OA\Get(
+     *   path="/payments/{transaction_id}/status",
+     *   summary="결제 상태 조회",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\Parameter(
+     *     name="transaction_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 주문 번호",
+     *     example="550E8400-E29B-41D4-A716-446655440000",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "transaction_id",
+     *         "partner_transaction_id",
+     *         "payment_method_id",
+     *         "payment_method_type",
+     *         "status",
+     *         "product_name",
+     *         "amount",
+     *         "reserved_at"
+     *       },
+     *       @OA\Property(
+     *         property="transaction_id",
+     *         type="string",
+     *         description="RIDI Pay 주문 번호",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호"),
+     *       @OA\Property(
+     *         property="payment_method_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 수단 ID",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       ),
+     *       @OA\Property(property="payment_method_type", type="string", description="RIDI Pay 결제 수단 종류", example="CARD"),
+     *       @OA\Property(property="status", type="string", enum={"RESERVED", "APPROVED", "CANCELED"}, description="결제 상태"),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="reserved_at",
+     *         type="string",
+     *         description="결제 예약 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="approved_at",
+     *         type="string",
+     *         description="결제 승인 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:59+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="canceled_at",
+     *         type="string",
+     *         description="결제 취소 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:59+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="card_receipt_url",
+     *         type="string",
+     *         description="신용카드 매출 전표 URL",
+     *         example="https://admin8.kcp.co.kr/assist/bill.BillActionNew.do?cmd=card_bill&tno=kcp_tno&order_no=order_no&trade_mony=100"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner"),
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NonexistentTransaction")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
      * @param Request $request
      * @param string $transaction_id
      * @return JsonResponse
@@ -313,7 +757,7 @@ class PaymentController extends BaseController
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NonexistentTransactionException $e) {

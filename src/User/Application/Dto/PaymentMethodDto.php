@@ -3,13 +3,18 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Application\Dto;
 
+use OpenApi\Annotations as OA;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\PaymentMethodConstant;
 
 abstract class PaymentMethodDto
 {
-    /** @var string 결제 수단 UUID */
+    /**
+     * @OA\Property(example="550E8400-E29B-41D4-A716-446655440000")
+     *
+     * @var string 결제 수단 UUID
+     */
     public $payment_method_id;
 
     /**

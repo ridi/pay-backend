@@ -3,8 +3,81 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller\Response;
 
+use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @OA\Schema(
+ *   schema="CardAlreadyExists",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="CARD_ALREADY_EXISTS"),
+ *   @OA\Property(property="message", type="string", example="카드는 하나만 등록할 수 있습니다.")
+ * )
+ * @OA\Schema(
+ *   schema="LeavedUser",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="LEAVED_USER"),
+ *   @OA\Property(property="message", type="string", example="탈퇴한 사용자입니다.")
+ * )
+ * @OA\Schema(
+ *   schema="NotFoundUser",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="NOT_FOUND_USER"),
+ *   @OA\Property(property="message", type="string", example="RIDI Pay 이용자가 아닙니다.")
+ * )
+ * @OA\Schema(
+ *   schema="OnetouchPaySettingChangeDeclined",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="ONETOUCH_PAY_SETTING_CHANGE_DECLINED"),
+ *   @OA\Property(property="message", type="string", example="결제 비밀번호를 설정해주세요.")
+ * )
+ * @OA\Schema(
+ *   schema="PasswordEntryBlocked",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="PASSWORD_ENTRY_BLOCKED"),
+ *   @OA\Property(property="message", type="string", example="비밀번호를 5회 잘못 입력하셔서 이용이 제한되었습니다.")
+ * )
+ * @OA\Schema(
+ *   schema="PinEntryBlocked",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="PIN_ENTRY_BLOCKED"),
+ *   @OA\Property(property="message", type="string", example="비밀번호를 5회 잘못 입력하셔서 이용이 제한되었습니다.")
+ * )
+ * @OA\Schema(
+ *   schema="PasswordUnmatched",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="PASSWORD_UNMATCHED"),
+ *   @OA\Property(property="message", type="string", example="계정 비밀번호를 올바르게 입력해주세요.")
+ * )
+ * @OA\Schema(
+ *   schema="PinUnmatched",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="PIN_UNMATCHED"),
+ *   @OA\Property(property="message", type="string", example="결제 비밀번호를 올바르게 입력해주세요.")
+ * )
+ * @OA\Schema(
+ *   schema="UnregisteredPaymentMethod",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="UNREGISTERED_PAYMENT_METHOD"),
+ *   @OA\Property(property="message", type="string", example="등록되지 않은 결제 수단입니다.")
+ * )
+ * @OA\Schema(
+ *   schema="WrongFormattedPin",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="WRONG_FORMATTED_PIN"),
+ *   @OA\Property(property="message", type="string", example="결제 비밀번호는 0 ~ 9 사이의 6자리 숫자로 입력해야합니다.")
+ * )
+ */
 class UserErrorCodeConstant
 {
     public const CARD_ALREADY_EXISTS = 'CARD_ALREADY_EXISTS';

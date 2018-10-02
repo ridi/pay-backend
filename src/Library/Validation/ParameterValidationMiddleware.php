@@ -58,6 +58,7 @@ class ParameterValidationMiddleware implements EventSubscriberInterface
             $event->setController(function () use ($e) {
                 $message = $e->getMessage();
                 $parameter = $e->getParameter();
+
                 return new JsonResponse(
                     [
                         'code' => CommonErrorCodeConstant::INVALID_PARAMETER,

@@ -82,7 +82,7 @@ class TransactionEntity
      *   length=64,
      *   nullable=false,
      *   options={
-     *     "comment"="Partner 주문 번호"
+     *     "comment"="가맹점 주문 번호"
      *   }
      * )
      */

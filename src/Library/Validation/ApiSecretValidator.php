@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Library\Validation;
 
+use OpenApi\Annotations as OA;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Validator\Constraints\Uuid;
 use Symfony\Component\Validator\Validation;
@@ -35,6 +36,15 @@ class ApiSecretValidator
     }
 
     /**
+     * @OA\Parameter(
+     *   name="Api-Key",
+     *   in="header",
+     *   required=true,
+     *   description="가맹점에서 RIDI Pay API 연동을 위해 필요한 ID",
+     *   example="550E8400-E29B-41D4-A716-446655440000",
+     *   @OA\Schema(type="string")
+     * )
+     *
      * @param Request $request
      * @return null|string
      */
@@ -44,6 +54,15 @@ class ApiSecretValidator
     }
 
     /**
+     * @OA\Parameter(
+     *   name="Secret-Key",
+     *   in="header",
+     *   required=true,
+     *   description="가맹점에서 RIDI Pay API 연동을 위해 필요한 Secret",
+     *   example="550E8400-E29B-41D4-A716-446655440000",
+     *   @OA\Schema(type="string")
+     * )
+     *
      * @param Request $request
      * @return null|string
      */

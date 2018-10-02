@@ -1,3 +1,7 @@
+language: php
+php:
+  - '7.2'
+
 sudo: required
 
 services:
@@ -15,13 +19,28 @@ cache:
 before_install:
   - docker run -d --name mariadb -e "MYSQL_DATABASE=ridi_pay" -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" mariadb:10.3
   - docker run -d --name redis redis:latest
-  - docker run -itd -v $(pwd):/app --name test --link redis:redis --link mariadb:mariadb ridibooks/store-php-test:7.2 /bin/bash
+  - docker run -itd \
+      -v $(pwd):/app \
+      --name test \
+      --link redis:redis \
+      --link mariadb:mariadb \
+      ridibooks/store-php-test:7.2 \
+      /bin/bash
+  - docker run -itd \
+      -v $(pwd)/docs/api:/app \
+      -e "AWS_ACCESS_KEY_ID=${DEV_AWS_ACCESS_KEY_ID}" \
+      -e "AWS_SECRET_ACCESS_KEY=${DEV_AWS_SECRET_ACCESS_KEY}" \
+      --name node \
+      node:alpine \
+      /bin/sh
 
 install:
   - docker exec -it -w /app test /bin/bash -c "composer validate && composer install"
+  - docker exec -it node sh -c "yarn global add redoc-cli && apk --update add py3-pip && pip3 install awscli"
 
 stages:
   - test
+  - docs
 
 jobs:
   include:
@@ -32,3 +51,7 @@ jobs:
     - stage: test
       name: phpcs
       script: docker exec -it -w /app test bash -c "vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml"
+    - stage: docs
+      name: api
+      script: php $(pwd)/docs/api/api_scanner.php > $(pwd)/docs/api/api.json
+      after_success: docker exec -it -w /app node sh -c "redoc-cli bundle -o api.html api.json && aws s3 cp api.html s3://ridi-pay-dev-docs"

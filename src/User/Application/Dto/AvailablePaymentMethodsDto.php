@@ -3,12 +3,20 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Application\Dto;
 
+use OpenApi\Annotations as OA;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 
+/**
+ * @OA\Schema()
+ */
 class AvailablePaymentMethodsDto
 {
-    /** @var CardDto[] */
+    /**
+     * @OA\Property()
+     *
+     * @var CardDto[]
+     */
     public $cards;
 
     /**

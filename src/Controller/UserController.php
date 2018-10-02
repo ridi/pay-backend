@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
+use OpenApi\Annotations as OA;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
@@ -28,6 +29,44 @@ class UserController extends BaseController
     /**
      * @Route("/users/{u_idx}", methods={"DELETE"}, requirements={"u_idx"="\d+"})
      * @JwtAuth()
+     *
+     * @OA\Delete(
+     *   path="/users/{u_idx}",
+     *   summary="서점 회원 탈퇴 시, RIDI Pay 탈퇴 처리",
+     *   tags={"private-api-for-first-party"},
+     *   @OA\Parameter(
+     *     name="u_idx",
+     *     description="RIDIBOOKS 유저 고유 번호",
+     *     in="path",
+     *     required=true,
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent()
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/InvalidJwt")
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
      *
      * @param int $u_idx
      * @return JsonResponse
@@ -61,6 +100,34 @@ class UserController extends BaseController
     /**
      * @Route("/users/{u_idx}/payment-methods", methods={"GET"}, requirements={"u_idx"="\d+"})
      * @JwtAuth()
+     *
+     * @OA\Get(
+     *   path="/users/{u_idx}/payment-methods",
+     *   summary="등록된 결제 수단 목록 조회",
+     *   tags={"private-api-for-first-party"},
+     *   @OA\Parameter(
+     *     name="u_idx",
+     *     description="RIDIBOOKS 유저 고유 번호",
+     *     in="path",
+     *     required=true,
+     *     @OA\Schema(type="integer")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(ref="#/components/schemas/AvailablePaymentMethodsDto")
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/InvalidJwt")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
      *
      * @param int $u_idx
      * @return JsonResponse
@@ -98,6 +165,42 @@ class UserController extends BaseController
     /**
      * @Route("/me", methods={"GET"})
      * @OAuth2()
+     *
+     * @OA\Get(
+     *   path="/me",
+     *   summary="RIDI Pay 유저 정보 조회",
+     *   tags={"private-api"},
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(ref="#/components/schemas/UserInformationDto")
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
      *
      * @return JsonResponse
      */
@@ -146,6 +249,59 @@ class UserController extends BaseController
      * @Route("/me/pin", methods={"PUT"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
+     *
+     * @OA\Put(
+     *   path="/me/pin",
+     *   summary="결제 비밀번호 변경",
+     *   tags={"private-api"},
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"pin"},
+     *       @OA\Property(property="pin", type="string", description="결제 비밀번호", example="123456")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent()
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidParameter"),
+     *         @OA\Schema(ref="#/components/schemas/WrongFormattedPin")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
      *
      * @param Request $request
      * @return JsonResponse
@@ -198,6 +354,73 @@ class UserController extends BaseController
      * @Route("/me/pin/validate", methods={"POST"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
+     *
+     * @OA\Post(
+     *   path="/me/pin/validate",
+     *   summary="입력한 결제 비밀번호 검증",
+     *   tags={"private-api"},
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"pin"},
+     *       @OA\Property(property="pin", type="string", description="결제 비밀번호", example="123456"),
+     *       @OA\Property(
+     *         property="reservation_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 예약 ID, [POST] /payments/reserve API 참고",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 인증 후 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidParameter"),
+     *         @OA\Schema(ref="#/components/schemas/PinUnmatched")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/PinEntryBlocked")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
      *
      * @param Request $request
      * @return JsonResponse
@@ -266,6 +489,73 @@ class UserController extends BaseController
      * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
      * @OAuth2()
      *
+     * @OA\Post(
+     *   path="/me/password/validate",
+     *   summary="입력한 RIDIBOOKS 계정 비밀번호 검증",
+     *   tags={"private-api"},
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"password"},
+     *       @OA\Property(property="password", type="string", description="RIDIBOOKS 계정 비밀번호", example="abcde@123456"),
+     *       @OA\Property(
+     *         property="reservation_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 예약 ID, [POST] /payments/reserve API 참고",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 인증 후 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidParameter"),
+     *         @OA\Schema(ref="#/components/schemas/PasswordUnmatched")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/PasswordEntryBlocked")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -332,6 +622,59 @@ class UserController extends BaseController
      * @Route("/me/onetouch", methods={"PUT"})
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
+     *
+     * @OA\Put(
+     *   path="/me/onetouch",
+     *   summary="원터치 결제 이용 여부 변경",
+     *   tags={"private-api"},
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"enable_onetouch_pay"},
+     *       @OA\Property(property="enable_onetouch_pay", type="boolean", description="원터치 결제 이용 여부", example=true)
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent()
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
+     *         @OA\Schema(ref="#/components/schemas/OnetouchPaySettingChangeDeclined")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
      *
      * @param Request $request
      * @return JsonResponse

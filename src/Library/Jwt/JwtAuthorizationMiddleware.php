@@ -57,7 +57,7 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
             $event->setController(function () use ($e) {
                 return new JsonResponse(
                     [
-                        'code' => 'UNAUTHORIZED',
+                        'code' => CommonErrorCodeConstant::INVALID_JWT,
                         'message' => $e->getMessage()
                     ],
                     Response::HTTP_UNAUTHORIZED

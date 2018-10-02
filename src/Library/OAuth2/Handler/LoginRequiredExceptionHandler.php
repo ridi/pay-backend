@@ -5,6 +5,7 @@ namespace RidiPay\Library\OAuth2\Handler;
 
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use Ridibooks\OAuth2\Authorization\Exception\InsufficientScopeException;
+use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,7 +22,7 @@ class LoginRequiredExceptionHandler implements ExceptionHandlerInterface
         if ($e instanceof InsufficientScopeException) {
             return new JsonResponse(
                 [
-                    'code' => 'INVALID_ACCESS_TOKEN',
+                    'code' => CommonErrorCodeConstant::INVALID_ACCESS_TOKEN,
                     'message' => 'No sufficient scope'
                 ],
                 Response::HTTP_FORBIDDEN
@@ -30,7 +31,7 @@ class LoginRequiredExceptionHandler implements ExceptionHandlerInterface
 
         return new JsonResponse(
             [
-                'code' => 'UNAUTHORIZED',
+                'code' => CommonErrorCodeConstant::LOGIN_REQUIRED,
                 'message' => 'Login required'
             ],
             Response::HTTP_UNAUTHORIZED
