@@ -58,7 +58,7 @@ jobs:
         - |
           docker exec -it \
             -w /app \
-            -e "AWS_ACCESS_KEY_ID=${DEV_AWS_ACCESS_KEY_ID}" \
-            -e "AWS_SECRET_ACCESS_KEY=${DEV_AWS_SECRET_ACCESS_KEY}" \
+            -e "AWS_ACCESS_KEY_ID=$DEV_AWS_ACCESS_KEY_ID" \
+            -e "AWS_SECRET_ACCESS_KEY=$DEV_AWS_SECRET_ACCESS_KEY" \
             node \
             sh -c "redoc-cli bundle -o api.html api.json && aws s3 cp api.html s3://ridi-pay-dev-docs"
