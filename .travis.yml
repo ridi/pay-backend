@@ -30,8 +30,6 @@ before_install:
   - |
     docker run -itd \
       -v $(pwd)/docs/api:/app \
-      -e "AWS_ACCESS_KEY_ID=${DEV_AWS_ACCESS_KEY_ID}" \
-      -e "AWS_SECRET_ACCESS_KEY=${DEV_AWS_SECRET_ACCESS_KEY}" \
       --name node \
       node:alpine \
       /bin/sh
@@ -56,4 +54,11 @@ jobs:
     - stage: docs
       name: api
       script: php $(pwd)/docs/api/api_scanner.php > $(pwd)/docs/api/api.json
-      after_success: docker exec -it -w /app node sh -c "redoc-cli bundle -o api.html api.json && aws s3 cp api.html s3://ridi-pay-dev-docs"
+      after_success:
+        - |
+          docker exec -it \
+            -w /app \
+            -e "AWS_ACCESS_KEY_ID=${DEV_AWS_ACCESS_KEY_ID}" \
+            -e "AWS_SECRET_ACCESS_KEY=${DEV_AWS_SECRET_ACCESS_KEY}" \
+            node \
+            sh -c "redoc-cli bundle -o api.html api.json && aws s3 cp api.html s3://ridi-pay-dev-docs"
