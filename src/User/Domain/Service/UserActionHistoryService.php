@@ -11,6 +11,7 @@ class UserActionHistoryService
 {
     private const ADD_CARD = 'ADD_CARD';
     private const DELETE_CARD = 'DELETE_CARD';
+    private const CREATE_PIN = 'CREATE_PIN';
     private const UPDATE_PIN = 'UPDATE_PIN';
     private const ENABLE_ONETOUCH_PAY = 'ENABLE_ONETOUCH_PAY';
     private const DISABLE_ONETOUCH_PAY = 'DISABLE_ONETOUCH_PAY';
@@ -31,6 +32,15 @@ class UserActionHistoryService
     public static function logDeleteCard(int $u_idx)
     {
         self::logUserAction($u_idx, self::DELETE_CARD);
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws \Exception
+     */
+    public static function logCreatePin(int $u_idx)
+    {
+        self::logUserAction($u_idx, self::CREATE_PIN);
     }
 
     /**

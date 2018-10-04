@@ -58,7 +58,7 @@ class ValidatePinTest extends ControllerTestCase
     {
         $u_idx = TestUtil::getRandomUidx();
         UserAppService::createUser($u_idx);
-        UserAppService::updatePin($u_idx, self::VALID_PIN);
+        UserAppService::createPin($u_idx, self::VALID_PIN);
 
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
         $client = self::createClientWithOAuth2AccessToken();
@@ -113,13 +113,13 @@ class ValidatePinTest extends ControllerTestCase
         }
 
         UserAppService::createUser($user_indices[0]);
-        UserAppService::updatePin($user_indices[0], self::VALID_PIN);
+        UserAppService::createPin($user_indices[0], self::VALID_PIN);
 
         UserAppService::createUser($user_indices[1]);
         UserAppService::deleteUser($user_indices[1]);
 
         UserAppService::createUser($user_indices[3]);
-        UserAppService::updatePin($user_indices[3], self::VALID_PIN);
+        UserAppService::createPin($user_indices[3], self::VALID_PIN);
 
         return [
             [$user_indices[0], self::VALID_PIN, Response::HTTP_OK, null],

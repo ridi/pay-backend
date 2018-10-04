@@ -80,7 +80,7 @@ class UserEntity
      * @param string $pin
      * @throws WrongFormattedPinException
      */
-    public function updatePin(string $pin): void
+    public function setPin(string $pin): void
     {
         self::assertValidPin($pin);
         $this->pin = self::hashPin($pin);

@@ -15,6 +15,7 @@ use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
+use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
@@ -236,23 +237,23 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/pin", methods={"OPTIONS"})
-     * @Cors(methods={"PUT"})
+     * @Cors(methods={"POST"})
      *
      * @return JsonResponse
      */
-    public function updatePinPreflight(): JsonResponse
+    public function createPinPreflight(): JsonResponse
     {
         return self::createSuccessResponse();
     }
 
     /**
-     * @Route("/me/pin", methods={"PUT"})
+     * @Route("/me/pin", methods={"POST"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
      * @OAuth2()
      *
-     * @OA\Put(
+     * @OA\Post(
      *   path="/me/pin",
-     *   summary="결제 비밀번호 변경",
+     *   summary="결제 비밀번호 등록",
      *   tags={"private-api"},
      *   @OA\RequestBody(
      *     @OA\JsonContent(
@@ -306,11 +307,11 @@ class UserController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function updatePin(Request $request)
+    public function createPin(Request $request): JsonResponse
     {
         try {
             $body = json_decode($request->getContent());
-            UserAppService::updatePin($this->getUidx(), $body->pin);
+            UserAppService::createPin($this->getUidx(), $body->pin);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -321,6 +322,127 @@ class UserController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
+                $e->getMessage()
+            );
+        } catch (WrongFormattedPinException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::WRONG_FORMATTED_PIN,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/pin", methods={"OPTIONS"})
+     * @Cors(methods={"PUT"})
+     *
+     * @return JsonResponse
+     */
+    public function updatePinPreflight(): JsonResponse
+    {
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/pin", methods={"PUT"})
+     * @ParamValidator(
+     *   {"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}},
+     *   {"param"="validation_token", "constraints"={"Uuid"}}
+     * )
+     * @OAuth2()
+     *
+     * @OA\Put(
+     *   path="/me/pin",
+     *   summary="결제 비밀번호 변경",
+     *   tags={"private-api"},
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"pin", "validation_token"},
+     *       @OA\Property(property="pin", type="string", description="결제 비밀번호", example="123456"),
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 비밀번호 검증 시 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent()
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidParameter"),
+     *         @OA\Schema(ref="#/components/schemas/WrongFormattedPin")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired"),
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPinChange")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function updatePin(Request $request)
+    {
+        try {
+            $body = json_decode($request->getContent());
+            UserAppService::updatePin($this->getUidx(), $body->pin, $body->validation_token);
+        } catch (LeavedUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::LEAVED_USER,
+                $e->getMessage()
+            );
+        } catch (NotFoundUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::NOT_FOUND_USER,
+                $e->getMessage()
+            );
+        } catch (UnauthorizedPinChangeException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNAUTHORIZED_PIN_CHANGE,
                 $e->getMessage()
             );
         } catch (WrongFormattedPinException $e) {
@@ -380,7 +502,7 @@ class UserController extends BaseController
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="결제 인증 후 발급된 토큰",
+     *         description="결제 비밀번호 인증 후 발급된 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )
@@ -433,6 +555,8 @@ class UserController extends BaseController
 
             if (isset($body->reservation_id)) {
                 $validation_token = TransactionAppService::generateValidationToken($body->reservation_id);
+            } else {
+                $validation_token = UserAppService::generateValidationToken($this->getUidx());
             }
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
@@ -465,12 +589,7 @@ class UserController extends BaseController
             );
         }
 
-        $data = [];
-        if (isset($validation_token)) {
-            $data['validation_token'] = $validation_token;
-        }
-
-        return self::createSuccessResponse($data);
+        return self::createSuccessResponse(['validation_token' => $validation_token]);
     }
 
     /**

@@ -106,7 +106,7 @@ class OneTimePaymentTest extends ControllerTestCase
     public function testOneTimePaymentLifeCycleCaseInCaseOfPinValidation()
     {
         $pin = '123456';
-        UserAppService::updatePin(self::$u_idx, $pin);
+        UserAppService::createPin(self::$u_idx, $pin);
         UserAppService::disableOnetouchPay(self::$u_idx);
 
         // 결제 수단 조회

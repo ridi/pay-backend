@@ -48,7 +48,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
 
     public function testDisableOnetouchPayWhenAddingFirstPaymentMethodAndHavingPin()
     {
-        UserAppService::updatePin(self::$u_idx, '123456');
+        UserAppService::createPin(self::$u_idx, '123456');
 
         $body = json_encode(['enable_onetouch_pay' => false]);
         self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
@@ -58,7 +58,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
 
     public function testEnableOnetouchPay()
     {
-        UserAppService::updatePin(self::$u_idx, '123456');
+        UserAppService::createPin(self::$u_idx, '123456');
 
         $body = json_encode(['enable_onetouch_pay' => false]);
         self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
@@ -73,7 +73,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
 
     public function testDisableOnetouchPay()
     {
-        UserAppService::updatePin(self::$u_idx, '123456');
+        UserAppService::createPin(self::$u_idx, '123456');
 
         $body = json_encode(['enable_onetouch_pay' => true]);
         self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);

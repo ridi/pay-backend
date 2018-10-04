@@ -13,7 +13,7 @@ use RidiPay\User\Domain\Exception\NotFoundUserException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class UpdatePinTest extends ControllerTestCase
+class CreateAndUpdatePinTest extends ControllerTestCase
 {
     /**
      * @dataProvider userAndPinProvider
@@ -24,19 +24,36 @@ class UpdatePinTest extends ControllerTestCase
      * @param null|string $error_code
      * @throws AuthorizationException
      */
-    public function testUpdatePin(int $u_idx, string $pin, int $http_status_code, ?string $error_code)
+    public function testCreateAndUpdatePin(int $u_idx, string $pin, int $http_status_code, ?string $error_code)
     {
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $client = self::createClientWithOAuth2AccessToken();
 
         $body = json_encode(['pin' => $pin]);
-        $client->request(Request::METHOD_PUT, '/me/pin', [], [], [], $body);
-        $this->assertSame($http_status_code, $client->getResponse()->getStatusCode());
+        $client->request(Request::METHOD_POST, '/me/pin', [], [], [], $body);
+
+        $response_status_code = $client->getResponse()->getStatusCode();
+        $this->assertSame($http_status_code, $response_status_code);
 
         $response_content = json_decode($client->getResponse()->getContent());
         if (isset($response_content->code)) {
             $this->assertSame($error_code, $response_content->code);
+        }
+
+        if ($response_status_code === Response::HTTP_OK) {
+            $body = json_encode(['pin' => $pin]);
+            $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
+            $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+
+            $response_content = json_decode($client->getResponse()->getContent());
+
+            $body = json_encode([
+                'pin' => self::getValidPin(),
+                'validation_token' => $response_content->validation_token
+            ]);
+            $client->request(Request::METHOD_PUT, '/me/pin', [], [], [], $body);
+            $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         }
 
         TestUtil::tearDownOAuth2Doubles();
@@ -48,6 +65,7 @@ class UpdatePinTest extends ControllerTestCase
      * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
      */
     public function userAndPinProvider(): array
     {

@@ -5,6 +5,8 @@ namespace RidiPay\User\Application\Service;
 
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
+use RidiPay\Library\TimeUnitConstant;
+use RidiPay\Library\ValidationTokenManager;
 use RidiPay\User\Application\Dto\UserInformationDto;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -13,6 +15,7 @@ use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
+use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Repository\UserRepository;
@@ -50,7 +53,7 @@ class UserAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function updatePin(int $u_idx, string $pin): void
+    public static function createPin(int $u_idx, string $pin): void
     {
         $user = self::getUser($u_idx);
 
@@ -58,7 +61,45 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            $user->updatePin($pin);
+            $user->setPin($pin);
+            UserRepository::getRepository()->save($user);
+
+            UserActionHistoryService::logCreatePin($u_idx);
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
+
+            throw $t;
+        }
+    }
+
+    /**
+     * @param int $u_idx
+     * @param string $pin
+     * @param string $validation_token
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws UnauthorizedPinChangeException
+     * @throws WrongFormattedPinException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function updatePin(int $u_idx, string $pin, string $validation_token): void
+    {
+        $user = self::getUser($u_idx);
+        self::assertMatchedValidationToken($u_idx, $validation_token);
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $user->setPin($pin);
             UserRepository::getRepository()->save($user);
 
             UserActionHistoryService::logUpdatePin($u_idx);
@@ -73,6 +114,8 @@ class UserAppService
 
             throw $t;
         }
+
+        ValidationTokenManager::invalidate(self::getUserKey($u_idx));
     }
 
     /**
@@ -291,5 +334,39 @@ class UserAppService
         }
 
         return $user;
+    }
+
+    /**
+     * @param int $u_idx
+     * @return string
+     * @throws \Exception
+     */
+    public static function generateValidationToken(int $u_idx): string
+    {
+        $user_key = self::getUserKey($u_idx);
+
+        return ValidationTokenManager::generate($user_key, 5 * TimeUnitConstant::SEC_IN_MINUTE);
+    }
+
+    /**
+     * @param int $u_idx
+     * @param string $entered_validation_token
+     * @throws UnauthorizedPinChangeException
+     */
+    private static function assertMatchedValidationToken(int $u_idx, string $entered_validation_token): void
+    {
+        $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
+        if ($validation_token !== $entered_validation_token) {
+            throw new UnauthorizedPinChangeException();
+        }
+    }
+
+    /**
+     * @param int $u_idx
+     * @return string
+     */
+    private static function getUserKey(int $u_idx): string
+    {
+        return "user:${u_idx}";
     }
 }

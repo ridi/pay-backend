@@ -9,6 +9,7 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TimeUnitConstant;
+use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Application\Service\PgAppService;
@@ -134,13 +135,8 @@ class TransactionAppService
     public static function generateValidationToken(string $reservation_id): string
     {
         $reservation_key = self::getReservationKey($reservation_id);
-        $validation_token = Uuid::uuid4()->toString();
 
-        $redis = self::getRedisClient();
-        $redis->hset($reservation_key, 'validation_token', $validation_token);
-        $redis->expire($reservation_key, TimeUnitConstant::SEC_IN_HOUR);
-
-        return $validation_token;
+        return ValidationTokenManager::generate($reservation_key, 5 * TimeUnitConstant::SEC_IN_MINUTE);
     }
 
     /**
@@ -159,11 +155,7 @@ class TransactionAppService
         string $reservation_id,
         string $validation_token
     ): CreateTransactionDto {
-        $reserved_transaction = self::getReservedTransaction($reservation_id);
-        if ($reserved_transaction['validation_token'] !== $validation_token) {
-            throw new UnvalidatedTransactionException();
-        }
-
+        $reserved_transaction = self::getReservedTransaction($reservation_id, $validation_token);
         $pg = PgAppService::getActivePg();
 
         try {
@@ -184,6 +176,8 @@ class TransactionAppService
 
             throw $t;
         }
+
+        ValidationTokenManager::invalidate(self::getReservationKey($reservation_id));
 
         return new CreateTransactionDto(
             $transaction->getUuid()->toString(),
@@ -343,10 +337,12 @@ class TransactionAppService
 
     /**
      * @param string $reservation_id
+     * @param string $validation_token
      * @return array
      * @throws NotReservedTransactionException
+     * @throws UnvalidatedTransactionException
      */
-    private static function getReservedTransaction(string $reservation_id): array
+    private static function getReservedTransaction(string $reservation_id, string $validation_token): array
     {
         $reservation_key = self::getReservationKey($reservation_id);
 
@@ -354,6 +350,9 @@ class TransactionAppService
         $reserved_transaction = $redis->hgetall($reservation_key);
         if (empty($reserved_transaction)) {
             throw new NotReservedTransactionException();
+        }
+        if ($reserved_transaction['validation_token'] !== $validation_token) {
+            throw new UnvalidatedTransactionException();
         }
 
         return $reserved_transaction;
