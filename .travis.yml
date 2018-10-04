@@ -19,14 +19,16 @@ cache:
 before_install:
   - docker run -d --name mariadb -e "MYSQL_DATABASE=ridi_pay" -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" mariadb:10.3
   - docker run -d --name redis redis:latest
-  - docker run -itd \
+  - |
+    docker run -itd \
       -v $(pwd):/app \
       --name test \
       --link redis:redis \
       --link mariadb:mariadb \
       ridibooks/store-php-test:7.2 \
       /bin/bash
-  - docker run -itd \
+  - |
+    docker run -itd \
       -v $(pwd)/docs/api:/app \
       -e "AWS_ACCESS_KEY_ID=${DEV_AWS_ACCESS_KEY_ID}" \
       -e "AWS_SECRET_ACCESS_KEY=${DEV_AWS_SECRET_ACCESS_KEY}" \
