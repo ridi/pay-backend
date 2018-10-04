@@ -45,4 +45,4 @@ aws-vault exec <profile_name> -- docker-compose up [--build]
 - 프로젝트 root 경로에 `.env` 파일을 추가하여 이 Environment Variables를 Overriding 할 수 있습니다. 
 
 ## API 문서
-[링크](https://github.com/ridi-pay/backend/blob/master/docs/api/swagger.yaml)에 붙여넣기 하면 API 문서가 렌더링 됩니다.
+[링크](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-dev-docs/api.html)
