@@ -37,7 +37,9 @@ class AbuseBlocker
     {
         $key = $this->getKey();
         $try_count = $this->redis->hincrby($key, self::FIELD_TRY_COUNT, 1);
-        if ($try_count >= $this->policy->getBlockThreshold()) {
+        if ($try_count > $this->policy->getBlockThreshold()) {
+            return true;
+        } elseif ($try_count === $this->policy->getBlockThreshold()) {
             $blocked_at = time();
             if ($this->redis->hsetnx($key, self::FIELD_BLOCKED_AT, $blocked_at) === 1) {
                 $this->redis->expireat($key, $blocked_at + $this->policy->getBlockedPeriod());

@@ -134,19 +134,18 @@ class UserAppService
     {
         $user = self::getUser($u_idx);
 
-        if (!$user->isPinMatched($pin)) {
-            $policy = new PinEntryAbuseBlockPolicy();
-            $abuse_blocker = new AbuseBlocker($policy, $u_idx);
-
-            if (!$abuse_blocker->isBlocked()) {
-                throw new UnmatchedPinException();
-            }
-
+        $policy = new PinEntryAbuseBlockPolicy();
+        $abuse_blocker = new AbuseBlocker($policy, $u_idx);
+        if ($abuse_blocker->isBlocked()) {
             $remaining_period_until_unblock = $abuse_blocker->getBlockedAt() + $policy->getBlockedPeriod() - time();
             throw new PasswordEntryBlockedException(
                 $policy,
                 ($remaining_period_until_unblock >= 0 ? $remaining_period_until_unblock : 0)
             );
+        }
+
+        if (!$user->isPinMatched($pin)) {
+            throw new UnmatchedPinException();
         }
     }
 
