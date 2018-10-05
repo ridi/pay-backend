@@ -45,7 +45,7 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent()
+     *     @OA\JsonContent(type="object")
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -265,7 +265,7 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent()
+     *     @OA\JsonContent(type="object")
      *   ),
      *   @OA\Response(
      *     response="400",
@@ -379,7 +379,7 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent()
+     *     @OA\JsonContent(type="object")
      *   ),
      *   @OA\Response(
      *     response="400",
@@ -756,7 +756,7 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent()
+     *     @OA\JsonContent(type="object")
      *   ),
      *   @OA\Response(
      *     response="400",
