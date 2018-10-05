@@ -13,6 +13,7 @@ use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
+use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
@@ -61,7 +62,7 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            $user->setPin($pin);
+            $user->createPin($pin);
             UserRepository::getRepository()->save($user);
 
             UserActionHistoryService::logCreatePin($u_idx);
@@ -85,6 +86,7 @@ class UserAppService
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws UnauthorizedPinChangeException
+     * @throws UnchangedPinException
      * @throws WrongFormattedPinException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -99,7 +101,7 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            $user->setPin($pin);
+            $user->updatePin($pin);
             UserRepository::getRepository()->save($user);
 
             UserActionHistoryService::logUpdatePin($u_idx);

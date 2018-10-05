@@ -16,6 +16,7 @@ use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
+use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
@@ -376,7 +377,8 @@ class UserController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/InvalidParameter"),
-     *         @OA\Schema(ref="#/components/schemas/WrongFormattedPin")
+     *         @OA\Schema(ref="#/components/schemas/WrongFormattedPin"),
+     *         @OA\Schema(ref="#/components/schemas/UnchangedPin")
      *       }
      *     )
      *   ),
@@ -432,6 +434,12 @@ class UserController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNAUTHORIZED_PIN_CHANGE,
+                $e->getMessage()
+            );
+        } catch (UnchangedPinException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNCHANGED_PIN,
                 $e->getMessage()
             );
         } catch (WrongFormattedPinException $e) {

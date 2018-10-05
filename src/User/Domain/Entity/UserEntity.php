@@ -5,6 +5,7 @@ namespace RidiPay\User\Domain\Entity;
 
 use RidiPay\Library\PasswordValidationApi;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
+use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 
 /**
@@ -80,9 +81,23 @@ class UserEntity
      * @param string $pin
      * @throws WrongFormattedPinException
      */
-    public function setPin(string $pin): void
+    public function createPin(string $pin): void
     {
         self::assertValidPin($pin);
+
+        $this->pin = self::hashPin($pin);
+    }
+
+    /**
+     * @param string $pin
+     * @throws UnchangedPinException
+     * @throws WrongFormattedPinException
+     */
+    public function updatePin(string $pin): void
+    {
+        self::assertValidPin($pin);
+        self::assertNewPin($pin, $this->pin);
+
         $this->pin = self::hashPin($pin);
     }
 
@@ -94,6 +109,18 @@ class UserEntity
     {
         if (!preg_match('/[0-9]{6}/', $pin)) {
             throw new WrongFormattedPinException();
+        }
+    }
+
+    /**
+     * @param string $pin
+     * @param string $previous_pin
+     * @throws UnchangedPinException
+     */
+    private static function assertNewPin(string $pin, string $previous_pin): void
+    {
+        if ($previous_pin === self::hashPin($pin)) {
+            throw new UnchangedPinException();
         }
     }
 
