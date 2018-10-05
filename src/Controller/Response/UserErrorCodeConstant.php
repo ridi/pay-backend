@@ -75,7 +75,7 @@ use Symfony\Component\HttpFoundation\Response;
  *   type="object",
  *   required={"code", "message"},
  *   @OA\Property(property="code", type="string", example="UNCHANGED_PIN"),
- *   @OA\Property(property="message", type="string", example="기존 비밀번호와 다른 비밀번호를 입력해주세요.")
+ *   @OA\Property(property="message", type="string", example="현재 비밀번호와 동일합니다.")
  * )
  * @OA\Schema(
  *   schema="UnregisteredPaymentMethod",
