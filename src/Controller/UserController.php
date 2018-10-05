@@ -237,11 +237,11 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/pin", methods={"OPTIONS"})
-     * @Cors(methods={"POST"})
+     * @Cors(methods={"POST, PUT"})
      *
      * @return JsonResponse
      */
-    public function createPinPreflight(): JsonResponse
+    public function createAndUpdatePinPreflight(): JsonResponse
     {
         return self::createSuccessResponse();
     }
@@ -337,17 +337,6 @@ class UserController extends BaseController
             );
         }
 
-        return self::createSuccessResponse();
-    }
-
-    /**
-     * @Route("/me/pin", methods={"OPTIONS"})
-     * @Cors(methods={"PUT"})
-     *
-     * @return JsonResponse
-     */
-    public function updatePinPreflight(): JsonResponse
-    {
         return self::createSuccessResponse();
     }
 
