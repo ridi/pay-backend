@@ -337,12 +337,12 @@ class TransactionAppService
 
     /**
      * @param string $reservation_id
-     * @param string $validation_token
+     * @param null|string $validation_token
      * @return array
      * @throws NotReservedTransactionException
      * @throws UnvalidatedTransactionException
      */
-    private static function getReservedTransaction(string $reservation_id, string $validation_token): array
+    private static function getReservedTransaction(string $reservation_id, ?string $validation_token = null): array
     {
         $reservation_key = self::getReservationKey($reservation_id);
 
@@ -351,7 +351,9 @@ class TransactionAppService
         if (empty($reserved_transaction)) {
             throw new NotReservedTransactionException();
         }
-        if ($reserved_transaction['validation_token'] !== $validation_token) {
+        if (isset($reserved_transaction['validation_token'])
+            && ($reserved_transaction['validation_token'] !== $validation_token)
+        ) {
             throw new UnvalidatedTransactionException();
         }
 
