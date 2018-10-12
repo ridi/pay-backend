@@ -42,7 +42,7 @@ class PasswordValidationApi
             // HTTP 4XX Response
             return false;
         } catch (\Exception $e) {
-            SentryHelper::getClient()->captureException($e);
+            SentryHelper::captureException($e);
             return false;
         }
 

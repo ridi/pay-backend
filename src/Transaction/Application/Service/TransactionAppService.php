@@ -247,7 +247,7 @@ class TransactionAppService
                         'response_message' => $cancel_transaction_response->getResponseMessage()
                     ]
                 ];
-                SentryHelper::getClient()->captureMessage($message, [], $data, true);
+                SentryHelper::captureMessage($message, [], $data, true);
             }
 
             throw $t;

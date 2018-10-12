@@ -35,4 +35,40 @@ class SentryHelper
     {
         return self::$client;
     }
+
+    /**
+     * @param \Exception $e
+     * @param array $data
+     * @param null $logger
+     * @param null $vars
+     */
+    public static function captureException(\Exception $e, array $data = [], $logger = null, $vars = null)
+    {
+        if (is_null(self::$client)) {
+            return;
+        }
+
+        self::$client->captureException($e, $data, $logger, $vars);
+    }
+
+    /**
+     * @param string $message
+     * @param array $params
+     * @param array $data
+     * @param bool $stack
+     * @param null $vars
+     */
+    public static function captureMessage(
+        string $message,
+        array $params = [],
+        array $data = [],
+        bool $stack = false,
+        $vars = null
+    ) {
+        if (is_null(self::$client)) {
+            return;
+        }
+
+        self::$client->captureMessage($message, $params, $data, $stack, $vars);
+    }
 }
