@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
+use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
-use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
@@ -41,7 +41,9 @@ class PaymentMethodController extends BaseController
      *     {"param"="card_password", "constraints"={{"Regex"="/\d{2}/"}}},
      *     {"param"="tax_id", "constraints"={{"Regex"="/(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}/"}}}
      * )
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Post(
      *   path="/me/cards",
@@ -158,7 +160,9 @@ class PaymentMethodController extends BaseController
 
     /**
      * @Route("/me/cards/{payment_method_id}", methods={"DELETE"})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Delete(
      *   path="/me/cards/{payment_method_id}",

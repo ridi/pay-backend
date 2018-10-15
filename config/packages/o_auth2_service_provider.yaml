@@ -1,0 +1,4 @@
+o_auth2_service_provider:
+  client_id: '%env(OAUTH2_CLIENT_ID)%'
+  client_secret: '%env(OAUTH2_CLIENT_SECRET)%'
+  jwt_secret: '%env(OAUTH2_JWT_SECRET)%'

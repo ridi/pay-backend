@@ -4,12 +4,12 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
+use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PartnerErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
-use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\Validation\ApiSecretValidationException;
 use RidiPay\Library\Validation\ApiSecretValidator;
@@ -151,7 +151,9 @@ class PaymentController extends BaseController
 
     /**
      * @Route("/payments/{reservation_id}", methods={"GET"})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Get(
      *   path="/payments/{reservation_id}",
@@ -274,7 +276,9 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/{reservation_id}", methods={"POST"})
      * @ParamValidator({"param"="validation_token", "constraints"={"Uuid"}})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Post(
      *   path="/payments/{reservation_id}",

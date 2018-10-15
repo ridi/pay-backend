@@ -12,7 +12,8 @@ $aspect_mock_kernel->init([
     'cacheDir' => join(DIRECTORY_SEPARATOR, [sys_get_temp_dir(), 'aspect_mock']),
     'debug' => true,
     'includePaths' => [
-        __DIR__ . '/../src'
+        __DIR__ . '/../src',
+        __DIR__ . '/../vendor/ridibooks/oauth2/lib'
     ]
 ]);
 

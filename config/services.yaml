@@ -6,35 +6,30 @@
 parameters:
 
 services:
-    # default configuration for services in *this* file
-    _defaults:
-        autowire: true      # Automatically injects dependencies in your services.
-        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
-        public: false       # Allows optimizing the container by removing unused services; this also means
-                            # fetching services directly from the container via $container->get() won't work.
-                            # The best practice is to be explicit about your dependencies anyway.
+  # default configuration for services in *this* file
+  _defaults:
+    autowire: true      # Automatically injects dependencies in your services.
+    autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+    public: false       # Allows optimizing the container by removing unused services; this also means
+                        # fetching services directly from the container via $container->get() won't work.
+                        # The best practice is to be explicit about your dependencies anyway.
 
-    RidiPay\Library\OAuth2\OAuth2Manager:
-        class: RidiPay\Library\OAuth2\OAuth2Manager
-        public: true
+  RidiPay\Library\Jwt\JwtAuthorizationMiddleware:
+    class: RidiPay\Library\Jwt\JwtAuthorizationMiddleware
+    arguments:
+      - '@annotation_reader'
 
-    RidiPay\Library\OAuth2\OAuth2Middleware:
-        class: RidiPay\Library\OAuth2\OAuth2Middleware
-        arguments:
-            - '@RidiPay\Library\OAuth2\OAuth2Manager'
-            - '@annotation_reader'
+  RidiPay\Library\Validation\ParameterValidationMiddleware:
+    class: RidiPay\Library\Validation\ParameterValidationMiddleware
+    arguments:
+      - '@annotation_reader'
 
-    RidiPay\Library\Jwt\JwtAuthorizationMiddleware:
-        class: RidiPay\Library\Jwt\JwtAuthorizationMiddleware
-        arguments:
-            - '@annotation_reader'
+  RidiPay\Library\Cors\CorsMiddleware:
+    class: RidiPay\Library\Cors\CorsMiddleware
+    arguments:
+      - '@annotation_reader'
 
-    RidiPay\Library\Validation\ParameterValidationMiddleware:
-        class: RidiPay\Library\Validation\ParameterValidationMiddleware
-        arguments:
-            - '@annotation_reader'
-
-    RidiPay\Library\Cors\CorsMiddleware:
-        class: RidiPay\Library\Cors\CorsMiddleware
-        arguments:
-            - '@annotation_reader'
+  RidiPay\Controller\:
+    resource: '../src/Controller/*Controller.php'
+    arguments:
+      - '@oauth2_service_provider'

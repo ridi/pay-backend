@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
+use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
@@ -11,7 +12,6 @@ use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
-use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
@@ -166,7 +166,9 @@ class UserController extends BaseController
 
     /**
      * @Route("/me", methods={"GET"})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Get(
      *   path="/me",
@@ -250,7 +252,9 @@ class UserController extends BaseController
     /**
      * @Route("/me/pin", methods={"POST"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Post(
      *   path="/me/pin",
@@ -347,7 +351,9 @@ class UserController extends BaseController
      *   {"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}},
      *   {"param"="validation_token", "constraints"={"Uuid"}}
      * )
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Put(
      *   path="/me/pin",
@@ -472,7 +478,9 @@ class UserController extends BaseController
     /**
      * @Route("/me/pin/validate", methods={"POST"})
      * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Post(
      *   path="/me/pin/validate",
@@ -603,7 +611,9 @@ class UserController extends BaseController
     /**
      * @Route("/me/password/validate", methods={"POST"})
      * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Post(
      *   path="/me/password/validate",
@@ -737,7 +747,9 @@ class UserController extends BaseController
     /**
      * @Route("/me/onetouch", methods={"PUT"})
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
-     * @OAuth2()
+     * @OAuth2(
+     *   exception_handler="RidiPay\Library\OAuth2\LoginRequiredExceptionHandler"
+     * )
      *
      * @OA\Put(
      *   path="/me/onetouch",
