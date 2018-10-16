@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Domain\Entity;
 
-use RidiPay\Partner\Domain\Entity\PartnerEntity;
-use RidiPay\User\Domain\Entity\PaymentMethodEntity;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  * @Table(
@@ -14,7 +14,7 @@ use RidiPay\User\Domain\Entity\PaymentMethodEntity;
  *     @Index(name="idx_partner_id", columns={"partner_id"})
  *   }
  * )
- * @Entity
+ * @Entity(repositoryClass="RidiPay\Transaction\Domain\Repository\SubscriptionRepository")
  */
 class SubscriptionEntity
 {
@@ -28,46 +28,121 @@ class SubscriptionEntity
     private $id;
 
     /**
-     * @var PaymentMethodEntity
+     * @var int
      *
-     * @ManyToOne(targetEntity="RidiPay\User\Domain\Entity\PaymentMethodEntity")
-     * @JoinColumn(name="payment_method_id", referencedColumnName="id", nullable=false)
+     * @Column(
+     *   name="payment_method_id",
+     *   type="integer",
+     *   nullable=false,
+     *   options={
+     *     "unsigned"=true,
+     *     "comment"="payment_method.id"
+     *   }
+     * )
      */
-    private $payment_method;
+    private $payment_method_id;
 
     /**
-     * @var PartnerEntity
+     * @var int
      *
-     * @ManyToOne(targetEntity="RidiPay\Partner\Domain\Entity\PartnerEntity")
-     * @JoinColumn(name="partner_id", referencedColumnName="id", nullable=false)
+     * @Column(name="partner_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="partner.id"})
      */
-    private $partner;
+    private $partner_id;
 
     /**
-     * @var string
+     * @var UuidInterface
      *
-     * @Column(name="bill_key", type="string", length=255, nullable=false, options={"comment"="정기 결제 Bill Key"})
+     * @Column(name="bill_key", type="uuid_binary", nullable=false, options={"comment"="정기 결제 Bill Key"})
      */
     private $bill_key;
 
     /**
      * @var string
      *
-     * @Column(name="purpose", type="string", length=32, nullable=false, options={"comment"="구독 목적"})
+     * @Column(name="purpose", type="string", length=32, nullable=false, options={"comment"="구독 상품명"})
      */
-    private $purpose;
+    private $product_name;
+
+    /**
+     * @var int
+     *
+     * @Column(name="amount", type="integer", nullable=false, options={"comment"="주문 금액"})
+     */
+    private $amount;
 
     /**
      * @var \DateTime
      *
-     * @Column(name="created_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
+     * @Column(name="subscribed_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
      */
-    private $created_at;
+    private $subscribed_at;
 
     /**
      * @var \DateTime|null
      *
-     * @Column(name="deleted_at", type="datetime", nullable=true)
+     * @Column(name="unsubscribed_at", type="datetime", nullable=true)
      */
-    private $deleted_at;
+    private $unsubscribed_at;
+
+    /**
+     * @param int $payment_method_id
+     * @param int $partner_id
+     * @param string $product_name
+     * @param int $amount
+     * @throws \Exception
+     */
+    public function __construct(
+        int $payment_method_id,
+        int $partner_id,
+        string $product_name,
+        int $amount
+    ) {
+        $this->payment_method_id = $payment_method_id;
+        $this->partner_id = $partner_id;
+        $this->bill_key = Uuid::uuid4();
+        $this->product_name = $product_name;
+        $this->amount = $amount;
+        $this->subscribed_at = new \DateTime();
+        $this->unsubscribed_at = null;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPaymentMethodId(): int
+    {
+        return $this->payment_method_id;
+    }
+
+    /**
+     * @return UuidInterface
+     */
+    public function getBillKey(): UuidInterface
+    {
+        return $this->bill_key;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProductName(): string
+    {
+        return $this->product_name;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAmount(): int
+    {
+        return $this->amount;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getSubscribedAt(): \DateTime
+    {
+        return $this->subscribed_at;
+    }
 }

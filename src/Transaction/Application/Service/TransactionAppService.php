@@ -257,6 +257,84 @@ class TransactionAppService
     }
 
     /**
+     * @param int $u_idx
+     * @param int $payment_method_id
+     * @param int $partner_id
+     * @param string $partner_transaction_id
+     * @param string $product_name
+     * @param int $amount
+     * @param \DateTime $subscribed_at
+     * @return ApproveTransactionDto
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function approveTransactionBySubscription(
+        int $u_idx,
+        int $payment_method_id,
+        int $partner_id,
+        string $partner_transaction_id,
+        string $product_name,
+        int $amount,
+        \DateTime $subscribed_at
+    ): ApproveTransactionDto {
+        $pg = PgAppService::getActivePg();
+        $pg_handler = PgHandlerFactory::create($pg->name);
+
+        $transaction = new TransactionEntity(
+            $u_idx,
+            $payment_method_id,
+            $pg->id,
+            $partner_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount,
+            $subscribed_at
+        );
+
+        try {
+            $response = $pg_handler->approveTransaction($transaction);
+
+            $transaction->approve($response->getPgTransactionId());
+            TransactionRepository::getRepository()->save($transaction);
+
+            $transaction_history = TransactionHistoryEntity::createApproveHistory(
+                $transaction,
+                $response->isSuccess(),
+                $response->getResponseCode(),
+                $response->getResponseMessage()
+            );
+            TransactionHistoryRepository::getRepository()->save($transaction_history);
+        } catch (\Throwable $t) {
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
+
+            // 결제 승인 건 취소 처리
+            $cancel_reason = 'RIDI Pay 정기 결제 승인 처리 중 오류 발생';
+            $cancel_transaction_response = $pg_handler->cancelTransaction(
+                $transaction->getPgTransactionId(),
+                $cancel_reason
+            );
+            if (!$cancel_transaction_response->isSuccess()) {
+                $message = 'RIDI Pay 정기 결제 승인 처리 중 오류 발생으로 인한 결제 취소 중 오류 발생';
+
+                $data = [
+                    'extra' => [
+                        'transaction_id' => $transaction->getPgTransactionId(),
+                        'response_code' => $cancel_transaction_response->getResponseCode(),
+                        'response_message' => $cancel_transaction_response->getResponseMessage()
+                    ]
+                ];
+                SentryHelper::captureMessage($message, [], $data, true);
+            }
+
+            throw $t;
+        }
+
+        return new ApproveTransactionDto($transaction);
+    }
+
+    /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
      * @param string $transaction_id

@@ -43,7 +43,7 @@ class OneTimePaymentTest extends ControllerTestCase
         UserAppService::createUser(self::$u_idx);
 
         self::$payment_method_id = TestUtil::createCard(self::$u_idx);
-        self::$partner = PartnerAppService::registerPartner('test', 'test@12345', true);
+        self::$partner = PartnerAppService::registerPartner('one-time-payment', 'test@12345', true);
 
         self::$client = self::createClient(
             [],

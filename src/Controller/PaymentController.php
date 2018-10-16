@@ -15,6 +15,7 @@ use RidiPay\Library\Validation\ApiSecretValidationException;
 use RidiPay\Library\Validation\ApiSecretValidator;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
+use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
@@ -33,11 +34,11 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/reserve", methods={"POST"})
      * @ParamValidator(
-     *     {"param"="payment_method_id", "constraints"={"Uuid"}},
-     *     {"param"="partner_transaction_id", "constraints"={"Uuid"}},
-     *     {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
-     *     {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
-     *     {"param"="return_url", "constraints"={"Url"}}
+     *   {"param"="payment_method_id", "constraints"={"Uuid"}},
+     *   {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
+     *   {"param"="return_url", "constraints"={"Url"}}
      * )
      *
      * @OA\Post(
@@ -139,7 +140,13 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"OPTIONS"})
+     * @Route(
+     *   "/payments/{reservation_id}",
+     *   methods={"OPTIONS"},
+     *   requirements={
+     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
      * @Cors(methods={"GET"})
      *
      * @return JsonResponse
@@ -150,7 +157,13 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"GET"})
+     * @Route(
+     *   "/payments/{reservation_id}",
+     *   methods={"GET"},
+     *   requirements={
+     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
      * @OAuth2()
      *
      * @OA\Get(
@@ -261,7 +274,13 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"OPTIONS"})
+     * @Route(
+     *   "/payments/{reservation_id}",
+     *   methods={"OPTIONS"},
+     *   requirements={
+     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
      * @Cors(methods={"POST"})
      *
      * @return JsonResponse
@@ -272,7 +291,13 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{reservation_id}", methods={"POST"})
+     * @Route(
+     *   "/payments/{reservation_id}",
+     *   methods={"POST"},
+     *   requirements={
+     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
      * @ParamValidator({"param"="validation_token", "constraints"={"Uuid"}})
      * @OAuth2()
      *
@@ -381,7 +406,13 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{transaction_id}/approve", methods={"POST"})
+     * @Route(
+     *   "/payments/{transaction_id}/approve",
+     *   methods={"POST"},
+     *   requirements={
+     *     "transaction_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
      *
      * @OA\Post(
      *   path="/payments/{transaction_id}/approve",
@@ -517,7 +548,13 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{transaction_id}/cancel", methods={"POST"})
+     * @Route(
+     *   "/payments/{transaction_id}/cancel",
+     *   methods={"POST"},
+     *   requirements={
+     *     "transaction_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
      *
      * @OA\Post(
      *   path="/payments/{transaction_id}/cancel",
@@ -649,7 +686,13 @@ class PaymentController extends BaseController
     }
 
     /**
-     * @Route("/payments/{transaction_id}/status", methods={"GET"})
+     * @Route(
+     *   "/payments/{transaction_id}/status",
+     *   methods={"GET"},
+     *   requirements={
+     *     "transaction_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
      *
      * @OA\Get(
      *   path="/payments/{transaction_id}/status",
@@ -794,5 +837,267 @@ class PaymentController extends BaseController
         }
 
         return self::createSuccessResponse($data);
+    }
+
+    /**
+     * @Route("/payments/subscriptions", methods={"POST"})
+     * @ParamValidator(
+     *   {"param"="payment_method_id", "constraints"={"Uuid"}},
+     *   {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
+     * )
+     *
+     * @OA\Post(
+     *   path="/payments/subscriptions",
+     *   summary="정기 결제 등록",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"payment_method_id", "product_name", "amount"},
+     *       @OA\Property(
+     *         property="payment_method_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 수단 ID",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "payment_method_id",
+     *         "bill_key",
+     *         "product_name",
+     *         "amount",
+     *         "subscribed_at"
+     *       },
+     *       @OA\Property(
+     *         property="subscription_id",
+     *         type="string",
+     *         description="RIDI Pay 정기 결제 ID",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       ),
+     *       @OA\Property(
+     *         property="payment_method_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 수단 ID",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="subscribed_at",
+     *         type="string",
+     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function subscribe(Request $request): JsonResponse
+    {
+        try {
+            ApiSecretValidator::validate($request);
+
+            $body = json_decode($request->getContent());
+            $result = SubscriptionAppService::subscribe(
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
+                $body->payment_method_id,
+                $body->product_name,
+                $body->amount
+            );
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (UnregisteredPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse([
+            'subscription_id' => $result->bill_key,
+            'payment_method_id' => $result->payment_method_id,
+            'product_name' => $result->product_name,
+            'amount' => $result->amount,
+            'subscribed_at' => $result->subscribed_at
+        ]);
+    }
+
+    /**
+     * @Route(
+     *   "/payments/subscriptions/{subscription_id}/pay",
+     *   methods={"POST"},
+     *   requirements={
+     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
+     * @ParamValidator(
+     *   {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}}
+     * )
+     *
+     * @OA\Post(
+     *   path="/payments/subscriptions/{subscription_id}/pay",
+     *   summary="정기 결제 승인",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\Parameter(
+     *     name="subscription_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 정기 결제 ID",
+     *     example="550E8400-E29B-41D4-A716-446655440000",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"partner_transaction_id"},
+     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호")
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "transaction_id",
+     *         "partner_transaction_id",
+     *         "subscription_id",
+     *         "product_name",
+     *         "amount",
+     *         "subscribed_at",
+     *         "approved_at",
+     *       },
+     *       @OA\Property(
+     *         property="transaction_id",
+     *         type="string",
+     *         description="RIDI Pay 주문 번호",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호"),
+     *       @OA\Property(
+     *         property="subscription_id",
+     *         type="string",
+     *         description="RIDI Pay 정기 결제 ID",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       ),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="subscribed_at",
+     *         type="string",
+     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="approved_at",
+     *         type="string",
+     *         description="정기 결제 승인 일시(ISO 8601 Format)",
+     *         example="2018-06-07T03:30:30+09:00"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @param string $subscription_id
+     * @return JsonResponse
+     */
+    public function paySubscription(Request $request, string $subscription_id): JsonResponse
+    {
+        try {
+            ApiSecretValidator::validate($request);
+
+            $body = json_decode($request->getContent());
+            $result = SubscriptionAppService::paySubscription(
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
+                $subscription_id,
+                $body->partner_transaction_id
+            );
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (UnregisteredPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse([
+            'transaction_id' => $result->transaction_id,
+            'partner_transaction_id' => $result->partner_transaction_id,
+            'subscription_id' => $result->subscription_id,
+            'product_name' => $result->product_name,
+            'amount' => $result->amount,
+            'subscribed_at' => $result->subscribed_at,
+            'approved_at' => $result->approved_at
+        ]);
     }
 }

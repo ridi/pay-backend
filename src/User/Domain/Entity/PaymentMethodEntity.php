@@ -135,6 +135,14 @@ class PaymentMethodEntity
     }
 
     /**
+     * @return int
+     */
+    public function getUidx(): int
+    {
+        return $this->u_idx;
+    }
+
+    /**
      * @return bool
      */
     public function isCard(): bool

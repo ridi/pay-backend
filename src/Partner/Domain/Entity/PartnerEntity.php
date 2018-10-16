@@ -31,7 +31,7 @@ class PartnerEntity
     /**
      * @var string
      *
-     * @Column(name="name", type="string", length=16, nullable=false, options={"comment"="가맹점 관리자 로그인 Username"})
+     * @Column(name="name", type="string", length=32, nullable=false, options={"comment"="가맹점 관리자 로그인 Username"})
      */
     private $name;
 
