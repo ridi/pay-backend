@@ -4,11 +4,11 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
+use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
-use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;

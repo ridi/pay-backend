@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
+use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
@@ -11,7 +12,6 @@ use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
-use RidiPay\Library\OAuth2\Annotation\OAuth2;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;

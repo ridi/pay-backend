@@ -3,13 +3,24 @@ declare(strict_types=1);
 
 namespace RidiPay\Controller;
 
-use RidiPay\Library\OAuth2\OAuth2Manager;
+use Ridibooks\OAuth2\Symfony\Provider\OAuth2ServiceProvider;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 abstract class BaseController extends Controller
 {
+    /** @var OAuth2ServiceProvider */
+    protected $oauth2_service_provider;
+
+    /**
+     * @param OAuth2ServiceProvider $oauth2_service_provider
+     */
+    public function __construct(OAuth2ServiceProvider $oauth2_service_provider)
+    {
+        $this->oauth2_service_provider = $oauth2_service_provider;
+    }
+
     /**
      * @param array $data
      * @param array $headers
@@ -68,10 +79,7 @@ abstract class BaseController extends Controller
      */
     protected function getUidx(): int
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-
-        return $oauth2_manager->getUser()->getUidx();
+        return $this->oauth2_service_provider->getMiddleware()->getUser()->getUidx();
     }
 
     /**
@@ -79,9 +87,6 @@ abstract class BaseController extends Controller
      */
     protected function getUid(): string
     {
-        /** @var OAuth2Manager $oauth2_manager */
-        $oauth2_manager = $this->container->get(OAuth2Manager::class);
-
-        return $oauth2_manager->getUser()->getUid();
+        return $this->oauth2_service_provider->getMiddleware()->getUser()->getUid();
     }
 }
