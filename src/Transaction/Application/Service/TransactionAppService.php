@@ -37,9 +37,6 @@ use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 
 class TransactionAppService
 {
-    private const VALIDATION_PASSWORD = 'PASSWORD';
-    private const VALIDATION_PIN = 'PIN';
-
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
@@ -99,7 +96,7 @@ class TransactionAppService
     /**
      * @param string $reservation_id
      * @param int $u_idx
-     * @return null|string
+     * @return bool
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws NotReservedTransactionException
@@ -107,24 +104,17 @@ class TransactionAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getRequiredValidation(string $reservation_id, int $u_idx): ?string
+    public static function isPinValidationRequired(string $reservation_id, int $u_idx): bool
     {
         $reserved_transaction = self::getReservedTransaction($reservation_id);
 
         $amount = intval($reserved_transaction['amount']);
-        if ($amount > 100000) {
-            return self::VALIDATION_PASSWORD;
+        $user = UserAppService::getUserInformation($u_idx);
+        if ($user->is_using_onetouch_pay && $amount < 100000) {
+            return false;
         }
 
-        $user = UserAppService::getUserInformation($u_idx);
-        if ($user->is_using_onetouch_pay) {
-            return null;
-        }
-        if ($user->has_pin) {
-            return self::VALIDATION_PIN;
-        } else {
-            return self::VALIDATION_PASSWORD;
-        }
+        return true;
     }
 
     /**

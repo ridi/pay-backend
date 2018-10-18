@@ -6,7 +6,7 @@ namespace RidiPay\User\Domain\Exception;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\User\Domain\Service\BaseAbuseBlockPolicy;
 
-class PasswordEntryBlockedException extends \Exception
+class PinEntryBlockedException extends \Exception
 {
     /**
      * @param BaseAbuseBlockPolicy $policy

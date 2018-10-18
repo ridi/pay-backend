@@ -182,18 +182,17 @@ class PaymentController extends BaseController
      *     description="Success",
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"required_validation"},
+     *       required={"is_pin_validation_required"},
      *       @OA\Property(
-     *         property="required_validation",
-     *         type="string",
-     *         enum={"PASSWORD", "PIN"},
-     *         nullable=true,
-     *         description="결제 생성을 위해 필요한 인증 방식(null인 경우, 원터치 결제)"
+     *         property="is_pin_validation_required",
+     *         type="boolean",
+     *         description="결제 비밀번호 검증 필요 여부",
+     *         example=true
      *       ),
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="결제 인증 후 발급된 토큰",
+     *         description="is_pin_validation_required = false인 경우, 발급된 인증 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )
@@ -236,8 +235,11 @@ class PaymentController extends BaseController
     public function getReservation(string $reservation_id): JsonResponse
     {
         try {
-            $required_validation = TransactionAppService::getRequiredValidation($reservation_id, $this->getUidx());
-            if (is_null($required_validation)) {
+            $is_pin_validation_required = TransactionAppService::isPinValidationRequired(
+                $reservation_id,
+                $this->getUidx()
+            );
+            if (!$is_pin_validation_required) {
                 $validation_token = TransactionAppService::generateValidationToken($reservation_id);
             }
         } catch (LeavedUserException $e) {
@@ -265,7 +267,7 @@ class PaymentController extends BaseController
             );
         }
 
-        $data = ['required_validation' => $required_validation];
+        $data = ['is_pin_validation_required' => $is_pin_validation_required];
         if (isset($validation_token)) {
             $data['validation_token'] = $validation_token;
         }

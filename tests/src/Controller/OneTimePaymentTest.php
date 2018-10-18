@@ -3,9 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
-use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
-use RidiPay\Library\PasswordValidationApi;
 use RidiPay\Partner\Application\Dto\RegisterPartnerDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
@@ -144,49 +142,6 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 결제 취소
         $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
-    }
-
-    public function testOneTimePaymentLifeCycleCaseInCaseOfPasswordValidation()
-    {
-        Test::double(PasswordValidationApi::class, ['isPasswordMatched' => true]);
-
-        // 결제 수단 조회
-        $this->assertGetPaymentMethodsSuccessfully();
-
-        $partner_transaction_id = Uuid::uuid4()->toString();
-        $product_name = 'mock';
-        $amount = 100000;
-        $return_url = 'https://mock.net';
-
-        // 결제 예약
-        $this->assertReservePaymentSuccessfully(
-            self::$payment_method_id,
-            $partner_transaction_id,
-            $product_name,
-            $amount,
-            $return_url
-        );
-
-        // 계정 비밀번호 인증
-        UserAppService::validatePassword(self::$u_idx, 'test', 'abcde@12345');
-        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
-
-        // 결제 생성
-        $this->assertCreatePaymentSuccessfully(
-            $validation_token,
-            self::$reservation_id,
-            $partner_transaction_id,
-            $product_name,
-            $amount
-        );
-
-        // 결제 승인
-        $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
-
-        // 결제 취소
-        $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
-
-        Test::clean(PasswordValidationApi::class);
     }
 
     private function assertGetPaymentMethodsSuccessfully()

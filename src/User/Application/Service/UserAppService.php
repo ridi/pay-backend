@@ -12,16 +12,14 @@ use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
-use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
+use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
-use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Repository\UserRepository;
 use RidiPay\User\Domain\Service\AbuseBlocker;
-use RidiPay\User\Domain\Service\PasswordEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 
@@ -126,7 +124,7 @@ class UserAppService
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws UnmatchedPinException
-     * @throws PasswordEntryBlockedException
+     * @throws PinEntryBlockedException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
@@ -138,7 +136,7 @@ class UserAppService
         $abuse_blocker = new AbuseBlocker($policy, $u_idx);
         if ($abuse_blocker->isBlocked()) {
             $remaining_period_until_unblock = $abuse_blocker->getBlockedAt() + $policy->getBlockedPeriod() - time();
-            throw new PasswordEntryBlockedException(
+            throw new PinEntryBlockedException(
                 $policy,
                 ($remaining_period_until_unblock >= 0 ? $remaining_period_until_unblock : 0)
             );
@@ -146,37 +144,6 @@ class UserAppService
 
         if (!$user->isPinMatched($pin)) {
             throw new UnmatchedPinException();
-        }
-    }
-
-    /**
-     * @param int $u_idx
-     * @param string $u_id
-     * @param string $password
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws PasswordEntryBlockedException
-     * @throws UnmatchedPasswordException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function validatePassword(int $u_idx, string $u_id, string $password): void
-    {
-        $user = self::getUser($u_idx);
-
-        if (!$user->isPasswordMatched($u_id, $password)) {
-            $policy = new PasswordEntryAbuseBlockPolicy();
-            $abuse_blocker = new AbuseBlocker($policy, $u_idx);
-
-            if (!$abuse_blocker->isBlocked()) {
-                throw new UnmatchedPasswordException();
-            }
-
-            $remaining_period_until_unblock = $abuse_blocker->getBlockedAt() + $policy->getBlockedPeriod() - time();
-            throw new PasswordEntryBlockedException(
-                $policy,
-                ($remaining_period_until_unblock >= 0 ? $remaining_period_until_unblock : 0)
-            );
         }
     }
 

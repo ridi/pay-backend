@@ -11,13 +11,12 @@ use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
-use RidiPay\User\Domain\Exception\PasswordEntryBlockedException;
+use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
-use RidiPay\User\Domain\Exception\UnmatchedPasswordException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
@@ -573,7 +572,7 @@ class UserController extends BaseController
                 UserErrorCodeConstant::PIN_UNMATCHED,
                 $e->getMessage()
             );
-        } catch (PasswordEntryBlockedException $e) {
+        } catch (PinEntryBlockedException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::PIN_ENTRY_BLOCKED,
@@ -587,140 +586,6 @@ class UserController extends BaseController
         }
 
         return self::createSuccessResponse(['validation_token' => $validation_token]);
-    }
-
-    /**
-     * @Route("/me/password/validate", methods={"OPTIONS"})
-     * @Cors(methods={"POST"})
-     *
-     * @return JsonResponse
-     */
-    public function validatePasswordPreflight(): JsonResponse
-    {
-        return self::createSuccessResponse();
-    }
-
-    /**
-     * @Route("/me/password/validate", methods={"POST"})
-     * @ParamValidator({"param"="password", "constraints"={"NotBlank", {"Type"="string"}}})
-     * @OAuth2()
-     *
-     * @OA\Post(
-     *   path="/me/password/validate",
-     *   summary="입력한 RIDIBOOKS 계정 비밀번호 검증",
-     *   tags={"private-api"},
-     *   @OA\RequestBody(
-     *     @OA\JsonContent(
-     *       type="object",
-     *       required={"password"},
-     *       @OA\Property(property="password", type="string", description="RIDIBOOKS 계정 비밀번호", example="abcde@123456"),
-     *       @OA\Property(
-     *         property="reservation_id",
-     *         type="string",
-     *         description="RIDI Pay 결제 예약 ID, [POST] /payments/reserve API 참고",
-     *         example="880E8200-A29B-24B2-8716-42B65544A000"
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Success",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       @OA\Property(
-     *         property="validation_token",
-     *         type="string",
-     *         description="결제 인증 후 발급된 토큰",
-     *         example="550E8400-E29B-41D4-A716-446655440000"
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="400",
-     *     description="Bad Request",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InvalidParameter"),
-     *         @OA\Schema(ref="#/components/schemas/PasswordUnmatched")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="401",
-     *     description="Unauthorized",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
-     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/PasswordEntryBlocked")
-     *   ),
-     *   @OA\Response(
-     *     response="404",
-     *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
-     *   ),
-     *   @OA\Response(
-     *     response="500",
-     *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
-     *   )
-     * )
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function validatePassword(Request $request)
-    {
-        try {
-            $body = json_decode($request->getContent());
-            UserAppService::validatePassword($this->getUidx(), $this->getUid(), $body->password);
-
-            if (isset($body->reservation_id)) {
-                $validation_token = TransactionAppService::generateValidationToken($body->reservation_id);
-            }
-        } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::LEAVED_USER,
-                $e->getMessage()
-            );
-        } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
-        } catch (UnmatchedPasswordException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::PASSWORD_UNMATCHED,
-                $e->getMessage()
-            );
-        } catch (PasswordEntryBlockedException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::PASSWORD_ENTRY_BLOCKED,
-                $e->getMessage()
-            );
-        } catch (\Throwable $t) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
-            );
-        }
-
-        $data = [];
-        if (isset($validation_token)) {
-            $data['validation_token'] = $validation_token;
-        }
-
-        return self::createSuccessResponse($data);
     }
 
     /**

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
-use RidiPay\Library\PasswordValidationApi;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
@@ -148,17 +147,6 @@ class UserEntity
     private static function hashPin(string $pin)
     {
         return password_hash($pin, PASSWORD_DEFAULT);
-    }
-
-    /**
-     * @param string $u_id
-     * @param string $password
-     * @return bool
-     * @throws \Exception
-     */
-    public function isPasswordMatched(string $u_id, string $password): bool
-    {
-        return PasswordValidationApi::isPasswordMatched($u_id, $password);
     }
 
     /**

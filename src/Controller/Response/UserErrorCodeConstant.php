@@ -36,25 +36,11 @@ use Symfony\Component\HttpFoundation\Response;
  *   @OA\Property(property="message", type="string", example="결제 비밀번호를 설정해주세요.")
  * )
  * @OA\Schema(
- *   schema="PasswordEntryBlocked",
- *   type="object",
- *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="PASSWORD_ENTRY_BLOCKED"),
- *   @OA\Property(property="message", type="string", example="비밀번호를 5회 잘못 입력하셔서 이용이 제한되었습니다.")
- * )
- * @OA\Schema(
  *   schema="PinEntryBlocked",
  *   type="object",
  *   required={"code", "message"},
  *   @OA\Property(property="code", type="string", example="PIN_ENTRY_BLOCKED"),
  *   @OA\Property(property="message", type="string", example="비밀번호를 5회 잘못 입력하셔서 이용이 제한되었습니다.")
- * )
- * @OA\Schema(
- *   schema="PasswordUnmatched",
- *   type="object",
- *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="PASSWORD_UNMATCHED"),
- *   @OA\Property(property="message", type="string", example="계정 비밀번호를 올바르게 입력해주세요.")
  * )
  * @OA\Schema(
  *   schema="PinUnmatched",
@@ -98,9 +84,7 @@ class UserErrorCodeConstant
     public const LEAVED_USER = 'LEAVED_USER';
     public const NOT_FOUND_USER = 'NOT_FOUND_USER';
     public const ONETOUCH_PAY_SETTING_CHANGE_DECLINED = 'ONETOUCH_PAY_SETTING_CHANGE_DECLINED';
-    public const PASSWORD_ENTRY_BLOCKED = 'PASSWORD_ENTRY_BLOCKED';
     public const PIN_ENTRY_BLOCKED = 'PIN_ENTRY_BLOCKED';
-    public const PASSWORD_UNMATCHED = 'PASSWORD_UNMATCHED';
     public const PIN_UNMATCHED = 'PIN_UNMATCHED';
     public const UNAUTHORIZED_PIN_CHANGE = 'UNAUTHORIZED_PIN_CHANGE';
     public const UNCHANGED_PIN = 'UNCHANGED_PIN';
@@ -112,9 +96,7 @@ class UserErrorCodeConstant
         self::LEAVED_USER => Response::HTTP_FORBIDDEN,
         self::NOT_FOUND_USER => Response::HTTP_NOT_FOUND,
         self::ONETOUCH_PAY_SETTING_CHANGE_DECLINED => Response::HTTP_FORBIDDEN,
-        self::PASSWORD_ENTRY_BLOCKED => Response::HTTP_FORBIDDEN,
         self::PIN_ENTRY_BLOCKED => Response::HTTP_FORBIDDEN,
-        self::PASSWORD_UNMATCHED => Response::HTTP_BAD_REQUEST,
         self::PIN_UNMATCHED => Response::HTTP_BAD_REQUEST,
         self::UNAUTHORIZED_PIN_CHANGE => Response::HTTP_UNAUTHORIZED,
         self::UNCHANGED_PIN => Response::HTTP_BAD_REQUEST,
