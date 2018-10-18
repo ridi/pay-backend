@@ -59,7 +59,7 @@ class SubscriptionEntity
     /**
      * @var string
      *
-     * @Column(name="purpose", type="string", length=32, nullable=false, options={"comment"="구독 상품명"})
+     * @Column(name="product_name", type="string", length=32, nullable=false, options={"comment"="구독 상품명"})
      */
     private $product_name;
 
