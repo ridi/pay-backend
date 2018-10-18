@@ -11,12 +11,12 @@ use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 class SubscriptionRepository extends BaseEntityRepository
 {
     /**
-     * @param UuidInterface $bill_key
+     * @param UuidInterface $uuid
      * @return null|SubscriptionEntity
      */
-    public function findOneByBillKey(UuidInterface $bill_key): ?SubscriptionEntity
+    public function findOneByUuid(UuidInterface $uuid): ?SubscriptionEntity
     {
-        return $this->findOneBy(['bill_key' => $bill_key]);
+        return $this->findOneBy(['uuid' => $uuid]);
     }
 
     /**

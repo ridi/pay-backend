@@ -36,9 +36,9 @@ class SubscriptionPaymentDto
         ApproveTransactionDto $approve_transaction_dto,
         SubscriptionEntity $subscription
     ) {
+        $this->subscription_id = $subscription->getUuid()->toString();
         $this->transaction_id = $approve_transaction_dto->transaction_id;
         $this->partner_transaction_id = $approve_transaction_dto->partner_transaction_id;
-        $this->subscription_id = $subscription->getBillKey();
         $this->product_name = $subscription->getProductName();
         $this->amount = $subscription->getAmount();
         $this->subscribed_at = $subscription->getSubscribedAt();

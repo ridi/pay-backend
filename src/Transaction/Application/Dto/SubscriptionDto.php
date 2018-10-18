@@ -8,10 +8,10 @@ use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 class SubscriptionDto
 {
     /** @var string */
-    public $payment_method_id;
+    public $subscription_id;
 
     /** @var string */
-    public $bill_key;
+    public $payment_method_id;
 
     /** @var string */
     public $product_name;
@@ -28,10 +28,10 @@ class SubscriptionDto
      */
     public function __construct(string $payment_method_id, SubscriptionEntity $subscription)
     {
+        $this->subscription_id = $subscription->getUuid()->toString();
         $this->payment_method_id = $payment_method_id;
-        $this->bill_key = $subscription->getBillKey();
         $this->product_name = $subscription->getProductName();
         $this->amount = $subscription->getAmount();
-        $this->subscribed_at = $subscription->getSubscribedAt()->format(DATE_ATOM);
+        $this->subscribed_at = $subscription->getSubscribedAt();
     }
 }

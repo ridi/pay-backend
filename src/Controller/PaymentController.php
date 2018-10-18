@@ -873,8 +873,8 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(
      *       type="object",
      *       required={
+     *         "subscription_id",
      *         "payment_method_id",
-     *         "bill_key",
      *         "product_name",
      *         "amount",
      *         "subscribed_at"
@@ -954,11 +954,11 @@ class PaymentController extends BaseController
         }
 
         return self::createSuccessResponse([
-            'subscription_id' => $result->bill_key,
+            'subscription_id' => $result->subscription_id,
             'payment_method_id' => $result->payment_method_id,
             'product_name' => $result->product_name,
             'amount' => $result->amount,
-            'subscribed_at' => $result->subscribed_at
+            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
         ]);
     }
 
@@ -967,7 +967,7 @@ class PaymentController extends BaseController
      *   "/payments/subscriptions/{subscription_id}/pay",
      *   methods={"POST"},
      *   requirements={
-     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "bill_key"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
      *   }
      * )
      * @ParamValidator(
@@ -1091,13 +1091,13 @@ class PaymentController extends BaseController
         }
 
         return self::createSuccessResponse([
+            'subscription_id' => $result->subscription_id,
             'transaction_id' => $result->transaction_id,
             'partner_transaction_id' => $result->partner_transaction_id,
-            'subscription_id' => $result->subscription_id,
             'product_name' => $result->product_name,
             'amount' => $result->amount,
-            'subscribed_at' => $result->subscribed_at,
-            'approved_at' => $result->approved_at
+            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
+            'approved_at' => $result->approved_at->format(DATE_ATOM)
         ]);
     }
 }

@@ -47,7 +47,7 @@ class SubscriptionAppService
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
-     * @param string $bill_key
+     * @param string $subscription_id
      * @param string $partner_transaction_id
      * @return SubscriptionPaymentDto
      * @throws UnauthorizedPartnerException
@@ -59,12 +59,12 @@ class SubscriptionAppService
     public static function paySubscription(
         string $partner_api_key,
         string $partner_secret_key,
-        string $bill_key,
+        string $subscription_id,
         string $partner_transaction_id
     ) {
         $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
-        $subscription = SubscriptionRepository::getRepository()->findOneByBillKey(Uuid::fromString($bill_key));
+        $subscription = SubscriptionRepository::getRepository()->findOneByUuid(Uuid::fromString($subscription_id));
         if (is_null($subscription)) {
             throw new \Exception();
         }

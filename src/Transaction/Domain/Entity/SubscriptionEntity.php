@@ -28,6 +28,13 @@ class SubscriptionEntity
     private $id;
 
     /**
+     * @var UuidInterface
+     *
+     * @Column(name="uuid", type="uuid_binary", nullable=false, options={"comment"="PG사 bill key와 1:1 대응"})
+     */
+    private $uuid;
+
+    /**
      * @var int
      *
      * @Column(
@@ -48,13 +55,6 @@ class SubscriptionEntity
      * @Column(name="partner_id", type="integer", nullable=false, options={"unsigned"=true, "comment"="partner.id"})
      */
     private $partner_id;
-
-    /**
-     * @var UuidInterface
-     *
-     * @Column(name="bill_key", type="uuid_binary", nullable=false, options={"comment"="정기 결제 Bill Key"})
-     */
-    private $bill_key;
 
     /**
      * @var string
@@ -99,7 +99,7 @@ class SubscriptionEntity
     ) {
         $this->payment_method_id = $payment_method_id;
         $this->partner_id = $partner_id;
-        $this->bill_key = Uuid::uuid4();
+        $this->uuid = Uuid::uuid4();
         $this->product_name = $product_name;
         $this->amount = $amount;
         $this->subscribed_at = new \DateTime();
@@ -117,9 +117,9 @@ class SubscriptionEntity
     /**
      * @return UuidInterface
      */
-    public function getBillKey(): UuidInterface
+    public function getUuid(): UuidInterface
     {
-        return $this->bill_key;
+        return $this->uuid;
     }
 
     /**
