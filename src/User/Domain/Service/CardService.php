@@ -12,7 +12,6 @@ use RidiPay\Pg\Domain\Repository\PgRepository;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
-use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\CardIssuerRepository;
 use RidiPay\User\Domain\Repository\CardRepository;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
@@ -57,8 +56,20 @@ class CardService
 
     /**
      * @param int $u_idx
+     * @return bool
+     */
+    public static function isCardRegistrationInProgress(int $u_idx): bool
+    {
+        $card_registration_key = self::getCardRegistrationKey($u_idx);
+        $redis = self::getRedisClient();
+        $card_registration = $redis->hgetall($card_registration_key);
+
+        return !empty($card_registration);
+    }
+
+    /**
+     * @param int $u_idx
      * @return PaymentMethodEntity
-     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -68,9 +79,6 @@ class CardService
         $card_registration_key = self::getCardRegistrationKey($u_idx);
         $redis = self::getRedisClient();
         $card_registration = $redis->hgetall($card_registration_key);
-        if (empty($card_registration)) {
-            throw new UnregisteredPaymentMethodException();
-        }
 
         $pg_id = intval($card_registration['pg_id']);
         $card_issuer = CardIssuerRepository::getRepository()->findOneByPgIdAndCode(

@@ -150,14 +150,6 @@ class UserEntity
     }
 
     /**
-     * @return bool
-     */
-    public function hasOnetouchPaySetting(): bool
-    {
-        return !is_null($this->is_using_onetouch_pay);
-    }
-
-    /**
      * @return null|bool
      */
     public function isUsingOnetouchPay(): ?bool

@@ -18,7 +18,6 @@ use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
-use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
@@ -649,12 +648,7 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/NotFoundUser"),
-     *         @OA\Schema(ref="#/components/schemas/UnregisteredPaymentMethod")
-     *       }
-     *     )
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -691,12 +685,6 @@ class UserController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::ONETOUCH_PAY_SETTING_CHANGE_DECLINED,
-                $e->getMessage()
-            );
-        } catch (UnregisteredPaymentMethodException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {

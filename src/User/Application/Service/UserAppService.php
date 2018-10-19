@@ -16,7 +16,6 @@ use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
-use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Repository\UserRepository;
@@ -154,7 +153,6 @@ class UserAppService
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws OnetouchPaySettingChangeDeclinedException
-     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -167,7 +165,7 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            if (!$user->hasOnetouchPaySetting()) {
+            if (CardService::isCardRegistrationInProgress($u_idx)) {
                 CardService::useRegisteredCard($u_idx);
             }
 
@@ -193,7 +191,6 @@ class UserAppService
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws OnetouchPaySettingChangeDeclinedException
-     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -206,7 +203,7 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            if (!$user->hasOnetouchPaySetting()) {
+            if (CardService::isCardRegistrationInProgress($u_idx)) {
                 CardService::useRegisteredCard($u_idx);
             }
 
