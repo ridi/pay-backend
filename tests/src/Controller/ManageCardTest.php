@@ -9,7 +9,6 @@ use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Tests\TestUtil;
-use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
@@ -145,9 +144,10 @@ class ManageCardTest extends ControllerTestCase
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
-        UserAppService::createUser($user_indices[1]);
-        CardAppService::registerCard(
+        TestUtil::signUp(
             $user_indices[1],
+            '123456',
+            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],
@@ -206,18 +206,20 @@ class ManageCardTest extends ControllerTestCase
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
-        UserAppService::createUser($user_indices[0]);
-        $payment_method_of_normal_user = CardAppService::registerCard(
+        $payment_method_id_of_normal_user = TestUtil::signUp(
             $user_indices[0],
+            '123456',
+            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],
             self::TAX_ID
         );
 
-        UserAppService::createUser($user_indices[1]);
-        $payment_method_of_leaved_user = CardAppService::registerCard(
+        $payment_method_id_of_leaved_user = TestUtil::signUp(
             $user_indices[1],
+            '123456',
+            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],
@@ -228,13 +230,13 @@ class ManageCardTest extends ControllerTestCase
         return [
             [
                 $user_indices[0],
-                $payment_method_of_normal_user->payment_method_id,
+                $payment_method_id_of_normal_user,
                 Response::HTTP_OK,
                 null
             ],
             [
                 $user_indices[1],
-                $payment_method_of_leaved_user->payment_method_id,
+                $payment_method_id_of_leaved_user,
                 Response::HTTP_FORBIDDEN,
                 UserErrorCodeConstant::LEAVED_USER
             ],

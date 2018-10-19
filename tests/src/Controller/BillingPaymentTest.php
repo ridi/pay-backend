@@ -7,7 +7,6 @@ use Ramsey\Uuid\Uuid;
 use RidiPay\Partner\Application\Dto\RegisterPartnerDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
-use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,9 +28,15 @@ class BillingPaymentTest extends ControllerTestCase
     public static function setUpBeforeClass()
     {
         self::$u_idx = TestUtil::getRandomUidx();
-        UserAppService::createUser(self::$u_idx);
-
-        self::$payment_method_id = TestUtil::createCard(self::$u_idx);
+        self::$payment_method_id = TestUtil::signUp(
+            self::$u_idx,
+            '123456',
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
         self::$partner = PartnerAppService::registerPartner('billing-payment-test', 'test@12345', true);
 
         self::$client = self::createClient(

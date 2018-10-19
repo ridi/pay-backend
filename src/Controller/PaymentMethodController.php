@@ -60,11 +60,7 @@ class PaymentMethodController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       required={"card"},
-     *       @OA\Property(property="card", ref="#/components/schemas/CardDto")
-     *     )
+     *     @OA\JsonContent(type="object")
      *   ),
      *   @OA\Response(
      *     response="400",
@@ -110,7 +106,7 @@ class PaymentMethodController extends BaseController
     {
         try {
             $body = json_decode($request->getContent());
-            $result = CardAppService::registerCard(
+            CardAppService::registerCard(
                 $this->getUidx(),
                 $body->card_number,
                 $body->card_expiration_date,
@@ -142,7 +138,7 @@ class PaymentMethodController extends BaseController
             );
         }
 
-        return self::createSuccessResponse(['card' => $result]);
+        return self::createSuccessResponse();
     }
 
     /**

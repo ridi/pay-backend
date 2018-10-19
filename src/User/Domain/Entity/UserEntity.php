@@ -152,10 +152,17 @@ class UserEntity
     /**
      * @return bool
      */
+    public function hasOnetouchPaySetting(): bool
+    {
+        return !is_null($this->is_using_onetouch_pay);
+    }
+
+    /**
+     * @return bool
+     */
     public function isUsingOnetouchPay(): bool
     {
-        // 원터치 결제 이용 여부 미설정 및 OFF를 원터치 결제를 사용하고 있지 않은 것으로 판단한다.
-        return !empty($this->is_using_onetouch_pay);
+        return $this->is_using_onetouch_pay;
     }
 
     /**
@@ -163,8 +170,8 @@ class UserEntity
      */
     public function enableOnetouchPay(): void
     {
-        // 최초 결제 수단 등록이 아닌 경우, 원터치 결제 활성화 시 결제 비밀번호 소유 필수
-        if (!is_null($this->is_using_onetouch_pay) && !$this->hasPin()) {
+        if (!$this->hasPin()) {
+            // 원터치 결제 활성화 시 결제 비밀번호 소유 필수
             throw new OnetouchPaySettingChangeDeclinedException();
         }
 

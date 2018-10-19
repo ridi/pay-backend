@@ -6,17 +6,14 @@ namespace RidiPay\User\Application\Service;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
-use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
-use RidiPay\Pg\Domain\Service\PgHandlerFactory;
-use RidiPay\User\Application\Dto\PaymentMethodDto;
-use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
+use RidiPay\User\Domain\Service\CardRegistrationValidator;
 use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 
@@ -28,7 +25,6 @@ class CardAppService
      * @param string $card_password 카드 비밀번호 앞 2자리
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
-     * @return PaymentMethodDto
      * @throws CardAlreadyExistsException
      * @throws CardRegistrationException
      * @throws LeavedUserException
@@ -43,10 +39,7 @@ class CardAppService
         string $card_expiration_date,
         string $card_password,
         string $tax_id
-    ): PaymentMethodDto {
-        $pg = PgAppService::getActivePg();
-        $pg_handler = PgHandlerFactory::create($pg->name);
-
+    ): void {
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
 
@@ -57,16 +50,16 @@ class CardAppService
                 UserAppService::createUser($u_idx);
             }
 
-            $payment_method = CardService::registerCard(
+            $card_registration_validator = new CardRegistrationValidator($u_idx);
+            $card_registration_validator->validate();
+
+            CardService::registerCard(
                 $u_idx,
                 $card_number,
                 $card_expiration_date,
                 $card_password,
-                $tax_id,
-                $pg->id,
-                $pg_handler
+                $tax_id
             );
-            UserActionHistoryService::logAddCard($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -78,8 +71,6 @@ class CardAppService
 
             throw $t;
         }
-
-        return PaymentMethodDtoFactory::create($payment_method);
     }
 
     /**

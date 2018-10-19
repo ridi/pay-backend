@@ -82,10 +82,15 @@ class UserInformationInquiryTest extends ControllerTestCase
     {
         $user_indices = [TestUtil::getRandomUidx(), TestUtil::getRandomUidx(), TestUtil::getRandomUidx()];
 
-        UserAppService::createUser($user_indices[0]);
-        UserAppService::createPin($user_indices[0], '123456');
-        UserAppService::enableOnetouchPay($user_indices[0]);
-        $payment_method_id = TestUtil::createCard($user_indices[0]);
+        $payment_method_id = TestUtil::signUp(
+            $user_indices[0],
+            '123456',
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
 
         UserAppService::createUser($user_indices[1]);
         UserAppService::deleteUser($user_indices[1]);

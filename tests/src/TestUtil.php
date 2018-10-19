@@ -16,9 +16,16 @@ use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Entity\PgEntity;
 use RidiPay\User\Application\Service\CardAppService;
+use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Entity\CardIssuerEntity;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
+use RidiPay\User\Domain\Exception\NotFoundUserException;
+use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
+use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
+use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
+use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 
 class TestUtil
 {
@@ -116,25 +123,52 @@ class TestUtil
 
     /**
      * @param int $u_idx
+     * @param string $pin
+     * @param bool $enable_onetouch_pay
+     * @param string $card_number
+     * @param string $card_expiration_date
+     * @param string $card_password
+     * @param string $tax_id
      * @return string
      * @throws CardAlreadyExistsException
      * @throws CardRegistrationException
      * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws OnetouchPaySettingChangeDeclinedException
+     * @throws UnregisteredPaymentMethodException
+     * @throws UnsupportedPaymentMethodException
      * @throws UnsupportedPgException
+     * @throws WrongFormattedPinException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function createCard(int $u_idx): string
-    {
-        $payment_method = CardAppService::registerCard(
+    public static function signUp(
+        int $u_idx,
+        string $pin,
+        bool $enable_onetouch_pay,
+        string $card_number,
+        string $card_expiration_date,
+        string $card_password,
+        string $tax_id
+    ) {
+        CardAppService::registerCard(
             $u_idx,
-            self::CARD['CARD_NUMBER'],
-            self::CARD['CARD_EXPIRATION_DATE'],
-            self::CARD['CARD_PASSWORD'],
-            self::TAX_ID
+            $card_number,
+            $card_expiration_date,
+            $card_password,
+            $tax_id
         );
+        UserAppService::createPin($u_idx, $pin);
 
-        return $payment_method->payment_method_id;
+        if ($enable_onetouch_pay) {
+            UserAppService::enableOnetouchPay($u_idx);
+        } else {
+            UserAppService::disableOnetouchPay($u_idx);
+        }
+
+        $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+
+        return $payment_methods->cards[0]->payment_method_id;
     }
 }

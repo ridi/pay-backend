@@ -16,10 +16,12 @@ use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
+use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Repository\UserRepository;
 use RidiPay\User\Domain\Service\AbuseBlocker;
+use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 
@@ -152,6 +154,7 @@ class UserAppService
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws OnetouchPaySettingChangeDeclinedException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -164,6 +167,10 @@ class UserAppService
         $em->beginTransaction();
 
         try {
+            if (!$user->hasOnetouchPaySetting()) {
+                CardService::useRegisteredCard($u_idx);
+            }
+
             $user->enableOnetouchPay();
             UserRepository::getRepository()->save($user);
 
@@ -186,6 +193,7 @@ class UserAppService
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws OnetouchPaySettingChangeDeclinedException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -198,6 +206,10 @@ class UserAppService
         $em->beginTransaction();
 
         try {
+            if (!$user->hasOnetouchPaySetting()) {
+                CardService::useRegisteredCard($u_idx);
+            }
+
             $user->disableOnetouchPay();
             UserRepository::getRepository()->save($user);
 

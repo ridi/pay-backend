@@ -37,10 +37,6 @@ class OneTimePaymentTest extends ControllerTestCase
 
     public static function setUpBeforeClass()
     {
-        self::$u_idx = TestUtil::getRandomUidx();
-        UserAppService::createUser(self::$u_idx);
-
-        self::$payment_method_id = TestUtil::createCard(self::$u_idx);
         self::$partner = PartnerAppService::registerPartner('one-time-payment', 'test@12345', true);
 
         self::$client = self::createClient(
@@ -50,19 +46,27 @@ class OneTimePaymentTest extends ControllerTestCase
                 'HTTP_Secret-Key' => self::$partner->secret_key
             ]
         );
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
         TestUtil::setUpJwtDoubles();
     }
 
     public static function tearDownAfterClass()
     {
         TestUtil::tearDownJwtDoubles();
-        TestUtil::tearDownOAuth2Doubles();
     }
 
     public function testOneTimePaymentLifeCycleInCaseOfOnetouchPay()
     {
-        UserAppService::enableOnetouchPay(self::$u_idx);
+        self::$u_idx = TestUtil::getRandomUidx();
+        self::$payment_method_id = TestUtil::signUp(
+            self::$u_idx,
+            '123456',
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
 
         // 결제 수단 조회
         $this->assertGetPaymentMethodsSuccessfully();
@@ -99,13 +103,24 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 결제 취소
         $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
+
+        TestUtil::tearDownOAuth2Doubles();
     }
 
     public function testOneTimePaymentLifeCycleCaseInCaseOfPinValidation()
     {
         $pin = '123456';
-        UserAppService::createPin(self::$u_idx, $pin);
-        UserAppService::disableOnetouchPay(self::$u_idx);
+        self::$u_idx = TestUtil::getRandomUidx();
+        self::$payment_method_id = TestUtil::signUp(
+            self::$u_idx,
+            $pin,
+            false,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
 
         // 결제 수단 조회
         $this->assertGetPaymentMethodsSuccessfully();
@@ -142,6 +157,8 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 결제 취소
         $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
+
+        TestUtil::tearDownOAuth2Doubles();
     }
 
     private function assertGetPaymentMethodsSuccessfully()
