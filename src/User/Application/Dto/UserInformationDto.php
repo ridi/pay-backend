@@ -26,9 +26,9 @@ class UserInformationDto
     public $has_pin;
 
     /**
-     * @OA\Property(example=false)
+     * @OA\Property(example=false, nullable=true)
      *
-     * @var bool
+     * @var null|bool
      */
     public $is_using_onetouch_pay;
 

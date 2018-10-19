@@ -229,13 +229,13 @@ class UserAppService
 
     /**
      * @param int $u_idx
-     * @return bool
+     * @return null|bool
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function isUsingOnetouchPay(int $u_idx): bool
+    public static function isUsingOnetouchPay(int $u_idx): ?bool
     {
         $user = self::getUser($u_idx);
 
