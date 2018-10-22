@@ -137,11 +137,6 @@ class UserController extends BaseController
     {
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-            foreach ($payment_methods->cards as $card) {
-                unset($card->color);
-                unset($card->logo_image_url);
-                unset($card->subscriptions);
-            }
         } catch (\Throwable $t) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
