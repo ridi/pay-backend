@@ -42,6 +42,7 @@ class UserInformationInquiryTest extends ControllerTestCase
         $this->assertSame($http_status_code, $response_status_code);
         if ($response_status_code === Response::HTTP_OK) {
             $expected_response = json_encode([
+                'user_id' => TestUtil::U_ID,
                 'payment_methods' => [
                     'cards' => [
                         [

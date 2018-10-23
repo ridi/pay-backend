@@ -171,6 +171,9 @@ class OneTimePaymentTest extends ControllerTestCase
                 [
                     'iin' => substr(TestUtil::CARD['CARD_NUMBER'], 0, 6),
                     'issuer_name' => '신한카드',
+                    'color' => '#000000',
+                    'logo_image_url' => '',
+                    'subscriptions' => [],
                     'payment_method_id' => self::$payment_method_id
                 ]
             ]

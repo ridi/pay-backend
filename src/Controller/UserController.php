@@ -169,7 +169,33 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent(ref="#/components/schemas/UserInformationDto")
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"user_id", "payment_methods", "has_pin", "is_using_onetouch_pay"},
+     *       @OA\Property(
+     *         property="user_id",
+     *         type="string",
+     *         description="RIDIBOOKS Username",
+     *         example="johndoe"
+     *       ),
+     *       @OA\Property(
+     *         property="payment_methods",
+     *         ref="#/components/schemas/AvailablePaymentMethodsDto"
+     *       ),
+     *       @OA\Property(
+     *         property="has_pin",
+     *         type="boolean",
+     *         description="결제 비밀번호 등록 여부",
+     *         example=true
+     *       ),
+     *       @OA\Property(
+     *         property="is_using_onetouch_pay",
+     *         type="boolean",
+     *         description="원터치 결제 이용 여부",
+     *         example=true,
+     *         nullable=true
+     *       )
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -224,6 +250,7 @@ class UserController extends BaseController
         }
 
         return self::createSuccessResponse([
+            'user_id' => $this->getUid(),
             'payment_methods' => $user_information->payment_methods,
             'has_pin' => $user_information->has_pin,
             'is_using_onetouch_pay' => $user_information->is_using_onetouch_pay
