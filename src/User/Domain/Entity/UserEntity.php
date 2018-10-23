@@ -100,6 +100,11 @@ class UserEntity
         $this->pin = self::hashPin($pin);
     }
 
+    public function deletePin(): void
+    {
+        $this->pin = null;
+    }
+
     /**
      * @param string $pin
      * @throws WrongFormattedPinException
@@ -181,6 +186,11 @@ class UserEntity
         }
 
         $this->is_using_onetouch_pay = false;
+    }
+
+    public function deleteOnetouchPay(): void
+    {
+        $this->is_using_onetouch_pay = null;
     }
 
     /**

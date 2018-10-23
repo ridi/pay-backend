@@ -121,6 +121,21 @@ class UserAppService
 
     /**
      * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function deletePin(int $u_idx): void
+    {
+        $user = self::getUser($u_idx);
+        $user->deletePin();
+
+        UserRepository::getRepository()->save($user);
+    }
+
+    /**
+     * @param int $u_idx
      * @param string $pin
      * @throws LeavedUserException
      * @throws NotFoundUserException
@@ -222,6 +237,21 @@ class UserAppService
 
             throw $t;
         }
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function deleteOnetouchpay(int $u_idx): void
+    {
+        $user = self::getUser($u_idx);
+        $user->deleteOnetouchPay();
+
+        UserRepository::getRepository()->save($user);
     }
 
     /**

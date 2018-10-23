@@ -104,6 +104,11 @@ class CardAppService
             UserActionHistoryService::logDeleteCard($u_idx);
             // TODO: first-party 정기 결제 해지 요청
 
+            if (empty($payment_method_repo->getAvailablePaymentMethods($u_idx))) {
+                UserAppService::deletePin($u_idx);
+                UserAppService::deleteOnetouchPay($u_idx);
+            }
+
             $em->commit();
         } catch (\Throwable $t) {
             $em->rollback();

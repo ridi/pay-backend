@@ -118,10 +118,12 @@ class ManageCardTest extends ControllerTestCase
         $response_content = json_decode($client->getResponse()->getContent());
         if (isset($response_content->code)) {
             $this->assertSame($error_code, $response_content->code);
+        } else {
+            $user = UserAppService::getUserInformation($u_idx);
+            $this->assertEmpty($user->payment_methods->cards);
+            $this->assertFalse($user->has_pin);
+            $this->assertNull($user->is_using_onetouch_pay);
         }
-
-        $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-        $this->assertEmpty($payment_methods->cards);
 
         TestUtil::tearDownOAuth2Doubles();
     }
