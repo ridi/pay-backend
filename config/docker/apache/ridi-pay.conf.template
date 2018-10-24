@@ -1,4 +1,4 @@
-ServerName ${DOMAIN}
+ServerName ridi-pay
 
 ErrorLog /dev/stderr
 TransferLog /dev/stdout

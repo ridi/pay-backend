@@ -17,10 +17,15 @@ if ($env === false) {
     throw new \RuntimeException('APP_ENV environment variables is not defined.');
 }
 
-$is_dev = ($env !== 'prod');
+$is_dev = ($env === 'dev');
 if ($is_dev) {
     $dotenv_file_path = __DIR__ . '/../.env';
     if (file_exists($dotenv_file_path)) {
+        if (!class_exists(Dotenv::class)) {
+            throw new \RuntimeException(
+                'Add "symfony/dotenv" as a Composer dependency to load variables from a .env file.'
+            );
+        }
         (new Dotenv())->load($dotenv_file_path);
     }
 

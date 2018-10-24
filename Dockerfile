@@ -28,14 +28,11 @@ RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache
 
 RUN pip3 install awscli
 
-ARG DOMAIN
-ENV DOMAIN ${DOMAIN}
-
 RUN a2enmod rewrite
 RUN a2dissite 000-default && rm /etc/apache2/sites-available/000-default.conf
-COPY /config/docker/apache/ridi-pay.conf.template /tmp/${DOMAIN}.conf
-RUN envsubst < /tmp/${DOMAIN}.conf > /etc/apache2/sites-available/${DOMAIN}.conf
-RUN a2ensite ${DOMAIN}
+COPY /config/docker/apache/ridi-pay.conf.template /tmp/ridi-pay.conf
+RUN envsubst < /tmp/ridi-pay.conf > /etc/apache2/sites-available/ridi-pay.conf
+RUN a2ensite ridi-pay
 
 # Install composer
 RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \

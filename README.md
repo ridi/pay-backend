@@ -35,7 +35,7 @@ aws-vault exec <profile_name> -- docker-compose up [--build]
 
 #### 3. 로컬 `/etc/hosts`에 아래 내용 추가
 ```
-127.0.0.1 api.pay.ridi.io
+127.0.0.1 api.pay.local.ridi.io
 ```
 
 #### 4. https://api.pay.ridi.io 접속

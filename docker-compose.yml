@@ -11,17 +11,14 @@ services:
     ports:
       - 80:80
       - 443:443
-  apache:
-    image: ridi/pay:latest
-    container_name: apache
-    build:
-      context: .
-      args:
-        DOMAIN: api.pay.ridi.io
+  api:
+    container_name: api
+    build: .
     ports:
       - 80
     environment:
       - VIRTUAL_HOST=api.pay.ridi.io
+      - APP_ENV=dev
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
