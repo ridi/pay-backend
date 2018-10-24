@@ -38,7 +38,7 @@ aws-vault exec <profile_name> -- docker-compose up [--build]
 127.0.0.1 api.pay.local.ridi.io
 ```
 
-#### 4. https://api.pay.ridi.io 접속
+#### 4. https://api.pay.local.ridi.io 접속
 
 ## Overriding environment variables
 - 개발 환경의 편의를 위해 AWS Parameter Store 내 Environment Variables가 정의되어 있습니다.

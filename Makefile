@@ -8,9 +8,9 @@ composer:
 mkcert:
 	mkcert -install
 	[ -d config/certs ] || mkdir -p config/certs
-	cd config/certs/ && mkcert api.pay.ridi.io \
-	&& mv api.pay.ridi.io.pem api.pay.ridi.io.crt \
-	&& mv api.pay.ridi.io-key.pem api.pay.ridi.io.key
+	cd config/certs/ && mkcert api.pay.local.ridi.io \
+	&& mv api.pay.local.ridi.io.pem api.pay.local.ridi.io.crt \
+	&& mv api.pay.local.ridi.io-key.pem api.pay.local.ridi.io.key
 
 phpunit:
 	docker exec -it apache vendor/bin/phpunit
