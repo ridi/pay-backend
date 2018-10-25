@@ -13,7 +13,7 @@ mkcert:
 	&& mv api.pay.local.ridi.io-key.pem api.pay.local.ridi.io.key
 
 phpunit:
-	docker exec -it apache vendor/bin/phpunit
+	docker exec -it api vendor/bin/phpunit
 
 phpcs:
-	docker exec -it apache vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml
+	docker exec -it api vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml
