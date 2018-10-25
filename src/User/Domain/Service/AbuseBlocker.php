@@ -60,6 +60,16 @@ class AbuseBlocker
     }
 
     /**
+     * @return int
+     */
+    public function getRemainedTryCount(): int
+    {
+        $try_count = intval($this->redis->hget($this->getKey(), self::FIELD_TRY_COUNT));
+
+        return $this->policy->getBlockThreshold() - $try_count;
+    }
+
+    /**
      * @return string
      */
     private function getKey(): string

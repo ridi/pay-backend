@@ -6,10 +6,10 @@ namespace RidiPay\User\Domain\Exception;
 class UnmatchedPinException extends \Exception
 {
     /**
-     * @param string $message
+     * @param int $remained_try_count
      */
-    public function __construct(string $message = '결제 비밀번호를 올바르게 입력해주세요.')
+    public function __construct(int $remained_try_count)
     {
-        parent::__construct($message);
+        parent::__construct("비밀번호가 일치하지 않습니다. ({$remained_try_count}회 남음)");
     }
 }
