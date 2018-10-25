@@ -71,7 +71,7 @@ class TransactionStatusDto
         $this->approved_at = $transaction->getApprovedAt();
         $this->canceled_at = $transaction->getCanceledAt();
 
-        if ($payment_method->isCard() && $transaction->isApproved()) {
+        if ($payment_method->isCard() && !$transaction->isReserved()) {
             $pg = PgAppService::getPgById($transaction->getPgId());
             $pg_handler = PgHandlerFactory::create($pg->name);
             $this->card_receipt_url = $pg_handler->getCardReceiptUrl($transaction);
