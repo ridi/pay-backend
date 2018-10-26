@@ -5,6 +5,7 @@ namespace RidiPay\Transaction\Application\Service;
 
 use Predis\Client;
 use Ramsey\Uuid\Uuid;
+use RidiPay\Kernel;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\SentryHelper;
@@ -198,7 +199,7 @@ class TransactionAppService
         $transaction = self::getTransaction($transaction_id);
 
         $pg = PgAppService::getPgById($transaction->getPgId());
-        $pg_handler = PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
         $response = $pg_handler->approveTransaction($transaction);
 
         $em = EntityManagerProvider::getEntityManager();
@@ -269,7 +270,7 @@ class TransactionAppService
         \DateTime $subscribed_at
     ): ApproveTransactionDto {
         $pg = PgAppService::getActivePg();
-        $pg_handler = PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
 
         $transaction = new TransactionEntity(
             $u_idx,
@@ -347,7 +348,7 @@ class TransactionAppService
         $transaction = self::getTransaction($transaction_id);
 
         $pg = PgAppService::getPgById($transaction->getPgId());
-        $pg_handler = PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
         $cancel_reason = '고객 결제 취소';
         $response = $pg_handler->cancelTransaction($transaction->getPgTransactionId(), $cancel_reason);
 

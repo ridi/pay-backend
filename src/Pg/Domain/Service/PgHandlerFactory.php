@@ -18,7 +18,37 @@ class PgHandlerFactory
     {
         switch ($pg_name) {
             case PgConstant::KCP:
-                return new KcpHandler();
+                return KcpHandler::create();
+            default:
+                throw new UnsupportedPgException();
+        }
+    }
+
+    /**
+     * @param string $pg_name
+     * @return KcpHandler
+     * @throws UnsupportedPgException
+     */
+    public static function createWithTaxDeduction(string $pg_name): PgHandlerInterface
+    {
+        switch ($pg_name) {
+            case PgConstant::KCP:
+                return KcpHandler::createWithTaxDeduction();
+            default:
+                throw new UnsupportedPgException();
+        }
+    }
+
+    /**
+     * @param string $pg_name
+     * @return PgHandlerInterface
+     * @throws UnsupportedPgException
+     */
+    public static function createWithTest(string $pg_name): PgHandlerInterface
+    {
+        switch ($pg_name) {
+            case PgConstant::KCP:
+                return KcpHandler::createWithTest();
             default:
                 throw new UnsupportedPgException();
         }

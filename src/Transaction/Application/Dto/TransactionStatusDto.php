@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Application\Dto;
 
+use RidiPay\Kernel;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
@@ -73,7 +74,7 @@ class TransactionStatusDto
 
         if ($payment_method->isCard() && !$transaction->isReserved()) {
             $pg = PgAppService::getPgById($transaction->getPgId());
-            $pg_handler = PgHandlerFactory::create($pg->name);
+            $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
             $this->card_receipt_url = $pg_handler->getCardReceiptUrl($transaction);
         }
     }

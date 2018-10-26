@@ -19,11 +19,13 @@ use RidiPay\User\Domain\Exception\UnavailableCardPurposeException;
  */
 class CardEntity
 {
-    private const PURPOSE_ONE_TIME = 'ONE_TIME'; // 단건 결제
+    private const PURPOSE_ONE_TIME = 'ONE_TIME'; // 소득 공제 불가능 단건 결제
+    private const PURPOSE_ONE_TIME_TAX_DEDUCTION = 'ONE_TIME_TAX_DEDUCTION'; // 소득 공제 가능 단건 결제
     private const PURPOSE_BILLING = 'BILLING'; // 정기 결제
 
     private const AVAILABLE_PURPOSES = [
         self::PURPOSE_ONE_TIME,
+        self::PURPOSE_ONE_TIME_TAX_DEDUCTION,
         self::PURPOSE_BILLING
     ];
 
@@ -96,10 +98,10 @@ class CardEntity
      *   name="purpose",
      *   type="string",
      *   nullable=false,
-     *   columnDefinition="ENUM('ONE_TIME','BILLING')",
+     *   columnDefinition="ENUM('ONE_TIME','ONE_TIME_TAX_DEDUCTION','BILLING')",
      *   options={
      *     "default"="ONE_TIME",
-     *     "comment"="용도(ONE_TIME: 단건 결제, BILLING: 정기 결제)"
+     *     "comment"="용도(ONE_TIME: 소득 공제 불가능 단건 결제, ONE_TIME_TAX_DEDUCTION: 소득 공제 가능 단건 결제, BILLING: 정기 결제)"
      *   }
      * )
      */
@@ -122,6 +124,25 @@ class CardEntity
         string $card_number
     ): CardEntity {
         return new self($payment_method, $card_issuer, $pg_id, $pg_bill_key, $card_number, self::PURPOSE_ONE_TIME);
+    }
+
+    /**
+     * @param PaymentMethodEntity $payment_method
+     * @param CardIssuerEntity $card_issuer
+     * @param int $pg_id
+     * @param string $pg_bill_key
+     * @param string $card_number
+     * @return CardEntity
+     * @throws UnavailableCardPurposeException
+     */
+    public static function createForOneTimePaymentWithTaxDeduction(
+        PaymentMethodEntity $payment_method,
+        CardIssuerEntity $card_issuer,
+        int $pg_id,
+        string $pg_bill_key,
+        string $card_number
+    ): CardEntity {
+        return new self($payment_method, $card_issuer, $pg_id, $pg_bill_key, $card_number, self::PURPOSE_ONE_TIME_TAX_DEDUCTION);
     }
 
     /**

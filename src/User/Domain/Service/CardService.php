@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\User\Domain\Service;
 
 use Predis\Client;
+use RidiPay\Kernel;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
@@ -36,9 +37,19 @@ class CardService
         string $card_password,
         string $tax_id
     ): void {
+        $is_dev = Kernel::isDev();
         $pg = PgRepository::getRepository()->findActiveOne();
-        $pg_handler = PgHandlerFactory::create($pg->getName());
+
+        $pg_handler = $is_dev
+            ? PgHandlerFactory::createWithTest($pg->getName())
+            : PgHandlerFactory::create($pg->getName());
         $response = $pg_handler->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
+
+        $pg_handler_with_tax_deduction = $is_dev
+            ? PgHandlerFactory::createWithTest($pg->getName())
+            : PgHandlerFactory::createWithTaxDeduction($pg->getName());
+        $response_with_tax_deduction = $pg_handler_with_tax_deduction
+            ->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
 
         $card_registration_key = self::getCardRegistrationKey($u_idx);
         $redis = self::getRedisClient();
@@ -48,7 +59,8 @@ class CardService
                 'iin' => substr($card_number, 0, 6),
                 'card_issuer_code' => $response->getCardIssuerCode(),
                 'pg_id' => $pg->getId(),
-                'pg_bill_key' => $response->getPgBillKey()
+                'pg_bill_key' => $response->getPgBillKey(),
+                'pg_tax_deduction_bill_key' => $response_with_tax_deduction->getPgBillKey()
             ]
         );
         $redis->expire($card_registration_key, TimeUnitConstant::SEC_IN_HOUR);
@@ -93,6 +105,9 @@ class CardService
             $payment_method = PaymentMethodEntity::createForCard($u_idx);
             PaymentMethodRepository::getRepository()->save($payment_method);
 
+            $card_repo = CardRepository::getRepository();
+            $cards = [];
+
             $card_for_one_time_payment = CardEntity::createForOneTimePayment(
                 $payment_method,
                 $card_issuer,
@@ -100,6 +115,19 @@ class CardService
                 $card_registration['pg_bill_key'],
                 $card_registration['iin']
             );
+            $card_repo->save($card_for_one_time_payment);
+            $cards[] = $card_for_one_time_payment;
+
+            $card_for_one_time_payment_with_tax_deduction = CardEntity::createForOneTimePaymentWithTaxDeduction(
+                $payment_method,
+                $card_issuer,
+                $pg_id,
+                $card_registration['pg_tax_deduction_bill_key'],
+                $card_registration['iin']
+            );
+            $card_repo->save($card_for_one_time_payment_with_tax_deduction);
+            $cards[] = $card_for_one_time_payment_with_tax_deduction;
+
             $card_for_billing_payment = CardEntity::createForBillingPayment(
                 $payment_method,
                 $card_issuer,
@@ -107,11 +135,10 @@ class CardService
                 $card_registration['pg_bill_key'],
                 $card_registration['iin']
             );
-            $card_repo = CardRepository::getRepository();
-            $card_repo->save($card_for_one_time_payment);
             $card_repo->save($card_for_billing_payment);
+            $cards[] = $card_for_billing_payment;
 
-            $payment_method->setCards($card_for_one_time_payment, $card_for_billing_payment);
+            $payment_method->setCards($cards);
             PaymentMethodRepository::getRepository()->save($payment_method);
 
             UserActionHistoryService::logAddCard($u_idx);

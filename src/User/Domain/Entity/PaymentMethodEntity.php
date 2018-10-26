@@ -207,11 +207,10 @@ class PaymentMethodEntity
     }
 
     /**
-     * @param CardEntity $card_for_one_time_payment
-     * @param CardEntity $card_for_billing_payment
+     * @param CardEntity[] $cards
      */
-    public function setCards(CardEntity $card_for_one_time_payment, CardEntity $card_for_billing_payment): void
+    public function setCards(array $cards): void
     {
-        $this->cards = [$card_for_one_time_payment, $card_for_billing_payment];
+        $this->cards = $cards;
     }
 }

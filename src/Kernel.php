@@ -16,6 +16,9 @@ class Kernel extends BaseKernel
 
     private const CONFIG_EXTS = '.{php,yaml,yml}';
 
+    private const PRODUCTION_ENVIRONMENTS = ['prod', 'staging'];
+    private const DEVELOPMENT_ENVIRONMENTS = ['dev', 'test', 'phpunit'];
+
     public function getCacheDir()
     {
         return $this->getProjectDir() . '/var/cache/' . $this->environment;
@@ -51,5 +54,13 @@ class Kernel extends BaseKernel
     protected function configureRoutes(RouteCollectionBuilder $routes)
     {
         $routes->import($this->getProjectDir() . '/src/Controller/', '/', 'annotation');
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isDev(): bool
+    {
+        return in_array(getenv('APP_ENV'), self::DEVELOPMENT_ENVIRONMENTS);
     }
 }

@@ -22,21 +22,58 @@ use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class KcpHandler implements PgHandlerInterface
 {
-    /** @var bool */
-    private $is_dev;
-
     /** @var Client */
     private $client;
 
-    public function __construct()
-    {
-        $this->is_dev = getenv('APP_ENV') !== 'prod';
+    /** @var bool */
+    private $is_prod;
 
-        if ($this->is_dev) {
-            $this->client = Client::getTestClient();
-        } else {
-            $this->client = new Client(getenv('KCP_SITE_CODE'), getenv('KCP_SITE_KEY'), getenv('KCP_GROUP_ID'));
-        }
+    /**
+     * @return KcpHandler
+     */
+    public static function create(): KcpHandler
+    {
+        $client = new Client(
+            getenv('KCP_SITE_CODE'),
+            getenv('KCP_SITE_KEY'),
+            getenv('KCP_GROUP_ID')
+        );
+
+        return new KcpHandler($client, true);
+    }
+
+    /**
+     * @return KcpHandler
+     */
+    public static function createWithTaxDeduction(): KcpHandler
+    {
+        $client = new Client(
+            getenv('KCP_TAX_DEDUCTION_SITE_CODE'),
+            getenv('KCP_TAX_DEDUCTION_SITE_KEY'),
+            getenv('KCP_TAX_DEDUCTION_GROUP_ID')
+        );
+
+        return new KcpHandler($client, true);
+    }
+
+    /**
+     * @return KcpHandler
+     */
+    public static function createWithTest(): KcpHandler
+    {
+        $client = Client::getTestClient();
+
+        return new KcpHandler($client, false);
+    }
+
+    /**
+     * @param Client $client
+     * @param bool $is_prod
+     */
+    private function __construct(Client $client, bool $is_prod)
+    {
+        $this->client = $client;
+        $this->is_prod = $is_prod;
     }
 
     /**
@@ -150,7 +187,7 @@ class KcpHandler implements PgHandlerInterface
             $transaction->getUuid()->toString(),
             $transaction->getAmount(),
             Util::RECEIPT_LANG_KO,
-            !$this->is_dev
+            $this->is_prod
         );
     }
 

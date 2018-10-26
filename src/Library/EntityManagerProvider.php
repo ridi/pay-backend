@@ -6,6 +6,7 @@ namespace RidiPay\Library;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Proxy\ProxyFactory;
 use Doctrine\ORM\Tools\Setup;
+use RidiPay\Kernel;
 
 class EntityManagerProvider
 {
@@ -39,7 +40,7 @@ class EntityManagerProvider
      */
     protected static function createEntityManager(string $connection_group): EntityManager
     {
-        $is_dev_mode = getenv('APP_ENV') !== 'prod';
+        $is_dev = Kernel::isDev();
         $config = Setup::createAnnotationMetadataConfiguration(
             [
                 __DIR__ . '/../Partner',
@@ -47,10 +48,10 @@ class EntityManagerProvider
                 __DIR__ . '/../Transaction',
                 __DIR__ . '/../User',
             ],
-            $is_dev_mode
+            $is_dev
         );
 
-        if ($is_dev_mode) {
+        if ($is_dev) {
             $config->setAutoGenerateProxyClasses(ProxyFactory::AUTOGENERATE_EVAL);
         } else {
             $entity_version = getenv('GIT_REVISION');
