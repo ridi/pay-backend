@@ -8,6 +8,7 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
+use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -102,7 +103,8 @@ class CardAppService
             $payment_method_repo->save($payment_method);
 
             UserActionHistoryService::logDeleteCard($u_idx);
-            // TODO: first-party 정기 결제 해지 요청
+
+            SubscriptionAppService::unsubscribe($payment_method->getId());
 
             if (empty($payment_method_repo->getAvailablePaymentMethods($u_idx))) {
                 UserAppService::initializePinEntryHistory($u_idx);

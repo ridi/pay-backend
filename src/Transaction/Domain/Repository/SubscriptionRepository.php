@@ -20,6 +20,18 @@ class SubscriptionRepository extends BaseEntityRepository
     }
 
     /**
+     * @param int $payment_method_id
+     * @return SubscriptionEntity[]
+     */
+    public function findSubscribedOnesByPaymentMethodId(int $payment_method_id): array
+    {
+        return $this->findBy([
+            'payment_method_id' => $payment_method_id,
+            'unsubscribed_at' => null
+        ]);
+    }
+
+    /**
      * @return SubscriptionRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException

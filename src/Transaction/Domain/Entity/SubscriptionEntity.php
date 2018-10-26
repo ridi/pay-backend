@@ -145,4 +145,17 @@ class SubscriptionEntity
     {
         return $this->subscribed_at;
     }
+
+    /**
+     * @return \DateTime
+     */
+    public function getUnsubscribedAt(): \DateTime
+    {
+        return $this->unsubscribed_at;
+    }
+
+    public function unsubscribe(): void
+    {
+        $this->unsubscribed_at = new \DateTime();
+    }
 }

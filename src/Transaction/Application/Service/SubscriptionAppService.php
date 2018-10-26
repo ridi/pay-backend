@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Application\Service;
 
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Transaction\Application\Dto\SubscriptionDto;
@@ -45,6 +46,36 @@ class SubscriptionAppService
     }
 
     /**
+     * TODO: first-party 정기 결제 해지 요청
+     *
+     * @param int $payment_method_id
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function unsubscribe(int $payment_method_id)
+    {
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $subscription_repo = SubscriptionRepository::getRepository();
+            $subscriptions = $subscription_repo->findSubscribedOnesByPaymentMethodId($payment_method_id);
+            foreach ($subscriptions as $subscription) {
+                $subscription->unsubscribe();
+                $subscription_repo->save($subscription);
+            }
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
+    }
+
+    /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
      * @param string $subscription_id
@@ -83,5 +114,23 @@ class SubscriptionAppService
         );
 
         return new SubscriptionPaymentDto($approve_transaction_dto, $subscription);
+    }
+
+    /**
+     * @param int $payment_method_id
+     * @return string[]
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getSubscribedProductNames(int $payment_method_id)
+    {
+        $subscriptions = SubscriptionRepository::getRepository()->findSubscribedOnesByPaymentMethodId($payment_method_id);
+
+        return array_map(
+            function (SubscriptionEntity $subscription) {
+                return $subscription->getProductName();
+            },
+            $subscriptions
+        );
     }
 }
