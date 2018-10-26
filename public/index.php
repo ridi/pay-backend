@@ -17,8 +17,7 @@ if ($env === false) {
     throw new \RuntimeException('APP_ENV environment variables is not defined.');
 }
 
-$is_dev = Kernel::isDev();
-if ($is_dev) {
+if (Kernel::isLocal()) {
     $dotenv_file_path = __DIR__ . '/../.env';
     if (file_exists($dotenv_file_path)) {
         if (!class_exists(Dotenv::class)) {
@@ -50,7 +49,7 @@ if ($sentry_dsn) {
     SentryHelper::registerClient($sentry_dsn, $options);
 }
 
-$kernel = new Kernel($env, $is_dev);
+$kernel = new Kernel($env, Kernel::isDev());
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
 $response->send();

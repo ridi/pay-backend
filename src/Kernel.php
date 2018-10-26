@@ -16,8 +16,21 @@ class Kernel extends BaseKernel
 
     private const CONFIG_EXTS = '.{php,yaml,yml}';
 
-    private const PRODUCTION_ENVIRONMENTS = ['prod', 'staging'];
-    private const DEVELOPMENT_ENVIRONMENTS = ['dev', 'test', 'phpunit'];
+    private const ENV_LOCAL = 'dev';
+    private const ENV_PHPUNIT = 'phpunit';
+    private const ENV_TEST = 'test';
+    private const ENV_STAGING = 'staging';
+    private const ENV_PROD = 'prod';
+
+    private const PRODUCTION_ENVIRONMENTS = [
+        self::ENV_STAGING,
+        self::ENV_PROD
+    ];
+    private const DEVELOPMENT_ENVIRONMENTS = [
+        self::ENV_LOCAL,
+        self::ENV_PHPUNIT,
+        self::ENV_TEST,
+    ];
 
     public function getCacheDir()
     {
@@ -61,6 +74,22 @@ class Kernel extends BaseKernel
      */
     public static function isDev(): bool
     {
-        return in_array(getenv('APP_ENV'), self::DEVELOPMENT_ENVIRONMENTS);
+        return in_array(self::getEnv(), self::DEVELOPMENT_ENVIRONMENTS);
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isLocal(): bool
+    {
+        return self::getEnv() === self::ENV_LOCAL;
+    }
+
+    /**
+     * @return string
+     */
+    private static function getEnv(): string
+    {
+        return getenv('APP_ENV');
     }
 }
