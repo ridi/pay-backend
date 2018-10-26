@@ -42,7 +42,7 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" &&
     mv composer.phar /usr/local/bin/composer
 
 COPY . /app
-RUN mkdir -p /htdocs/app/var && chmod -R 777 /htdocs/app/var
+RUN mkdir -p /app/var && chmod -R 777 /app/var
 
 COPY ./docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
