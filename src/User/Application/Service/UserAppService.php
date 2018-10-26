@@ -357,6 +357,16 @@ class UserAppService
 
     /**
      * @param int $u_idx
+     */
+    public static function initializePinEntryHistory(int $u_idx): void
+    {
+        $policy = new PinEntryAbuseBlockPolicy();
+        $abuse_blocker = new AbuseBlocker($policy, $u_idx);
+        $abuse_blocker->initialize();
+    }
+
+    /**
+     * @param int $u_idx
      * @param string $entered_validation_token
      * @throws UnauthorizedPinChangeException
      */

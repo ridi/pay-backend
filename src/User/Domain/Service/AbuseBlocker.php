@@ -69,6 +69,11 @@ class AbuseBlocker
         return $this->policy->getBlockThreshold() - $try_count;
     }
 
+    public function initialize(): void
+    {
+        $this->redis->del([$this->getKey()]);
+    }
+
     /**
      * @return string
      */
