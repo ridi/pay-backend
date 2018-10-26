@@ -1,0 +1,7 @@
+version: 1
+
+task_definition:
+  services:
+    api:
+      mem_limit: 256m
+      mem_reservation: 128m
