@@ -12,3 +12,18 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - GIT_REVISION=${GIT_REVISION}
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: ${APP_ENV}.ridi-pay.backend.api
+  fluentd:
+    build: ./config/docker/fluentd
+    container_name: fluentd
+    ports:
+      - 24224:24224
+    volumes:
+      - ./config/docker/fluentd:/fluentd/etc
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}

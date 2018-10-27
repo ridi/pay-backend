@@ -24,6 +24,22 @@ services:
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
       - .:/app
+    logging:
+      driver: fluentd
+      options:
+        fluentd-address: localhost:24224
+        tag: ridi-pay.backend.api
+    depends_on:
+      - fluentd
+  fluentd:
+    build: ./config/docker/fluentd
+    container_name: fluentd
+    ports:
+      - 24224:24224
+    volumes:
+      - ./config/docker/fluentd:/fluentd/etc
+    environment:
+      - FLUENTD_CONF=fluent.local.conf
   mariadb:
     image: mariadb:10.3
     container_name: mariadb
