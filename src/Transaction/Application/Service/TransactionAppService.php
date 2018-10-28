@@ -375,6 +375,15 @@ class TransactionAppService
             $logger = new StdoutLogger(__METHOD__);
             $logger->error($t->getMessage());
 
+            $data = [
+                'extra' => [
+                    'partner_transaction_id' => $transaction->getPartnerTransactionId(),
+                    'transaction_id' => $transaction->getId(),
+                    'pg_transaction_id' => $transaction->getPgTransactionId()
+                ]
+            ];
+            SentryHelper::captureMessage('PG사 결제 취소 성공 후, 내부 취소 처리 중 오류 발생', [], $data, true);
+
             throw $t;
         }
 

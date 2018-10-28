@@ -183,6 +183,14 @@ class TransactionEntity
     }
 
     /**
+     * @return int
+     */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
      * @return UuidInterface
      */
     public function getUuid(): UuidInterface
