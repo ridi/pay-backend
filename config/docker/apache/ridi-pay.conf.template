@@ -1,3 +1,6 @@
+ServerTokens Prod
+ServerSignature Off
+
 ServerName ridi-pay
 
 ErrorLog /dev/stderr
