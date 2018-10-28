@@ -29,6 +29,7 @@ class CardService
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public static function registerCard(
         int $u_idx,
@@ -44,12 +45,18 @@ class CardService
             ? PgHandlerFactory::createWithTest($pg->getName())
             : PgHandlerFactory::create($pg->getName());
         $response = $pg_handler->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
+        if (!$response->isSuccess()) {
+            throw new CardRegistrationException($response->getResponseMessage());
+        }
 
         $pg_handler_with_tax_deduction = $is_dev
             ? PgHandlerFactory::createWithTest($pg->getName())
             : PgHandlerFactory::createWithTaxDeduction($pg->getName());
         $response_with_tax_deduction = $pg_handler_with_tax_deduction
             ->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
+        if (!$response->isSuccess()) {
+            throw new CardRegistrationException($response->getResponseMessage());
+        }
 
         $card_registration_key = self::getCardRegistrationKey($u_idx);
         $redis = self::getRedisClient();

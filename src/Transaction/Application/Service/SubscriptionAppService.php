@@ -7,6 +7,8 @@ use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
+use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
+use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Dto\SubscriptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
@@ -28,6 +30,7 @@ class SubscriptionAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public static function subscribe(
         string $partner_api_key,
@@ -81,8 +84,10 @@ class SubscriptionAppService
      * @param string $subscription_id
      * @param string $partner_transaction_id
      * @return SubscriptionPaymentDto
+     * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
+     * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
@@ -108,6 +113,7 @@ class SubscriptionAppService
             $payment_method_id,
             $partner_id,
             $partner_transaction_id,
+            $subscription->getId(),
             $subscription->getProductName(),
             $subscription->getAmount(),
             $subscription->getSubscribedAt()

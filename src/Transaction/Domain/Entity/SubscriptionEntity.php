@@ -109,6 +109,14 @@ class SubscriptionEntity
     /**
      * @return int
      */
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * @return int
+     */
     public function getPaymentMethodId(): int
     {
         return $this->payment_method_id;

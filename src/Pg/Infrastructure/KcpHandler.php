@@ -9,9 +9,6 @@ use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Order;
 use RidiPay\Library\Pg\Kcp\Response;
 use RidiPay\Library\Pg\Kcp\Util;
-use RidiPay\Pg\Domain\Exception\CardRegistrationException;
-use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
-use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Pg\Domain\Service\CardRegistrationResponse;
 use RidiPay\Pg\Domain\Service\PgHandlerInterface;
 use RidiPay\Pg\Domain\Service\TransactionApprovalResponse;
@@ -82,7 +79,7 @@ class KcpHandler implements PgHandlerInterface
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @return CardRegistrationResponse
-     * @throws CardRegistrationException
+     * @throws \Exception
      */
     public function registerCard(
         string $card_number,
@@ -95,8 +92,6 @@ class KcpHandler implements PgHandlerInterface
         $response = $this->client->requestBatchKey($card);
         if (!$response->isSuccess()) {
             self::log(__METHOD__, $response);
-
-            throw new CardRegistrationException($response->getResMsg());
         }
 
         return new CardRegistrationResponse(
@@ -111,10 +106,10 @@ class KcpHandler implements PgHandlerInterface
     /**
      * @param TransactionEntity $transaction
      * @return TransactionApprovalResponse
-     * @throws TransactionApprovalException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
     public function approveTransaction(TransactionEntity $transaction): TransactionApprovalResponse
     {
@@ -138,8 +133,6 @@ class KcpHandler implements PgHandlerInterface
         $response = $this->client->batchOrder($pg_bill_key, $order);
         if (!$response->isSuccess()) {
             self::log(__METHOD__, $response);
-
-            throw new TransactionApprovalException($response->getResMsg());
         }
 
         return new TransactionApprovalResponse(
@@ -156,15 +149,13 @@ class KcpHandler implements PgHandlerInterface
      * @param string $pg_transaction_id
      * @param string $cancel_reason
      * @return TransactionCancellationResponse
-     * @throws TransactionCancellationException
+     * @throws \Exception
      */
     public function cancelTransaction(string $pg_transaction_id, string $cancel_reason): TransactionCancellationResponse
     {
         $response = $this->client->cancelTransaction($pg_transaction_id, $cancel_reason);
         if (!$response->isSuccess()) {
             self::log(__METHOD__, $response);
-
-            throw new TransactionCancellationException($response->getResMsg());
         }
 
         return new TransactionCancellationResponse(

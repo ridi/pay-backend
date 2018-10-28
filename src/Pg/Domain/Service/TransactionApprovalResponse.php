@@ -17,7 +17,7 @@ class TransactionApprovalResponse extends PgResponse
     /**
      * @param bool $is_success
      * @param string $response_code
-     * @param string
+     * @param string $response_message
      * @param string $pg_transaction_id
      * @param int $amount
      * @param \DateTime $approved_at

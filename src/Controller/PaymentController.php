@@ -210,7 +210,12 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
+     *         @OA\Schema(ref="#/components/schemas/UnvalidatedTransaction")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
@@ -258,6 +263,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (UnvalidatedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::UNVALIDATED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
@@ -1086,6 +1097,13 @@ class PaymentController extends BaseController
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
+            );
+        } catch (TransactionApprovalException $e) {
+            return self::createErrorResponse(
+                PgErrorCodeConstant::class,
+                PgErrorCodeConstant::TRANSACTION_APPROVAL_FAILED,
+                $e->getMessage(),
+                ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
             return self::createErrorResponse(
