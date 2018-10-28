@@ -10,6 +10,6 @@ class UnmatchedPinException extends \Exception
      */
     public function __construct(int $remained_try_count)
     {
-        parent::__construct("비밀번호가 일치하지 않습니다. ({$remained_try_count}회 남음)");
+        parent::__construct("비밀번호가 일치하지 않습니다.\n({$remained_try_count}회 남음)");
     }
 }
