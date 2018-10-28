@@ -27,13 +27,12 @@ services:
     logging:
       driver: fluentd
       options:
-        fluentd-address: localhost:24224
-        tag: ridi-pay.backend.api
+        tag: dev.ridi-pay.backend.api
     depends_on:
-      - fluentd
-  fluentd:
+      - logger
+  logger:
     build: ./config/docker/fluentd
-    container_name: fluentd
+    container_name: logger
     ports:
       - 24224:24224
     volumes:

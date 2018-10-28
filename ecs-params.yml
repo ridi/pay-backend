@@ -5,3 +5,6 @@ task_definition:
     api:
       mem_limit: 256m
       mem_reservation: 128m
+    logger:
+      mem_limit: 256m
+      mem_reservation: 128m
