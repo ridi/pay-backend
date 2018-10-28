@@ -530,7 +530,8 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::TRANSACTION_APPROVAL_FAILED,
-                $e->getMessage()
+                $e->getMessage(),
+                ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
             return self::createErrorResponse(
@@ -667,7 +668,8 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::TRANSACTION_CANCELLATION_FAILED,
-                $e->getMessage()
+                $e->getMessage(),
+                ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
             return self::createErrorResponse(

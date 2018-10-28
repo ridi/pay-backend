@@ -34,14 +34,16 @@ abstract class BaseController extends Controller
     /**
      * @param string $error_code_class
      * @param string $error_code
-     * @param string $message
+     * @param null|string $error_message
+     * @param array $data
      * @param array $headers
      * @return JsonResponse
      */
     protected static function createErrorResponse(
         string $error_code_class,
         string $error_code,
-        ?string $message = null,
+        ?string $error_message = null,
+        array $data = [],
         array $headers = []
     ): JsonResponse {
         try {
@@ -56,18 +58,18 @@ abstract class BaseController extends Controller
             } else {
                 $http_status_code = Response::HTTP_INTERNAL_SERVER_ERROR;
             }
-            if (empty($message)) {
-                $message = Response::$statusTexts[$http_status_code];
+            if (empty($error_message)) {
+                $error_message = Response::$statusTexts[$http_status_code];
             }
         } catch (\ReflectionException $e) {
             $http_status_code = Response::HTTP_INTERNAL_SERVER_ERROR;
-            $message = Response::$statusTexts[$http_status_code];
+            $error_message = Response::$statusTexts[$http_status_code];
         } finally {
             return new JsonResponse(
-                [
-                    'code' => $error_code,
-                    'message' => $message
-                ],
+                array_merge(
+                    ['code' => $error_code, 'message' => $error_message],
+                    $data
+                ),
                 $http_status_code,
                 $headers
             );

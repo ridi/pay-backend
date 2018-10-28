@@ -129,7 +129,8 @@ class PaymentMethodController extends BaseController
             return self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::CARD_REGISTRATION_FAILED,
-                $e->getMessage()
+                $e->getMessage(),
+                ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
             return self::createErrorResponse(
