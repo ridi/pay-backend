@@ -5,30 +5,30 @@ namespace RidiPay\Pg\Domain\Service;
 
 class TransactionApprovalResponse extends PgResponse
 {
-    /** @var string */
+    /** @var null|string */
     private $pg_transaction_id;
 
-    /** @var int */
+    /** @var null|int */
     private $amount;
 
-    /** @var \DateTime */
+    /** @var null|\DateTime */
     private $approved_at;
 
     /**
      * @param bool $is_success
      * @param string $response_code
      * @param string $response_message
-     * @param string $pg_transaction_id
-     * @param int $amount
-     * @param \DateTime $approved_at
+     * @param null|string $pg_transaction_id
+     * @param null|int $amount
+     * @param null|\DateTime $approved_at
      */
     public function __construct(
         bool $is_success,
         string $response_code,
         string $response_message,
-        string $pg_transaction_id,
-        int $amount,
-        \DateTime $approved_at
+        ?string $pg_transaction_id,
+        ?int $amount,
+        ?\DateTime $approved_at
     ) {
         parent::__construct($is_success, $response_code, $response_message);
 

@@ -5,21 +5,26 @@ namespace RidiPay\Pg\Domain\Service;
 
 class TransactionCancellationResponse extends PgResponse
 {
-    /** @var int */
+    /** @var null|int */
     private $amount;
 
-    /** @var \DateTime */
+    /** @var null|\DateTime */
     private $canceled_at;
 
     /**
      * @param bool $is_success
      * @param string $response_code
      * @param string $response_message
-     * @param int $amount
-     * @param \DateTime $canceled_at
+     * @param null|int $amount
+     * @param null|\DateTime $canceled_at
      */
-    public function __construct(bool $is_success, string $response_code, string $response_message, int $amount, \DateTime $canceled_at)
-    {
+    public function __construct(
+        bool $is_success,
+        string $response_code,
+        string $response_message,
+        ?int $amount,
+        ?\DateTime $canceled_at
+    ) {
         parent::__construct($is_success, $response_code, $response_message);
 
         $this->amount = $amount;

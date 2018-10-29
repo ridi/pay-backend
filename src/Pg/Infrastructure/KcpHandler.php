@@ -139,9 +139,9 @@ class KcpHandler implements PgHandlerInterface
             $response->isSuccess(),
             $response->getResCd(),
             $response->getResMsg(),
-            $response->getTno(),
-            $response->getAmount(),
-            $response->getAppTime()
+            ($response->isSuccess() ? $response->getTno() : null),
+            ($response->isSuccess() ? $response->getAmount() : null),
+            ($response->isSuccess() ? $response->getAppTime() : null)
         );
     }
 
@@ -162,8 +162,8 @@ class KcpHandler implements PgHandlerInterface
             $response->isSuccess(),
             $response->getResCd(),
             $response->getResMsg(),
-            $response->getAmount(),
-            $response->getCancTime()
+            ($response->isSuccess() ? $response->getAmount() : null),
+            ($response->isSuccess() ? $response->getCancTime() : null)
         );
     }
 
