@@ -38,10 +38,10 @@ class CardService
         string $card_password,
         string $tax_id
     ): void {
-        $is_dev = Kernel::isDev();
+        $is_local = Kernel::isLocal();
         $pg = PgRepository::getRepository()->findActiveOne();
 
-        $pg_handler = $is_dev
+        $pg_handler = $is_local
             ? PgHandlerFactory::createWithTest($pg->getName())
             : PgHandlerFactory::create($pg->getName());
         $response = $pg_handler->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
@@ -49,7 +49,7 @@ class CardService
             throw new CardRegistrationException($response->getResponseMessage());
         }
 
-        $pg_handler_with_tax_deduction = $is_dev
+        $pg_handler_with_tax_deduction = $is_local
             ? PgHandlerFactory::createWithTest($pg->getName())
             : PgHandlerFactory::createWithTaxDeduction($pg->getName());
         $response_with_tax_deduction = $pg_handler_with_tax_deduction

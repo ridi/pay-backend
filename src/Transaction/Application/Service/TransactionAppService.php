@@ -199,7 +199,7 @@ class TransactionAppService
 
         $transaction = self::getTransaction($transaction_id);
         $pg = PgAppService::getPgById($transaction->getPgId());
-        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
 
         $response = $pg_handler->approveTransaction($transaction);
         if (!$response->isSuccess()) {
@@ -291,7 +291,7 @@ class TransactionAppService
         \DateTime $subscribed_at
     ): ApproveTransactionDto {
         $pg = PgAppService::getActivePg();
-        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
 
         $transaction = new TransactionEntity(
             $u_idx,
@@ -392,7 +392,7 @@ class TransactionAppService
         $transaction = self::getTransaction($transaction_id);
 
         $pg = PgAppService::getPgById($transaction->getPgId());
-        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
         $cancel_reason = '고객 결제 취소';
         $response = $pg_handler->cancelTransaction($transaction->getPgTransactionId(), $cancel_reason);
         if (!$response->isSuccess()) {
