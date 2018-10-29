@@ -1,0 +1,5 @@
+o_auth2_service_provider:
+  authorize_url: https://account.ridibooks.com/ridi/authorize/
+  token_url: https://account.ridibooks.com/oauth2/token/
+  user_info_url: https://account.ridibooks.com/accounts/me/
+  token_cookie_domain: .ridibooks.com
