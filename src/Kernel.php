@@ -82,7 +82,7 @@ class Kernel extends BaseKernel
      */
     public static function isLocal(): bool
     {
-        return self::getEnv() === self::ENV_LOCAL;
+        return in_array(self::getEnv(), [self::ENV_LOCAL, self::ENV_PHPUNIT]);
     }
 
     /**
