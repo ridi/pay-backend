@@ -98,8 +98,8 @@ class KcpHandler implements PgHandlerInterface
             $response->isSuccess(),
             $response->getResCd(),
             $response->getResMsg(),
-            $response->getBatchKey(),
-            $response->getCardCd()
+            ($response->isSuccess() ? $response->getBatchKey() : null),
+            ($response->isSuccess() ? $response->getCardCd() : null)
         );
     }
 

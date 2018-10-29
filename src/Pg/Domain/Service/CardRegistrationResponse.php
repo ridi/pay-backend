@@ -5,21 +5,26 @@ namespace RidiPay\Pg\Domain\Service;
 
 class CardRegistrationResponse extends PgResponse
 {
-    /** @var string */
+    /** @var null|string */
     private $pg_bill_key;
     
-    /** @var string */
+    /** @var null|string */
     private $card_issuer_code;
 
     /**
      * @param bool $is_success
      * @param string $response_code
      * @param string $response_message
-     * @param string $pg_bill_key
-     * @param string $card_issuer_code
+     * @param null|string $pg_bill_key
+     * @param null|string $card_issuer_code
      */
-    public function __construct(bool $is_success, string $response_code, string $response_message, string $pg_bill_key, string $card_issuer_code)
-    {
+    public function __construct(
+        bool $is_success,
+        string $response_code,
+        string $response_message,
+        ?string $pg_bill_key,
+        ?string $card_issuer_code
+    ) {
         parent::__construct($is_success, $response_code, $response_message);
 
         $this->pg_bill_key = $pg_bill_key;
