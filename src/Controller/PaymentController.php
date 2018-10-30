@@ -17,7 +17,7 @@ use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
-use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
+use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
@@ -497,7 +497,7 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NonexistentTransaction")
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundTransaction")
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -531,10 +531,10 @@ class PaymentController extends BaseController
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
-        } catch (NonexistentTransactionException $e) {
+        } catch (NotFoundTransactionException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
+                TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {
@@ -635,7 +635,7 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NonexistentTransaction")
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundTransaction")
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -669,10 +669,10 @@ class PaymentController extends BaseController
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
-        } catch (NonexistentTransactionException $e) {
+        } catch (NotFoundTransactionException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
+                TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionCancellationException $e) {
@@ -789,7 +789,7 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NonexistentTransaction")
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundTransaction")
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -818,10 +818,10 @@ class PaymentController extends BaseController
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
-        } catch (NonexistentTransactionException $e) {
+        } catch (NotFoundTransactionException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::NONEXISTENT_TRANSACTION,
+                TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {

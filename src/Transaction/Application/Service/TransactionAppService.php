@@ -24,7 +24,7 @@ use RidiPay\Transaction\Application\Dto\CreateTransactionDto;
 use RidiPay\Transaction\Application\Dto\TransactionStatusDto;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
-use RidiPay\Transaction\Domain\Exception\NonexistentTransactionException;
+use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Transaction\Domain\Exception\UnvalidatedTransactionException;
 use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
@@ -182,7 +182,7 @@ class TransactionAppService
      * @param string $partner_secret_key
      * @param string $transaction_id
      * @return ApproveTransactionDto
-     * @throws NonexistentTransactionException
+     * @throws NotFoundTransactionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
      * @throws UnsupportedPgException
@@ -374,7 +374,7 @@ class TransactionAppService
      * @param string $partner_secret_key
      * @param string $transaction_id
      * @return CancelTransactionDto
-     * @throws NonexistentTransactionException
+     * @throws NotFoundTransactionException
      * @throws TransactionCancellationException
      * @throws UnauthorizedPartnerException
      * @throws UnsupportedPgException
@@ -450,7 +450,7 @@ class TransactionAppService
      * @param string $partner_secret_key
      * @param string $transaction_id
      * @return TransactionStatusDto
-     * @throws NonexistentTransactionException
+     * @throws NotFoundTransactionException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
      * @throws UnsupportedPaymentMethodException
@@ -513,7 +513,7 @@ class TransactionAppService
     /**
      * @param string $transaction_id
      * @return TransactionEntity
-     * @throws NonexistentTransactionException
+     * @throws NotFoundTransactionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
@@ -521,7 +521,7 @@ class TransactionAppService
     {
         $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
         if (is_null($transaction)) {
-            throw new NonexistentTransactionException();
+            throw new NotFoundTransactionException();
         }
 
         return $transaction;
