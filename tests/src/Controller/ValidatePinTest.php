@@ -57,8 +57,15 @@ class ValidatePinTest extends ControllerTestCase
     public function testPinEntryBlocked()
     {
         $u_idx = TestUtil::getRandomUidx();
-        UserAppService::createUser($u_idx);
-        UserAppService::createPin($u_idx, self::VALID_PIN);
+        TestUtil::signUp(
+            $u_idx,
+            self::VALID_PIN,
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
 
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
         $client = self::createClientWithOAuth2AccessToken();
@@ -112,14 +119,36 @@ class ValidatePinTest extends ControllerTestCase
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
-        UserAppService::createUser($user_indices[0]);
-        UserAppService::createPin($user_indices[0], self::VALID_PIN);
+        TestUtil::signUp(
+            $user_indices[0],
+            self::VALID_PIN,
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
 
-        UserAppService::createUser($user_indices[1]);
+        TestUtil::signUp(
+            $user_indices[1],
+            self::VALID_PIN,
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
         UserAppService::deleteUser($user_indices[1]);
 
-        UserAppService::createUser($user_indices[3]);
-        UserAppService::createPin($user_indices[3], self::VALID_PIN);
+        TestUtil::signUp(
+            $user_indices[3],
+            self::VALID_PIN,
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
 
         return [
             [$user_indices[0], self::VALID_PIN, Response::HTTP_OK, null],

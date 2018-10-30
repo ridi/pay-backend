@@ -33,6 +33,8 @@ class ManageCardTest extends ControllerTestCase
     ];
     private const TAX_ID = '940101'; // 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
 
+    private const PIN = '123456';
+
     /**
      * @dataProvider userAndCardProvider
      *
@@ -74,6 +76,12 @@ class ManageCardTest extends ControllerTestCase
         if (isset($response_content->code)) {
             $this->assertSame($error_code, $response_content->code);
         }
+
+        $body = json_encode(['pin' => self::PIN]);
+        $client->request(Request::METHOD_POST, '/me/pin', [], [], [], $body);
+
+        $body = json_encode(['enable_onetouch_pay' => true]);
+        $client->request(Request::METHOD_POST, '/me/onetouch', [], [], [], $body);
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
         if (!empty($payment_methods->cards)) {
@@ -148,7 +156,7 @@ class ManageCardTest extends ControllerTestCase
 
         TestUtil::signUp(
             $user_indices[1],
-            '123456',
+            self::PIN,
             true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],

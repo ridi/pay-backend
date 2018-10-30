@@ -169,9 +169,15 @@ class UserAppService
     public static function validatePin(int $u_idx, string $pin): void
     {
         $user = self::getUser($u_idx);
+        $is_pin_matched = $user->isPinMatched($pin);
 
         $policy = new PinEntryAbuseBlockPolicy();
         $abuse_blocker = new AbuseBlocker($policy, $u_idx);
+
+        if (!$is_pin_matched) {
+            $abuse_blocker->increaseErrorCount();
+        }
+
         if ($abuse_blocker->isBlocked()) {
             $remaining_period_until_unblock = $abuse_blocker->getBlockedAt() + $policy->getBlockedPeriod() - time();
             throw new PinEntryBlockedException(
@@ -180,8 +186,7 @@ class UserAppService
             );
         }
 
-        if (!$user->isPinMatched($pin)) {
-            $abuse_blocker->increaseTryCount();
+        if (!$is_pin_matched) {
             throw new UnmatchedPinException($abuse_blocker->getRemainedTryCount());
         }
 

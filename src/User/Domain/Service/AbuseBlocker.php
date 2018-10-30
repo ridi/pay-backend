@@ -7,7 +7,7 @@ use Predis\Client;
 
 class AbuseBlocker
 {
-    private const FIELD_TRY_COUNT = 'try_count';
+    private const FIELD_ERROR_COUNT = 'error_count';
     private const FIELD_BLOCKED_AT = 'blocked_at';
 
     /** @var BaseAbuseBlockPolicy */
@@ -30,10 +30,10 @@ class AbuseBlocker
         $this->u_idx = $u_idx;
     }
 
-    public function increaseTryCount(): void
+    public function increaseErrorCount(): void
     {
         $key = $this->getKey();
-        $this->redis->hincrby($key, self::FIELD_TRY_COUNT, 1);
+        $this->redis->hincrby($key, self::FIELD_ERROR_COUNT, 1);
     }
 
     /**
@@ -42,10 +42,10 @@ class AbuseBlocker
     public function isBlocked(): bool
     {
         $key = $this->getKey();
-        $try_count = $this->redis->hget($key, self::FIELD_TRY_COUNT);
-        if ($try_count > $this->policy->getBlockThreshold()) {
+        $error_count = $this->getErrorCount();
+        if ($error_count > $this->policy->getBlockThreshold()) {
             return true;
-        } elseif ($try_count === $this->policy->getBlockThreshold()) {
+        } elseif ($error_count === $this->policy->getBlockThreshold()) {
             $blocked_at = time();
             if ($this->redis->hsetnx($key, self::FIELD_BLOCKED_AT, $blocked_at) === 1) {
                 $this->redis->expireat($key, $blocked_at + $this->policy->getBlockedPeriod());
@@ -70,14 +70,20 @@ class AbuseBlocker
      */
     public function getRemainedTryCount(): int
     {
-        $try_count = intval($this->redis->hget($this->getKey(), self::FIELD_TRY_COUNT));
-
-        return $this->policy->getBlockThreshold() - $try_count;
+        return $this->policy->getBlockThreshold() - $this->getErrorCount();
     }
 
     public function initialize(): void
     {
         $this->redis->del([$this->getKey()]);
+    }
+
+    /**
+     * @return int
+     */
+    private function getErrorCount(): int
+    {
+        return intval($this->redis->hget($this->getKey(), self::FIELD_ERROR_COUNT));
     }
 
     /**
