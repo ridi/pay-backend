@@ -119,7 +119,7 @@ class PaymentController extends BaseController
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
@@ -527,7 +527,7 @@ class PaymentController extends BaseController
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
@@ -665,7 +665,7 @@ class PaymentController extends BaseController
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
@@ -814,7 +814,7 @@ class PaymentController extends BaseController
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
@@ -951,7 +951,7 @@ class PaymentController extends BaseController
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
@@ -1088,7 +1088,7 @@ class PaymentController extends BaseController
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
+                PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
