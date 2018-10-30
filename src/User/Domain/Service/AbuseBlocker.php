@@ -30,13 +30,19 @@ class AbuseBlocker
         $this->u_idx = $u_idx;
     }
 
+    public function increaseTryCount(): void
+    {
+        $key = $this->getKey();
+        $this->redis->hincrby($key, self::FIELD_TRY_COUNT, 1);
+    }
+
     /**
      * @return bool
      */
     public function isBlocked(): bool
     {
         $key = $this->getKey();
-        $try_count = $this->redis->hincrby($key, self::FIELD_TRY_COUNT, 1);
+        $try_count = $this->redis->hget($key, self::FIELD_TRY_COUNT);
         if ($try_count > $this->policy->getBlockThreshold()) {
             return true;
         } elseif ($try_count === $this->policy->getBlockThreshold()) {

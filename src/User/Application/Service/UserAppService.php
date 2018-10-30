@@ -181,8 +181,11 @@ class UserAppService
         }
 
         if (!$user->isPinMatched($pin)) {
+            $abuse_blocker->increaseTryCount();
             throw new UnmatchedPinException($abuse_blocker->getRemainedTryCount());
         }
+
+        $abuse_blocker->initialize();
     }
 
     /**
