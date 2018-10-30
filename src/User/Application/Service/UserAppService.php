@@ -81,7 +81,7 @@ class UserAppService
     /**
      * @param int $u_idx
      * @param string $pin
-     * @param string $validation_token
+     * @param string $entered_validation_token
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws UnauthorizedPinChangeException
@@ -91,10 +91,13 @@ class UserAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function updatePin(int $u_idx, string $pin, string $validation_token): void
+    public static function updatePin(int $u_idx, string $pin, string $entered_validation_token): void
     {
         $user = self::getUser($u_idx);
-        self::assertMatchedValidationToken($u_idx, $validation_token);
+        $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
+        if ($validation_token !== $entered_validation_token) {
+            throw new UnauthorizedPinChangeException();
+        }
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -165,6 +168,7 @@ class UserAppService
 
     /**
      * @param int $u_idx
+     * @param null|string $entered_validation_token
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws OnetouchPaySettingChangeDeclinedException
@@ -172,9 +176,13 @@ class UserAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function enableOnetouchPay(int $u_idx): void
+    public static function enableOnetouchPay(int $u_idx, ?string $entered_validation_token): void
     {
         $user = self::getUser($u_idx);
+        $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
+        if (!is_null($validation_token) && ($entered_validation_token !== $validation_token)) {
+            throw new OnetouchPaySettingChangeDeclinedException('원터치 결제 설정을 변경할 수 없습니다.');
+        }
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -245,8 +253,9 @@ class UserAppService
      * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
      */
-    public static function deleteOnetouchpay(int $u_idx): void
+    public static function deleteOnetouchPay(int $u_idx): void
     {
         $user = self::getUser($u_idx);
         $user->deleteOnetouchPay();
@@ -366,16 +375,11 @@ class UserAppService
     }
 
     /**
-     * @param int $u_idx
-     * @param string $entered_validation_token
-     * @throws UnauthorizedPinChangeException
+     * @return Client
      */
-    private static function assertMatchedValidationToken(int $u_idx, string $entered_validation_token): void
+    private static function getRedisClient(): Client
     {
-        $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
-        if ($validation_token !== $entered_validation_token) {
-            throw new UnauthorizedPinChangeException();
-        }
+        return new Client(['host' => getenv('REDIS_HOST')]);
     }
 
     /**

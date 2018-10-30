@@ -162,7 +162,7 @@ class TestUtil
         UserAppService::createPin($u_idx, $pin);
 
         if ($enable_onetouch_pay) {
-            UserAppService::enableOnetouchPay($u_idx);
+            UserAppService::enableOnetouchPay($u_idx, null);
         } else {
             UserAppService::disableOnetouchPay($u_idx);
         }

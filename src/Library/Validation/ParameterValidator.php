@@ -22,7 +22,7 @@ class ParameterValidator
 
             foreach ($constraints as $constraint) {
                 if (!isset($parameters[$parameter])) {
-                    throw new ParameterValidationException("Parameter doesn't exist", $parameter);
+                    throw new ParameterValidationException("Parameter doesn't exist.", $parameter);
                 }
 
                 $violations = $validator->validate($parameters[$parameter], $constraint);

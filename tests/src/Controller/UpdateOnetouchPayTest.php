@@ -31,7 +31,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $body = json_encode(['enable_onetouch_pay' => true]);
-        self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertTrue(UserAppService::isUsingOnetouchPay($u_idx));
 
@@ -40,10 +40,12 @@ class UpdateOnetouchPayTest extends ControllerTestCase
 
     public function testEnableOnetouchPay()
     {
+        $pin = '123456';
+
         $u_idx = TestUtil::getRandomUidx();
         TestUtil::signUp(
             $u_idx,
-            '123456',
+            $pin,
             false,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
@@ -59,7 +61,14 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertFalse(UserAppService::isUsingOnetouchPay($u_idx));
 
-        $body = json_encode(['enable_onetouch_pay' => true]);
+        $body = json_encode(['pin' => $pin]);
+        self::$client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
+        $validation_token = json_decode(self::$client->getResponse()->getContent())->validation_token;
+
+        $body = json_encode([
+            'enable_onetouch_pay' => true,
+            'validation_token' => $validation_token
+        ]);
         self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertTrue(UserAppService::isUsingOnetouchPay($u_idx));
@@ -69,10 +78,12 @@ class UpdateOnetouchPayTest extends ControllerTestCase
 
     public function testDisableOnetouchPay()
     {
+        $pin = '123456';
+
         $u_idx = TestUtil::getRandomUidx();
         TestUtil::signUp(
             $u_idx,
-            '123456',
+            $pin,
             true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
@@ -83,7 +94,14 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         self::$client = self::createClientWithOAuth2AccessToken();
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
-        $body = json_encode(['enable_onetouch_pay' => true]);
+        $body = json_encode(['pin' => $pin]);
+        self::$client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
+        $validation_token = json_decode(self::$client->getResponse()->getContent())->validation_token;
+
+        $body = json_encode([
+            'enable_onetouch_pay' => true,
+            'validation_token' => $validation_token
+        ]);
         self::$client->request(Request::METHOD_PUT, '/me/onetouch', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $this->assertTrue(UserAppService::isUsingOnetouchPay($u_idx));

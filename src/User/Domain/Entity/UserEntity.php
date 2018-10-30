@@ -169,7 +169,7 @@ class UserEntity
     {
         if (!$this->hasPin()) {
             // 원터치 결제 활성화 시 결제 비밀번호 소유 필수
-            throw new OnetouchPaySettingChangeDeclinedException();
+            throw new OnetouchPaySettingChangeDeclinedException('결제 비밀번호를 설정해주세요.');
         }
 
         $this->is_using_onetouch_pay = true;
@@ -182,7 +182,7 @@ class UserEntity
     {
         if (!$this->hasPin()) {
             // 원터치 결제 비활성화 시 결제 비밀번호 소유 필수
-            throw new OnetouchPaySettingChangeDeclinedException();
+            throw new OnetouchPaySettingChangeDeclinedException('결제 비밀번호를 설정해주세요.');
         }
 
         $this->is_using_onetouch_pay = false;

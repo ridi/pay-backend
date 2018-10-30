@@ -612,17 +612,17 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/onetouch", methods={"OPTIONS"})
-     * @Cors(methods={"PUT"})
+     * @Cors(methods={"POST, PUT"})
      *
      * @return JsonResponse
      */
-    public function updateOnetouchPayPreflight(): JsonResponse
+    public function setAndChangeOnetouchPayPreflight(): JsonResponse
     {
         return self::createSuccessResponse();
     }
 
     /**
-     * @Route("/me/onetouch", methods={"PUT"})
+     * @Route("/me/onetouch", methods={"POST"})
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
      *
@@ -682,12 +682,124 @@ class UserController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function updateOnetouchPay(Request $request)
+    public function setOnetouchPay(Request $request)
     {
         try {
             $body = json_decode($request->getContent());
             if ($body->enable_onetouch_pay) {
-                UserAppService::enableOnetouchPay($this->getUidx());
+                UserAppService::enableOnetouchPay($this->getUidx(), null);
+            } else {
+                UserAppService::disableOnetouchPay($this->getUidx());
+            }
+        } catch (LeavedUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::LEAVED_USER,
+                $e->getMessage()
+            );
+        } catch (NotFoundUserException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::NOT_FOUND_USER,
+                $e->getMessage()
+            );
+        } catch (OnetouchPaySettingChangeDeclinedException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::ONETOUCH_PAY_SETTING_CHANGE_DECLINED,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse();
+    }
+
+    /**
+     * @Route("/me/onetouch", methods={"PUT"})
+     * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
+     * @OAuth2()
+     *
+     * @OA\Put(
+     *   path="/me/onetouch",
+     *   summary="원터치 결제 이용 여부 변경",
+     *   tags={"private-api"},
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"enable_onetouch_pay"},
+     *       @OA\Property(property="enable_onetouch_pay", type="boolean", description="원터치 결제 이용 여부", example=true),
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 비밀번호 인증 후 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(type="object")
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
+     *         @OA\Schema(ref="#/components/schemas/OnetouchPaySettingChangeDeclined")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function changeOnetouchPay(Request $request)
+    {
+        try {
+            $body = json_decode($request->getContent());
+            if ($body->enable_onetouch_pay) {
+                if (!isset($body->validation_token)) {
+                    return self::createErrorResponse(
+                        CommonErrorCodeConstant::class,
+                        CommonErrorCodeConstant::INVALID_PARAMETER,
+                        "validation_token: Parameter doesn't exist."
+                    );
+                }
+
+                UserAppService::enableOnetouchPay($this->getUidx(), $body->validation_token);
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }
