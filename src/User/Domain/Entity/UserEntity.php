@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
-use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 
@@ -78,13 +77,22 @@ class UserEntity
 
     /**
      * @param string $pin
+     * @return string
      * @throws WrongFormattedPinException
      */
-    public function createPin(string $pin): void
+    public function createPin(string $pin): string
     {
         self::assertValidPin($pin);
 
-        $this->pin = self::hashPin($pin);
+        return self::hashPin($pin);
+    }
+
+    /**
+     * @param string $pin
+     */
+    public function setPin(string $pin): void
+    {
+        $this->pin = $pin;
     }
 
     /**
@@ -162,29 +170,13 @@ class UserEntity
         return $this->is_using_onetouch_pay;
     }
 
-    /**
-     * @throws OnetouchPaySettingChangeDeclinedException
-     */
     public function enableOnetouchPay(): void
     {
-        if (!$this->hasPin()) {
-            // 원터치 결제 활성화 시 결제 비밀번호 소유 필수
-            throw new OnetouchPaySettingChangeDeclinedException('결제 비밀번호를 설정해주세요.');
-        }
-
         $this->is_using_onetouch_pay = true;
     }
 
-    /**
-     * @throws OnetouchPaySettingChangeDeclinedException
-     */
     public function disableOnetouchPay(): void
     {
-        if (!$this->hasPin()) {
-            // 원터치 결제 비활성화 시 결제 비밀번호 소유 필수
-            throw new OnetouchPaySettingChangeDeclinedException('결제 비밀번호를 설정해주세요.');
-        }
-
         $this->is_using_onetouch_pay = false;
     }
 

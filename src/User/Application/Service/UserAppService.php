@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Application\Service;
 
+use Predis\Client;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\TimeUnitConstant;
@@ -61,8 +62,8 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            $user->createPin($pin);
-            UserRepository::getRepository()->save($user);
+            $redis = self::getRedisClient();
+            $redis->hset(self::getUserKey($u_idx), 'pin', $user->createPin($pin));
 
             UserActionHistoryService::logCreatePin($u_idx);
 
@@ -76,6 +77,24 @@ class UserAppService
 
             throw $t;
         }
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     */
+    public static function useCreatedPin(int $u_idx): void
+    {
+        $redis = self::getRedisClient();
+        $pin = $redis->hget(self::getUserKey($u_idx), 'pin');
+
+        $user = self::getUser($u_idx);
+        $user->setPin($pin);
+        UserRepository::getRepository()->save($user);
     }
 
     /**
@@ -190,6 +209,7 @@ class UserAppService
         try {
             if (CardService::isCardRegistrationInProgress($u_idx)) {
                 CardService::useRegisteredCard($u_idx);
+                self::useCreatedPin($u_idx);
             }
 
             $user->enableOnetouchPay();
@@ -228,6 +248,7 @@ class UserAppService
         try {
             if (CardService::isCardRegistrationInProgress($u_idx)) {
                 CardService::useRegisteredCard($u_idx);
+                self::useCreatedPin($u_idx);
             }
 
             $user->disableOnetouchPay();
