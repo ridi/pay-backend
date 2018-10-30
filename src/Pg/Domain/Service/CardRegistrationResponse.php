@@ -5,9 +5,10 @@ namespace RidiPay\Pg\Domain\Service;
 
 class CardRegistrationResponse extends PgResponse
 {
-    private const KCP_RESPONSE_CODE_UNMATCHED_EXPIRATION_DATE = 'CC55';
-    private const KCP_RESPONSE_CODE_UNMATCHED_PASSWORD = 'CC63';
-    private const KCP_RESPONSE_CODE_UNMATCHED_BIRTH_DATE = 'CC66';
+    private const KCP_RESPONSE_CODE_UNMATCHED_EXPIRATION_DATE = 'CC55'; // 유효기간 오류
+    private const KCP_RESPONSE_CODE_UNMATCHED_PASSWORD = 'CC63'; // 비밀번호 오류
+    private const KCP_RESPONSE_CODE_UNMATCHED_BIRTH_DATE = 'CC66'; // 생년월일 또는 사업자번호 불일치
+    private const KCP_RESPONSE_CODE_FORBIDDEN_CARD = 'CC69'; // 인증오류 3회초과(당일거래 불가)
 
     /** @var null|string */
     private $pg_bill_key;
@@ -61,7 +62,8 @@ class CardRegistrationResponse extends PgResponse
             [
                 self::KCP_RESPONSE_CODE_UNMATCHED_EXPIRATION_DATE,
                 self::KCP_RESPONSE_CODE_UNMATCHED_PASSWORD,
-                self::KCP_RESPONSE_CODE_UNMATCHED_BIRTH_DATE
+                self::KCP_RESPONSE_CODE_UNMATCHED_BIRTH_DATE,
+                self::KCP_RESPONSE_CODE_FORBIDDEN_CARD
             ]
         );
     }
