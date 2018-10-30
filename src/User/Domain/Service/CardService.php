@@ -148,7 +148,7 @@ class CardService
             $payment_method->setCards($cards);
             PaymentMethodRepository::getRepository()->save($payment_method);
 
-            UserActionHistoryService::logAddCard($u_idx);
+            UserActionHistoryService::logRegisterCard($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {

@@ -9,7 +9,7 @@ use RidiPay\User\Domain\Repository\UserRepository;
 
 class UserActionHistoryService
 {
-    private const ADD_CARD = 'ADD_CARD';
+    private const REGISTER_CARD = 'REGISTER_CARD';
     private const DELETE_CARD = 'DELETE_CARD';
     private const CREATE_PIN = 'CREATE_PIN';
     private const UPDATE_PIN = 'UPDATE_PIN';
@@ -20,9 +20,9 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
-    public static function logAddCard(int $u_idx)
+    public static function logRegisterCard(int $u_idx)
     {
-        self::logUserAction($u_idx, self::ADD_CARD);
+        self::logUserAction($u_idx, self::REGISTER_CARD);
     }
 
     /**
