@@ -46,7 +46,7 @@ class CardService
             : PgHandlerFactory::create($pg->getName());
         $response = $pg_handler->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
         if (!$response->isSuccess()) {
-            throw new CardRegistrationException($response->getResponseMessage());
+            throw new CardRegistrationException($response);
         }
 
         $pg_handler_with_tax_deduction = $is_local
@@ -55,7 +55,7 @@ class CardService
         $response_with_tax_deduction = $pg_handler_with_tax_deduction
             ->registerCard($card_number, $card_expiration_date, $card_password, $tax_id);
         if (!$response_with_tax_deduction->isSuccess()) {
-            throw new CardRegistrationException($response_with_tax_deduction->getResponseMessage());
+            throw new CardRegistrationException($response_with_tax_deduction);
         }
 
         $card_registration_key = self::getCardRegistrationKey($u_idx);
