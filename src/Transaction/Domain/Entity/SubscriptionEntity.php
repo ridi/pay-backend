@@ -5,6 +5,7 @@ namespace RidiPay\Transaction\Domain\Entity;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 
 /**
  * @Table(
@@ -115,6 +116,14 @@ class SubscriptionEntity
     }
 
     /**
+     * @return UuidInterface
+     */
+    public function getUuid(): UuidInterface
+    {
+        return $this->uuid;
+    }
+
+    /**
      * @return int
      */
     public function getPaymentMethodId(): int
@@ -123,11 +132,11 @@ class SubscriptionEntity
     }
 
     /**
-     * @return UuidInterface
+     * @return int
      */
-    public function getUuid(): UuidInterface
+    public function getPartnerId(): int
     {
-        return $this->uuid;
+        return $this->partner_id;
     }
 
     /**
@@ -155,6 +164,14 @@ class SubscriptionEntity
     }
 
     /**
+     * @return bool
+     */
+    public function isUnsubscribed(): bool
+    {
+        return !is_null($this->unsubscribed_at);
+    }
+
+    /**
      * @return \DateTime
      */
     public function getUnsubscribedAt(): \DateTime
@@ -165,5 +182,17 @@ class SubscriptionEntity
     public function unsubscribe(): void
     {
         $this->unsubscribed_at = new \DateTime();
+    }
+
+    /**
+     * @throws AlreadyResumedSubscriptionException
+     */
+    public function resumeSubscription(): void
+    {
+        if (is_null($this->unsubscribed_at)) {
+            throw new AlreadyResumedSubscriptionException();
+        }
+
+        $this->unsubscribed_at = null;
     }
 }

@@ -5,16 +5,10 @@ namespace RidiPay\Transaction\Application\Dto;
 
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 
-class SubscriptionPaymentDto
+class UnsubscriptionDto
 {
     /** @var string */
     public $subscription_id;
-
-    /** @var string */
-    public $transaction_id;
-
-    /** @var string */
-    public $partner_transaction_id;
 
     /** @var string */
     public $product_name;
@@ -26,22 +20,17 @@ class SubscriptionPaymentDto
     public $subscribed_at;
 
     /** @var \DateTime */
-    public $approved_at;
+    public $unsubscribed_at;
 
     /**
-     * @param ApproveTransactionDto $approve_transaction_dto
      * @param SubscriptionEntity $subscription
      */
-    public function __construct(
-        ApproveTransactionDto $approve_transaction_dto,
-        SubscriptionEntity $subscription
-    ) {
+    public function __construct(SubscriptionEntity $subscription)
+    {
         $this->subscription_id = $subscription->getUuid()->toString();
-        $this->transaction_id = $approve_transaction_dto->transaction_id;
-        $this->partner_transaction_id = $approve_transaction_dto->partner_transaction_id;
         $this->product_name = $subscription->getProductName();
         $this->amount = $subscription->getAmount();
         $this->subscribed_at = $subscription->getSubscribedAt();
-        $this->approved_at = $approve_transaction_dto->approved_at;
+        $this->unsubscribed_at = $subscription->getUnsubscribedAt();
     }
 }

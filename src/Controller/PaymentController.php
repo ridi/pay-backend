@@ -17,6 +17,8 @@ use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
+use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
+use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
@@ -889,7 +891,6 @@ class PaymentController extends BaseController
      *       type="object",
      *       required={
      *         "subscription_id",
-     *         "payment_method_id",
      *         "product_name",
      *         "amount",
      *         "subscribed_at"
@@ -899,12 +900,6 @@ class PaymentController extends BaseController
      *         type="string",
      *         description="RIDI Pay 정기 결제 ID",
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
-     *       ),
-     *       @OA\Property(
-     *         property="payment_method_id",
-     *         type="string",
-     *         description="RIDI Pay 결제 수단 ID",
-     *         example="550E8400-E29B-41D4-A716-446655440000"
      *       ),
      *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
      *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
@@ -970,7 +965,239 @@ class PaymentController extends BaseController
 
         return self::createSuccessResponse([
             'subscription_id' => $result->subscription_id,
-            'payment_method_id' => $result->payment_method_id,
+            'product_name' => $result->product_name,
+            'amount' => $result->amount,
+            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
+        ]);
+    }
+
+    /**
+     * @Route("/payments/subscriptions/{subscription_id}",
+     *   methods={"DELETE"},
+     *   requirements={
+     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
+     *
+     * @OA\Delete(
+     *   path="/payments/subscriptions/{subscription_id}",
+     *   summary="정기 결제 해지",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\Parameter(
+     *     name="subscription_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 정기 결제 ID",
+     *     example="550E8400-E29B-41D4-A716-446655440000",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "subscription_id",
+     *         "product_name",
+     *         "amount",
+     *         "subscribed_at",
+     *         "unsubscribed_at",
+     *       },
+     *       @OA\Property(
+     *         property="subscription_id",
+     *         type="string",
+     *         description="RIDI Pay 정기 결제 ID",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       ),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="subscribed_at",
+     *         type="string",
+     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="unsubscribed_at",
+     *         type="string",
+     *         description="정기 결제 해지 일시(ISO 8601 Format)",
+     *         example="2018-06-07T03:30:30+09:00"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundSubscription")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @param string $subscription_id
+     * @return JsonResponse
+     */
+    public function unsubscribe(Request $request, string $subscription_id): JsonResponse
+    {
+        try {
+            ApiSecretValidator::validate($request);
+
+            $result = SubscriptionAppService::unsubscribe(
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
+                $subscription_id
+            );
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                PartnerErrorCodeConstant::class,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NotFoundSubscriptionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse([
+            'subscription_id' => $result->subscription_id,
+            'product_name' => $result->product_name,
+            'amount' => $result->amount,
+            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
+            'unsubscribed_at' => $result->unsubscribed_at->format(DATE_ATOM)
+        ]);
+    }
+
+    /**
+     * @Route("/payments/subscriptions/{subscription_id}/resume",
+     *   methods={"PUT"},
+     *   requirements={
+     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *   }
+     * )
+     *
+     * @OA\Put(
+     *   path="/payments/subscriptions/{subscription_id}/resume",
+     *   summary="정기 결제 해지 취소",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\Parameter(
+     *     name="subscription_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 정기 결제 ID",
+     *     example="550E8400-E29B-41D4-A716-446655440000",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "subscription_id",
+     *         "product_name",
+     *         "amount",
+     *         "subscribed_at",
+     *       },
+     *       @OA\Property(
+     *         property="subscription_id",
+     *         type="string",
+     *         description="RIDI Pay 정기 결제 ID",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       ),
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(
+     *         property="subscribed_at",
+     *         type="string",
+     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/AlreadyResumedSubscription")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotFoundSubscription")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @param string $subscription_id
+     * @return JsonResponse
+     */
+    public function resumeSubscription(Request $request, string $subscription_id): JsonResponse
+    {
+        try {
+            ApiSecretValidator::validate($request);
+
+            $result = SubscriptionAppService::resumeSubscription(
+                ApiSecretValidator::getApiKey($request),
+                ApiSecretValidator::getSecretKey($request),
+                $subscription_id
+            );
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            return self::createErrorResponse(
+                PartnerErrorCodeConstant::class,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NotFoundSubscriptionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (AlreadyResumedSubscriptionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_RESUMED_SUBSCRIPTION,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        return self::createSuccessResponse([
+            'subscription_id' => $result->subscription_id,
             'product_name' => $result->product_name,
             'amount' => $result->amount,
             'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
@@ -982,7 +1209,7 @@ class PaymentController extends BaseController
      *   "/payments/subscriptions/{subscription_id}/pay",
      *   methods={"POST"},
      *   requirements={
-     *     "bill_key"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
      *   }
      * )
      * @ParamValidator(
@@ -1061,12 +1288,22 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotFoundSubscription"),
+     *         @OA\Schema(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError"),
+     *         @OA\Schema(ref="#/components/schemas/TransactionApprovalFailed")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -1090,6 +1327,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NotFoundSubscriptionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_FOUND_SUBSCRIPTION,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {

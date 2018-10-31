@@ -4,14 +4,19 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Application\Service;
 
 use Ramsey\Uuid\Uuid;
-use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Partner\Application\Service\PartnerAppService;
+use RidiPay\Partner\Domain\Exception\NotFoundPartnerException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
+use RidiPay\Partner\Domain\PartnerConstant;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Dto\SubscriptionDto;
+use RidiPay\Transaction\Application\Dto\SubscriptionResumptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
+use RidiPay\Transaction\Application\Dto\UnsubscriptionDto;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
+use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
+use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
@@ -45,45 +50,77 @@ class SubscriptionAppService
         $subscription = new SubscriptionEntity($payment_method_id, $partner_id, $product_name, $amount);
         SubscriptionRepository::getRepository()->save($subscription);
 
-        return new SubscriptionDto($payment_method_uuid, $subscription);
-    }
-
-    /**
-     * TODO: first-party 정기 결제 해지 요청
-     *
-     * @param int $payment_method_id
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
-     */
-    public static function unsubscribe(int $payment_method_id)
-    {
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
-            $subscription_repo = SubscriptionRepository::getRepository();
-            $subscriptions = $subscription_repo->findSubscribedOnesByPaymentMethodId($payment_method_id);
-            foreach ($subscriptions as $subscription) {
-                $subscription->unsubscribe();
-                $subscription_repo->save($subscription);
-            }
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
+        return new SubscriptionDto($subscription);
     }
 
     /**
      * @param string $partner_api_key
      * @param string $partner_secret_key
-     * @param string $subscription_id
+     * @param string $subscription_uuid
+     * @return UnsubscriptionDto
+     * @throws NotFoundSubscriptionException
+     * @throws UnauthorizedPartnerException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     */
+    public static function unsubscribe(
+        string $partner_api_key,
+        string $partner_secret_key,
+        string $subscription_uuid
+    ) {
+        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+
+        $subscription_repo = SubscriptionRepository::getRepository();
+        $subscription = $subscription_repo->findOneByUuid(Uuid::fromString($subscription_uuid));
+        if (is_null($subscription) || $subscription->isUnsubscribed()) {
+            throw new NotFoundSubscriptionException();
+        }
+
+        $subscription->unsubscribe();
+        $subscription_repo->save($subscription);
+
+        return new UnsubscriptionDto($subscription);
+    }
+
+    /**
+     * @param string $partner_api_key
+     * @param string $partner_secret_key
+     * @param string $subscription_uuid
+     * @return SubscriptionResumptionDto
+     * @throws AlreadyResumedSubscriptionException
+     * @throws NotFoundSubscriptionException
+     * @throws UnauthorizedPartnerException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     */
+    public static function resumeSubscription(
+        string $partner_api_key,
+        string $partner_secret_key,
+        string $subscription_uuid
+    ): SubscriptionResumptionDto {
+        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+
+        $subscription_repo = SubscriptionRepository::getRepository();
+        $subscription = $subscription_repo->findOneByUuid(Uuid::fromString($subscription_uuid));
+        if (is_null($subscription)) {
+            throw new NotFoundSubscriptionException();
+        }
+
+        $subscription->resumeSubscription();
+        $subscription_repo->save($subscription);
+
+        return new SubscriptionResumptionDto($subscription);
+    }
+
+    /**
+     * @param string $partner_api_key
+     * @param string $partner_secret_key
+     * @param string $subscription_uuid
      * @param string $partner_transaction_id
      * @return SubscriptionPaymentDto
+     * @throws NotFoundSubscriptionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
@@ -95,14 +132,14 @@ class SubscriptionAppService
     public static function paySubscription(
         string $partner_api_key,
         string $partner_secret_key,
-        string $subscription_id,
+        string $subscription_uuid,
         string $partner_transaction_id
     ) {
         $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
-        $subscription = SubscriptionRepository::getRepository()->findOneByUuid(Uuid::fromString($subscription_id));
-        if (is_null($subscription)) {
-            throw new \Exception();
+        $subscription = SubscriptionRepository::getRepository()->findOneByUuid(Uuid::fromString($subscription_uuid));
+        if (is_null($subscription) || $subscription->isUnsubscribed()) {
+            throw new NotFoundSubscriptionException();
         }
 
         $payment_method_id = $subscription->getPaymentMethodId();
@@ -128,13 +165,13 @@ class SubscriptionAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getSubscribedProductNames(int $payment_method_id)
+    public static function getSubscriptions(int $payment_method_id)
     {
-        $subscriptions = SubscriptionRepository::getRepository()->findSubscribedOnesByPaymentMethodId($payment_method_id);
+        $subscriptions = SubscriptionRepository::getRepository()->findByPaymentMethodId($payment_method_id);
 
         return array_map(
             function (SubscriptionEntity $subscription) {
-                return $subscription->getProductName();
+                return new SubscriptionDto($subscription);
             },
             $subscriptions
         );

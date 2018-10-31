@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Dto;
 
 use OpenApi\Annotations as OA;
+use RidiPay\Transaction\Application\Dto\SubscriptionDto;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\User\Domain\Entity\CardEntity;
 
@@ -64,6 +65,11 @@ class CardDto extends PaymentMethodDto
         $this->issuer_name = $card->getCardIssuer()->getName();
         $this->color = $card->getCardIssuer()->getColor();
         $this->logo_image_url = $card->getCardIssuer()->getLogoImageUrl();
-        $this->subscriptions = SubscriptionAppService::getSubscribedProductNames($card->getPaymentMethod()->getId());
+        $this->subscriptions = array_map(
+            function (SubscriptionDto $subscription) {
+                return $subscription->product_name;
+            },
+            SubscriptionAppService::getSubscriptions($card->getPaymentMethod()->getId())
+        );
     }
 }

@@ -11,9 +11,6 @@ class SubscriptionDto
     public $subscription_id;
 
     /** @var string */
-    public $payment_method_id;
-
-    /** @var string */
     public $product_name;
 
     /** @var int */
@@ -23,13 +20,11 @@ class SubscriptionDto
     public $subscribed_at;
 
     /**
-     * @param string $payment_method_id
      * @param SubscriptionEntity $subscription
      */
-    public function __construct(string $payment_method_id, SubscriptionEntity $subscription)
+    public function __construct(SubscriptionEntity $subscription)
     {
         $this->subscription_id = $subscription->getUuid()->toString();
-        $this->payment_method_id = $payment_method_id;
         $this->product_name = $subscription->getProductName();
         $this->amount = $subscription->getAmount();
         $this->subscribed_at = $subscription->getSubscribedAt();
