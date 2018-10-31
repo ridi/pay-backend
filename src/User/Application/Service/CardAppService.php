@@ -78,8 +78,8 @@ class CardAppService
      * @param int $u_idx
      * @param string $payment_method_id
      * @throws LeavedUserException
-     * @throws UnregisteredPaymentMethodException
      * @throws NotFoundUserException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
@@ -104,13 +104,13 @@ class CardAppService
 
             UserActionHistoryService::logDeleteCard($u_idx);
 
-            SubscriptionAppService::unsubscribe($payment_method->getId());
-
             if (empty($payment_method_repo->getAvailablePaymentMethods($u_idx))) {
                 UserAppService::initializePinEntryHistory($u_idx);
                 UserAppService::deletePin($u_idx);
                 UserAppService::deleteOnetouchPay($u_idx);
             }
+
+            SubscriptionAppService::optoutFirstPartySubscriptions($u_idx, $payment_method->getId());
 
             $em->commit();
         } catch (\Throwable $t) {

@@ -118,6 +118,14 @@ class PartnerEntity
     }
 
     /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
      * @param string $password
      * @return bool
      */
@@ -173,5 +181,13 @@ class PartnerEntity
     private static function getPartnerSecretKeySecret(): string
     {
         return base64_decode(getenv('PARTNER_SECRET_KEY_SECRET'));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFirstParty(): bool
+    {
+        return $this->is_first_party;
     }
 }

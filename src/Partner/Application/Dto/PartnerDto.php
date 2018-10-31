@@ -5,21 +5,20 @@ namespace RidiPay\Partner\Application\Dto;
 
 use RidiPay\Partner\Domain\Entity\PartnerEntity;
 
-class RegisterPartnerDto
+class PartnerDto
 {
     /** @var string */
-    public $api_key;
+    public $name;
 
-    /** @var string */
-    public $secret_key;
+    /** @var bool */
+    public $is_first_party;
 
     /**
      * @param PartnerEntity $partner
-     * @throws \Exception
      */
     public function __construct(PartnerEntity $partner)
     {
-        $this->api_key = $partner->getApiKey()->toString();
-        $this->secret_key = $partner->getSecretKey()->toString();
+        $this->name = $partner->getName();
+        $this->is_first_party = $partner->isFirstParty();
     }
 }

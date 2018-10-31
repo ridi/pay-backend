@@ -5,9 +5,7 @@ namespace RidiPay\Transaction\Application\Service;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Partner\Application\Service\PartnerAppService;
-use RidiPay\Partner\Domain\Exception\NotFoundPartnerException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
-use RidiPay\Partner\Domain\PartnerConstant;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Dto\SubscriptionDto;
@@ -18,6 +16,9 @@ use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
+use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
+use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
+use RidiPay\Transaction\Domain\SubscriptionConstant;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
@@ -175,5 +176,30 @@ class SubscriptionAppService
             },
             $subscriptions
         );
+    }
+
+    /**
+     * @param int $u_idx
+     * @param int $payment_method_id
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     */
+    public static function optoutFirstPartySubscriptions(int $u_idx, int $payment_method_id): void
+    {
+        $subscriptions = SubscriptionRepository::getRepository()->findByPaymentMethodId($payment_method_id);
+        foreach ($subscriptions as $subscription) {
+            if ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE) {
+                RidiCashAutoChargeSubscriptionOptoutManager::optout(
+                    $u_idx,
+                    $subscription->getUuid()->toString()
+                );
+            } elseif ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDISELECT) {
+                RidiSelectSubscriptionOptoutManager::optout(
+                    $u_idx,
+                    $subscription->getUuid()->toString()
+                );
+            }
+        }
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Tests\Controller;
 
 use Ramsey\Uuid\Uuid;
-use RidiPay\Partner\Application\Dto\RegisterPartnerDto;
+use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
@@ -20,7 +20,7 @@ class OneTimePaymentTest extends ControllerTestCase
     /** @var Client */
     private static $client;
 
-    /** @var RegisterPartnerDto */
+    /** @var PartnerRegistrationDto */
     private static $partner;
 
     /** @var int */

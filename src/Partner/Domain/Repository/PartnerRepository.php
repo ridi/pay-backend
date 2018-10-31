@@ -16,7 +16,10 @@ class PartnerRepository extends BaseEntityRepository
      */
     public function findOneById(int $id): ?PartnerEntity
     {
-        return $this->findOneBy(['id' => $id]);
+        return $this->findOneBy([
+            'id' => $id,
+            'is_valid' => true
+        ]);
     }
 
     /**
@@ -25,7 +28,10 @@ class PartnerRepository extends BaseEntityRepository
      */
     public function findOneByName(string $name): ?PartnerEntity
     {
-        return $this->findOneBy(['name' => $name]);
+        return $this->findOneBy([
+            'name' => $name,
+            'is_valid' => true
+        ]);
     }
 
     /**
@@ -34,7 +40,10 @@ class PartnerRepository extends BaseEntityRepository
      */
     public function findOneByApiKey(UuidInterface $api_key): ?PartnerEntity
     {
-        return $this->findOneBy(['api_key' => $api_key]);
+        return $this->findOneBy([
+            'api_key' => $api_key,
+            'is_valid' => true
+        ]);
     }
 
     /**
