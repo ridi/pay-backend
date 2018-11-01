@@ -21,7 +21,6 @@
         <env name="OAUTH2_JWT_SECRET" value="secret" />
         <env name="OAUTH2_ACCESS_TOKEN" value="eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyaWRpb2F1dGgydGVzdCIsInVfaWR4IjoyODAzMDUwLCJleHAiOjE5MzExMDM0ODUsImNsaWVudF9pZCI6ImlheDdPY0N1WUo4U3U1cDlzd2pzN1JOb3NMN3pZWjR6ZFY1eHlIVngiLCJzY29wZSI6ImFsbCJ9.Eh_kyD7VS5hbveUfWryK_uST2wMpWeESnCrfoJvLCbQ" />
         <env name="PG_BILL_KEY_SECRET" value="NC+J7HXycBr+GQA52O7lzbGnMxi2cwaQWZo+u1HOyAE=" />
-        <env name="IIN_SECRET" value="7arZ/12ZqOZwr9tu3bfbO2GUdhj+2AYu3Tprarkkkq8=" />
         <env name="PARTNER_SECRET_KEY_SECRET" value="TXjVCAn1mcEsE4CnZL7zoxB1cMKGjY+8WWRpAYIIYfw=" />
     </php>
 

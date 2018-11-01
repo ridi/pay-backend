@@ -82,7 +82,7 @@ class CardEntity
      * @Column(
      *   name="iin",
      *   type="string",
-     *   length=255,
+     *   length=6,
      *   nullable=false,
      *   options={
      *     "comment"="Issuer Identification Number(카드 번호 앞 6자리)"
@@ -185,7 +185,7 @@ class CardEntity
         $this->card_issuer = $card_issuer;
         $this->pg_id = $pg_id;
         $this->setEncryptedPgBillKey($pg_bill_key);
-        $this->setEncryptedIin(substr($card_number, 0, 6));
+        $this->setIin($card_number);
         $this->setPurpose($purpose);
     }
 
@@ -237,24 +237,16 @@ class CardEntity
      */
     public function getIin(): string
     {
-        return Crypto::decrypt($this->iin, self::getIinSecret());
+        return $this->iin;
     }
 
     /**
-     * @param string $iin
+     * @param string $card_number
      * @throws \Exception
      */
-    private function setEncryptedIin(string $iin): void
+    private function setIin(string $card_number): void
     {
-        $this->iin = Crypto::encrypt($iin, self::getIinSecret());
-    }
-
-    /**
-     * @return string
-     */
-    private static function getIinSecret(): string
-    {
-        return base64_decode(getenv('IIN_SECRET'));
+        $this->iin = substr($card_number, 0, 6);
     }
 
     /**
