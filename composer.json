@@ -24,13 +24,15 @@
         "monolog/monolog": "^1.23",
         "predis/predis": "^1.1",
         "ramsey/uuid-doctrine": "^1.4",
-        "ridibooks/oauth2": "^0.1.5",
+        "ridibooks/crm": "^1.0",
+        "ridibooks/oauth2": "^0.1.7",
         "sentry/sentry": "^1.9",
         "symfony/console": "^4.1",
         "symfony/flex": "^1.1",
         "symfony/framework-bundle": "^4.1",
         "symfony/validator": "^4.1",
         "symfony/yaml": "^4.1",
+        "twig/twig": "^2.0",
         "zircote/swagger-php": "^3.0"
     },
     "require-dev": {

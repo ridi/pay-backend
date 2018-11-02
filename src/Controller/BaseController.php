@@ -91,4 +91,12 @@ abstract class BaseController extends Controller
     {
         return $this->oauth2_service_provider->getMiddleware()->getUser()->getUid();
     }
+
+    /**
+     * @return string
+     */
+    protected function getEmail(): string
+    {
+        return $this->oauth2_service_provider->getMiddleware()->getUser()->getEmail();
+    }
 }

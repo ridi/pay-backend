@@ -9,8 +9,10 @@ use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
+use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
+use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -212,6 +214,14 @@ class PaymentMethodController extends BaseController
     {
         try {
             CardAppService::deleteCard($this->getUidx(), $payment_method_id);
+
+            $data = [];
+            $email_body = (new TemplateRenderer())->render('card-deletion-alert', $data);
+            EmailSender::send(
+                $this->getEmail(),
+                "[RIDI Pay] {$this->getUid()}님, 카드 삭제 안내드립니다.",
+                $email_body
+            );
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,

@@ -9,8 +9,10 @@ use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
+use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
+use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -439,6 +441,14 @@ class UserController extends BaseController
         try {
             $body = json_decode($request->getContent());
             UserAppService::updatePin($this->getUidx(), $body->pin, $body->validation_token);
+
+            $data = [];
+            $email_body = (new TemplateRenderer())->render('pin-change-alert', $data);
+            EmailSender::send(
+                $this->getEmail(),
+                "[RIDI Pay] {$this->getUid()}님, 결제 비밀번호 변경 안내드립니다.",
+                $email_body
+            );
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -691,6 +701,14 @@ class UserController extends BaseController
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }
+
+            $data = [];
+            $email_body = (new TemplateRenderer())->render('card-registration-alert', $data);
+            EmailSender::send(
+                $this->getEmail(),
+                "[RIDI Pay] {$this->getUid()}님, 카드 등록 안내드립니다.",
+               $email_body
+            );
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -800,6 +818,14 @@ class UserController extends BaseController
                 }
 
                 UserAppService::enableOnetouchPay($this->getUidx(), $body->validation_token);
+
+                $data = [];
+                $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert', $data);
+                EmailSender::send(
+                    $this->getEmail(),
+                    "[RIDI Pay] {$this->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
+                    $email_body
+                );
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }
