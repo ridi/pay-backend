@@ -636,7 +636,7 @@ class UserController extends BaseController
      * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
      * @OAuth2()
      *
-     * @OA\Put(
+     * @OA\Post(
      *   path="/me/onetouch",
      *   summary="원터치 결제 이용 여부 변경",
      *   tags={"private-api"},
@@ -707,7 +707,7 @@ class UserController extends BaseController
             EmailSender::send(
                 $this->getEmail(),
                 "[RIDI Pay] {$this->getUid()}님, 카드 등록 안내드립니다.",
-               $email_body
+                $email_body
             );
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
