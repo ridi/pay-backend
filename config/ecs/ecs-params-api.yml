@@ -10,4 +10,4 @@ run_params:
   task_placement:
     constraints:
       - type: memberOf
-        expression: "attribute:service != fluentd"
+        expression: "attribute:service !exists"

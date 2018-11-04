@@ -34,7 +34,7 @@ deploy:
         --container-name fluentd \
         --container-port 24224
 	APP_ENV=${APP_ENV} GIT_REVISION=$(shell git rev-parse HEAD) ecs-cli compose -f ./config/ecs/api.yml \
-	    --ecs-params ./config/ecs/ecs-params-fluentd.yml \
+	    --ecs-params ./config/ecs/ecs-params-api.yml \
 	    --project-name api \
 		service up \
 		--target-group-arn ${API_TARGET_GROUP_ARN} \
