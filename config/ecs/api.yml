@@ -4,7 +4,7 @@ services:
   api:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend:${GIT_REVISION}
     container_name: api
-    build: .
+    build: ../..
     ports:
       - 80
     environment:
@@ -15,16 +15,5 @@ services:
     logging:
       driver: fluentd
       options:
+        fluentd-address: ${FLUENTD_ADDRESS}
         tag: ${APP_ENV}.ridi-pay.backend.api
-    depends_on:
-      - logger
-  logger:
-    image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-logger:latest
-    container_name: logger
-    build: ./config/docker/fluentd
-    ports:
-      - 24224:24224
-    environment:
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=ap-northeast-2

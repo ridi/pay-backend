@@ -29,10 +29,10 @@ services:
       options:
         tag: dev.ridi-pay.backend.api
     depends_on:
-      - logger
-  logger:
+      - fluentd
+  fluentd:
     build: ./config/docker/fluentd
-    container_name: logger
+    container_name: fluentd
     ports:
       - 24224:24224
     volumes:
