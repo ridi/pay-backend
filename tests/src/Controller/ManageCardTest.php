@@ -3,12 +3,15 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
+use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
+use RidiPay\Library\TemplateRenderer;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Tests\TestUtil;
+use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
@@ -34,6 +37,21 @@ class ManageCardTest extends ControllerTestCase
     private const TAX_ID = '940101'; // 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
 
     private const PIN = '123456';
+
+    /**
+     * @throws \Exception
+     */
+    public static function setUpBeforeClass()
+    {
+        Test::double(TemplateRenderer::class, ['render' => '']);
+        Test::double(EmailSender::class, ['send' => '']);
+    }
+
+    public static function tearDownAfterClass()
+    {
+        Test::clean(TemplateRenderer::class);
+        Test::clean(EmailSender::class);
+    }
 
     /**
      * @dataProvider userAndCardProvider

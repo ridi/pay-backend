@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
+use AspectMock\Test;
+use RidiPay\Library\TemplateRenderer;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Application\Service\CardAppService;
+use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,6 +17,21 @@ class UpdateOnetouchPayTest extends ControllerTestCase
 {
     /** @var Client */
     private static $client;
+
+    /**
+     * @throws \Exception
+     */
+    public static function setUpBeforeClass()
+    {
+        Test::double(TemplateRenderer::class, ['render' => '']);
+        Test::double(EmailSender::class, ['send' => '']);
+    }
+
+    public static function tearDownAfterClass()
+    {
+        Test::clean(TemplateRenderer::class);
+        Test::clean(EmailSender::class);
+    }
 
     public function testEnableOnetouchPayWhenAddingFirstPaymentMethod()
     {

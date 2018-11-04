@@ -84,6 +84,7 @@ class TestUtil
                     'result' => [
                         'id' => $u_id,
                         'idx' => $u_idx,
+                        'email' => 'oauth2-test@ridi.com',
                         'is_verified_adult' => true,
                     ],
                     'message' => '정상적으로 완료되었습니다.'
