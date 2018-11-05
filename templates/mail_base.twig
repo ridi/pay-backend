@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>RIDI Select</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+<body>
+  <div style="background: #F7F8F9; margin: 0; padding: 25px 10px; cursor: default; letter-spacing: -.03em; font-family: 'Apple SD Gothic Neo', Helvetica, arial, '나눔고딕', 'Nanum Gothic', '돋움', Dotum, Tahoma, Geneva, sans-serif;">
+    <table cellspacing="0" cellpadding="0" style="max-width: 680px; width: 100%; margin: 0 auto; border-collapse: collapse;">
+      <tbody>
+        <tr>
+          <td style="padding: 0 0 24px 0; vertical-align: top;">
+            <a href="{{ HOST_LINK }}" style="text-decoration: none;" target="_blank">
+              <img style="width: 104px; height: 16px;" src="{{ STATIC_URL }}/unlimited/dist/images/mail_template/logo_ridiselect.png" alt="리디셀렉트">
+            </a>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="padding: 40px 15px; background: white; border: 1px solid #E5E8EB;">
+            <div style="max-width: 490px; width: 100%; margin: 0 auto; font-size: 13px; color: #373a3c; line-height: 1.8em;">
+              {% block contents %}
+                {# email 내용 #}
+              {% endblock %}
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style="text-align: center; padding: 29px 0 50px 0;">
+            <ul style="margin: 0; padding: 0; font-family: Tahoma, helvetica; font-size: 18px; font-weight: bold; color: #373a3c; line-height: 1em;">
+              <li style="display: inline-block; padding-right: 8px; line-height: 1em;">
+                <img src="{{ STATIC_URL }}/books/dist/images/dm_template/global/call_center.png" alt="콜센터" style="width: 16px; height: 16px; margin: 2px 1px 0 0; padding: 0; vertical-align: top; border: none;">
+                1644-0331
+              </li><li style="display: inline-block; padding-left: 9px; line-height: 1em; border-left: 1px solid #d2d2d2;">
+                <a href="https://help.ridibooks.com/hc/ko/requests/new" target="_blank" style="display: inline-block; text-decoration: none; color: inherit;">고객센터</a>
+              </li>
+            </ul>
+            <p style="padding: 14px 0 0; margin: 0; line-height: 1.8em; color: #626d75; font-size: 11px; font-weight: bold;">
+              리디(주) / 대표 배기식 / 서울시 강남구 역삼동 702-28 어반벤치빌딩 10층 (테헤란로 325)<br>
+              사업자등록번호 120-87-27435 / 통신판매업신고 제 2009-서울강남 35-02139호
+            </p>
+            <p style="padding: 8px 0 0; margin: 0; color: #626d75; font-size: 11px; font-weight: bold; font-family: Tahoma, helvetica; ">© RIDI Corp.</p>
+            <div style="padding: 14px 0 0;">
+              <a href="https://www.facebook.com/ridibooks" style="text-decoration: none;" target="_blank">
+                <img src="{{ STATIC_URL }}/books/dist/images/dm_template/global/facebook.png" alt="리디북스 페이스북" style="border: none; width: 16px; height: 16px;">
+              </a>
+              <a href="https://twitter.com/ridibooks" style="text-decoration: none;" target="_blank">
+                <img src="{{ STATIC_URL }}/books/dist/images/dm_template/global/twitter.png" alt="리디북스 트위터" style="border: none; width: 16px; height: 16px; margin: 0 0 0 7px;">
+              </a>
+              <a href="https://blog.naver.com/ridibooks" style="text-decoration: none;" target="_blank">
+                <img src="{{ STATIC_URL }}/books/dist/images/dm_template/global/blog.png" alt="리디북스 블로그" style="border: none; width: 16px; height: 16px; margin: 0 0 0 7px;">
+              </a>
+              <a href="https://instagram.com/ridibookspaper/" style="text-decoration: none;" target="_blank">
+                <img src="{{ STATIC_URL }}/books/dist/images/dm_template/global/instagram.png" alt="리디북스 인스타그램" style="border: none; width: 16px; height: 16px; margin: 0 0 0 7px;">
+              </a>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

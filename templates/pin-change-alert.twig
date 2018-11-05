@@ -1,0 +1,63 @@
+{% extends "mail_base.twig" %}
+{% block contents %}
+  <h1 style="margin: 0; padding: 40px 0 0; font-size: 28px; font-weight: 600; color: #2b2f33; text-align: center; line-height: 1.4em;">
+    결제 비밀번호 변경 안내
+  </h1>
+  <div style="padding: 20px 0 40px 0; text-align: center;">
+    <p
+      style="
+        font-size: 16px;
+        font-weight: normal;
+        font-style: normal;
+        font-stretch: normal;
+        line-height: 1.88;
+        letter-spacing: -0.5px;
+        text-align: center;
+        color: #333333;
+        margin: 20px 0 30px 0;
+      "
+    >
+      {{ user_name }}님, 안녕하세요.<br />
+      RIDI Pay 결제 비밀번호가 변경되었습니다.<br />
+      본인이 변경하시지 않은 경우 <a href="https://help.ridibooks.com/hc/ko/sections/360002242393" style="color: #1f8ce6; text-decoration: none;">고객센터</a>로 문의해주세요.<br />
+    </p>
+    <p
+      style="
+        margin: 20px 0;
+        padding: 0;
+        font-size: 14px;
+        font-weight: bold;
+        font-style: normal;
+        font-stretch: normal;
+        line-height: 2.14;
+        letter-spacing: -0.4px;
+        text-align: center;
+        color: #333;
+      "
+    >
+      변경 일시: {{ }}
+    </p>
+  </div>
+  <div style="padding: 20px 0 40px 0; text-align: center;">
+    <a
+      href="{{ HOST_LINK }}"
+      style="
+        display: inline-block;
+        text-decoration: none;
+        margin: 0;
+        padding: 12px 50px;
+        border: 1px solid #1f8ce6;
+        background-color: #1f8ce6;
+        font-size: 13px;
+        line-height: 1em;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        box-shadow: none;
+        border-radius: 2px; -webkit-border-radius: 2px; -moz-border-radius: 2px; -ms-border-radius: 2px;
+      "
+    >
+      RIDI Pay 설정
+    </a>
+  </div>
+{% endblock %}
