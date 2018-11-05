@@ -443,7 +443,7 @@ class UserController extends BaseController
             UserAppService::updatePin($this->getUidx(), $body->pin, $body->validation_token);
 
             $data = [];
-            $email_body = (new TemplateRenderer())->render('pin-change-alert', $data);
+            $email_body = (new TemplateRenderer())->render('pin-change-alert.twig', $data);
             EmailSender::send(
                 $this->getEmail(),
                 "[RIDI Pay] {$this->getUid()}님, 결제 비밀번호 변경 안내드립니다.",
@@ -703,7 +703,7 @@ class UserController extends BaseController
             }
 
             $data = [];
-            $email_body = (new TemplateRenderer())->render('card-registration-alert', $data);
+            $email_body = (new TemplateRenderer())->render('card-registration-alert.twig', $data);
             EmailSender::send(
                 $this->getEmail(),
                 "[RIDI Pay] {$this->getUid()}님, 카드 등록 안내드립니다.",
@@ -820,7 +820,7 @@ class UserController extends BaseController
                 UserAppService::enableOnetouchPay($this->getUidx(), $body->validation_token);
 
                 $data = [];
-                $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert', $data);
+                $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
                 EmailSender::send(
                     $this->getEmail(),
                     "[RIDI Pay] {$this->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",

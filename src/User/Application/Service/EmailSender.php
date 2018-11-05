@@ -5,6 +5,7 @@ namespace RidiPay\User\Application\Service;
 
 use Ridibooks\Crm\Client;
 use Ridibooks\Crm\Notification\Payload\Email;
+use RidiPay\Kernel;
 use RidiPay\Library\EmailAddressConstant;
 use RidiPay\Library\SentryHelper;
 
@@ -23,9 +24,14 @@ class EmailSender
             $title,
             $body
         );
-        $client = Client::createWithDefaultRetry();
-        $response = $client->sendEmail($email);
 
+        if (Kernel::isDev()) {
+            $client = Client::createWithDefaultRetry(['base_uri' => 'https://crm-api.dev.ridi.io']);
+        } else {
+            $client = Client::createWithDefaultRetry();
+        }
+
+        $response = $client->sendEmail($email);
         if ($response->getStatusCode() !== 200) {
             SentryHelper::captureMessage('Email 발송 실패', [], [], true);
         }

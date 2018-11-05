@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Library\Jwt;
 
 use Firebase\JWT\JWT;
+use RidiPay\Library\TimeUnitConstant;
 
 class JwtAuthorizationHelper
 {
@@ -41,7 +42,8 @@ class JwtAuthorizationHelper
 
         $payload = [
             'iss' => $iss,
-            'aud' => $aud
+            'aud' => $aud,
+            'exp' => time() + (5 * TimeUnitConstant::SEC_IN_MINUTE)
         ];
         if (!is_null($sub)) {
             $payload['sub'] = $sub;

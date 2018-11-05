@@ -216,7 +216,7 @@ class PaymentMethodController extends BaseController
             CardAppService::deleteCard($this->getUidx(), $payment_method_id);
 
             $data = [];
-            $email_body = (new TemplateRenderer())->render('card-deletion-alert', $data);
+            $email_body = (new TemplateRenderer())->render('card-deletion-alert.twig', $data);
             EmailSender::send(
                 $this->getEmail(),
                 "[RIDI Pay] {$this->getUid()}님, 카드 삭제 안내드립니다.",
