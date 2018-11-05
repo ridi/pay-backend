@@ -7,7 +7,6 @@ use Predis\Client;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Kernel;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
@@ -69,27 +68,20 @@ class TransactionAppService
         $reservation_id = Uuid::uuid4()->toString();
         $reservation_key = self::getReservationKey($reservation_id);
 
-        try {
-            $redis = self::getRedisClient();
-            $redis->hmset(
-                $reservation_key,
-                [
-                    'payment_method_id' => $payment_method_id,
-                    'partner_id' => $partner_id,
-                    'partner_transaction_id' => $partner_transaction_id,
-                    'product_name' => $product_name,
-                    'amount' => $amount,
-                    'return_url' => $return_url,
-                    'reserved_at' => (new \DateTime())->format(DATE_ATOM)
-                ]
-            );
-            $redis->expire($reservation_key, TimeUnitConstant::SEC_IN_HOUR);
-        } catch (\Throwable $t) {
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
-
-            throw $t;
-        }
+        $redis = self::getRedisClient();
+        $redis->hmset(
+            $reservation_key,
+            [
+                'payment_method_id' => $payment_method_id,
+                'partner_id' => $partner_id,
+                'partner_transaction_id' => $partner_transaction_id,
+                'product_name' => $product_name,
+                'amount' => $amount,
+                'return_url' => $return_url,
+                'reserved_at' => (new \DateTime())->format(DATE_ATOM)
+            ]
+        );
+        $redis->expire($reservation_key, TimeUnitConstant::SEC_IN_HOUR);
 
         return $reservation_id;
     }
@@ -150,24 +142,17 @@ class TransactionAppService
         $reserved_transaction = self::getReservedTransaction($reservation_id, $validation_token);
         $pg = PgAppService::getActivePg();
 
-        try {
-            $transaction = new TransactionEntity(
-                $u_idx,
-                intval($reserved_transaction['payment_method_id']),
-                $pg->id,
-                intval($reserved_transaction['partner_id']),
-                $reserved_transaction['partner_transaction_id'],
-                $reserved_transaction['product_name'],
-                intval($reserved_transaction['amount']),
-                \DateTime::createFromFormat(DATE_ATOM, $reserved_transaction['reserved_at'])
-            );
-            TransactionRepository::getRepository()->save($transaction);
-        } catch (\Throwable $t) {
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
-
-            throw $t;
-        }
+        $transaction = new TransactionEntity(
+            $u_idx,
+            intval($reserved_transaction['payment_method_id']),
+            $pg->id,
+            intval($reserved_transaction['partner_id']),
+            $reserved_transaction['partner_transaction_id'],
+            $reserved_transaction['product_name'],
+            intval($reserved_transaction['amount']),
+            \DateTime::createFromFormat(DATE_ATOM, $reserved_transaction['reserved_at'])
+        );
+        TransactionRepository::getRepository()->save($transaction);
 
         ValidationTokenManager::invalidate(self::getReservationKey($reservation_id));
 
@@ -233,9 +218,6 @@ class TransactionAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
-
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
 
             // 결제 승인 건 취소 처리
             $cancel_reason = '[단건 결제] PG사 결제 성공 후, 내부 승인 처리 중 오류 발생';
@@ -336,9 +318,6 @@ class TransactionAppService
             $em->rollback();
             $em->close();
 
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
-
             // 결제 승인 건 취소 처리
             $cancel_reason = '[정기 결제] PG사 결제 성공 후, 내부 승인 처리 중 오류 발생';
             $cancel_transaction_response = $pg_handler->cancelTransaction(
@@ -426,9 +405,6 @@ class TransactionAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
-
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
 
             $data = [
                 'extra' => [

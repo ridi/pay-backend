@@ -5,7 +5,6 @@ namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
@@ -69,9 +68,6 @@ class CardAppService
             $em->rollback();
             $em->close();
 
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
-
             throw $t;
         }
     }
@@ -119,9 +115,6 @@ class CardAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
-
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
 
             throw $t;
         }

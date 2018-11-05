@@ -3,11 +3,9 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Infrastructure;
 
-use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Order;
-use RidiPay\Library\Pg\Kcp\Response;
 use RidiPay\Library\Pg\Kcp\Util;
 use RidiPay\Pg\Domain\Service\CardRegistrationResponse;
 use RidiPay\Pg\Domain\Service\PgHandlerInterface;
@@ -88,11 +86,7 @@ class KcpHandler implements PgHandlerInterface
         string $tax_id
     ): CardRegistrationResponse {
         $card = new Card($card_number, $card_expiration_date, $card_password, $tax_id);
-
         $response = $this->client->requestBatchKey($card);
-        if (!$response->isSuccess()) {
-            self::log(__METHOD__, $response);
-        }
 
         return new CardRegistrationResponse(
             $response->isSuccess(),
@@ -129,11 +123,7 @@ class KcpHandler implements PgHandlerInterface
             $buyer_tel2
         );
         $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
-
         $response = $this->client->batchOrder($pg_bill_key, $order);
-        if (!$response->isSuccess()) {
-            self::log(__METHOD__, $response);
-        }
 
         return new TransactionApprovalResponse(
             $response->isSuccess(),
@@ -154,9 +144,6 @@ class KcpHandler implements PgHandlerInterface
     public function cancelTransaction(string $pg_transaction_id, string $cancel_reason): TransactionCancellationResponse
     {
         $response = $this->client->cancelTransaction($pg_transaction_id, $cancel_reason);
-        if (!$response->isSuccess()) {
-            self::log(__METHOD__, $response);
-        }
 
         return new TransactionCancellationResponse(
             $response->isSuccess(),
@@ -180,16 +167,5 @@ class KcpHandler implements PgHandlerInterface
             Util::RECEIPT_LANG_KO,
             $this->is_prod
         );
-    }
-
-    /**
-     * @param string $name
-     * @param Response $response
-     * @throws \Exception
-     */
-    private static function log(string $name, Response $response): void
-    {
-        $logger = new StdoutLogger($name);
-        $logger->error(json_encode(['res_cd' => $response->getResCd(), 'res_msg' => $response->getResMsg()]));
     }
 }

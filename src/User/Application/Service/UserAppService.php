@@ -5,7 +5,6 @@ namespace RidiPay\User\Application\Service;
 
 use Predis\Client;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\User\Application\Dto\UserInformationDto;
@@ -71,9 +70,6 @@ class UserAppService
             $em->rollback();
             $em->close();
 
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
-
             throw $t;
         }
     }
@@ -130,9 +126,6 @@ class UserAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
-
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
 
             throw $t;
         }
@@ -223,9 +216,6 @@ class UserAppService
             $em->rollback();
             $em->close();
 
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
-
             throw $t;
         }
     }
@@ -284,9 +274,6 @@ class UserAppService
             $em->rollback();
             $em->close();
 
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
-
             throw $t;
         }
     }
@@ -317,9 +304,6 @@ class UserAppService
         } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
-
-            $logger = new StdoutLogger(__METHOD__);
-            $logger->error($t->getMessage());
 
             throw $t;
         }
