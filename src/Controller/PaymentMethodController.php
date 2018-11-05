@@ -213,9 +213,12 @@ class PaymentMethodController extends BaseController
     public function deleteCard(string $payment_method_id): JsonResponse
     {
         try {
-            CardAppService::deleteCard($this->getUidx(), $payment_method_id);
+            $card = CardAppService::deleteCard($this->getUidx(), $payment_method_id);
 
-            $data = [];
+            $data = [
+                'card_issuer_name' => $card->issuer_name,
+                'iin' => $card->iin
+            ];
             $email_body = (new TemplateRenderer())->render('card-deletion-alert.twig', $data);
             EmailSender::send(
                 $this->getEmail(),

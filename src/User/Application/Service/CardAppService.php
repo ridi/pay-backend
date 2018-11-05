@@ -9,9 +9,11 @@ use RidiPay\Library\Log\StdoutLogger;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
+use RidiPay\User\Application\Dto\CardDto;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
+use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 use RidiPay\User\Domain\Service\CardRegistrationValidator;
@@ -77,6 +79,7 @@ class CardAppService
     /**
      * @param int $u_idx
      * @param string $payment_method_id
+     * @return CardDto
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws UnregisteredPaymentMethodException
@@ -85,7 +88,7 @@ class CardAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function deleteCard(int $u_idx, string $payment_method_id): void
+    public static function deleteCard(int $u_idx, string $payment_method_id): CardDto
     {
         UserAppService::validateUser($u_idx);
 
@@ -122,5 +125,44 @@ class CardAppService
 
             throw $t;
         }
+
+        return new CardDto($payment_method->getCardForOneTimePayment());
+    }
+
+    /**
+     * @param int $u_idx
+     * @return CardDto
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws UnauthorizedCardRegistrationException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function finishCardRegistration(int $u_idx): CardDto
+    {
+        if (!CardService::isCardRegistrationInProgress($u_idx)) {
+            throw new UnauthorizedCardRegistrationException();
+        }
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $payment_method = CardService::useRegisteredCard($u_idx);
+            UserAppService::useCreatedPin($u_idx);
+            UserAppService::useSavedOnetouchPaySetting($u_idx);
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
+
+        // 단건 결제용 카드와 정기 결제용 카드는 연동 PG사 분기 가능성을 고려해서 나눠진 것 뿐이고,
+        // 두 카드는 동일한 카드라서 단건 결제용 카드를 외부로 전달한다.
+        return new CardDto($payment_method->getCardForOneTimePayment());
     }
 }

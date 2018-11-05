@@ -18,6 +18,13 @@ class TemplateRenderer
         $this->twig = new \Twig_Environment($loader, [
             'debug' => Kernel::isLocal()
         ]);
+
+        $this->addGlobalVariables();
+    }
+
+    private function addGlobalVariables(): void
+    {
+        $this->twig->addGlobal('RIDI_PAY_SETTINGS_URL', getenv('RIDI_PAY_URL') . '/settings');
     }
 
     /**

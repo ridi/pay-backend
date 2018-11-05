@@ -21,7 +21,6 @@ use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Repository\UserRepository;
 use RidiPay\User\Domain\Service\AbuseBlocker;
-use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 
@@ -195,6 +194,66 @@ class UserAppService
 
     /**
      * @param int $u_idx
+     * @param bool $enable_onetouch_pay
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function setOnetouchPay(int $u_idx, bool $enable_onetouch_pay): void
+    {
+        self::getUser($u_idx);
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $redis = self::getRedisClient();
+            $redis->hset(self::getUserKey($u_idx), 'enable_onetouch_pay', $enable_onetouch_pay);
+
+            if ($enable_onetouch_pay) {
+                UserActionHistoryService::logEnableOnetouchPay($u_idx);
+            } else {
+                UserActionHistoryService::logDisableOnetouchPay($u_idx);
+            }
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            $logger = new StdoutLogger(__METHOD__);
+            $logger->error($t->getMessage());
+
+            throw $t;
+        }
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Exception
+     */
+    public static function useSavedOnetouchPaySetting(int $u_idx): void
+    {
+        $redis = self::getRedisClient();
+        $enable_onetouch_pay = boolval($redis->hget(self::getUserKey($u_idx), 'enable_onetouch_pay'));
+
+        $user = self::getUser($u_idx);
+        if ($enable_onetouch_pay) {
+            $user->enableOnetouchPay();
+        } else {
+            $user->disableOnetouchPay();
+        }
+        UserRepository::getRepository()->save($user);
+    }
+
+    /**
+     * @param int $u_idx
      * @param null|string $entered_validation_token
      * @throws LeavedUserException
      * @throws NotFoundUserException
@@ -215,11 +274,6 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            if (CardService::isCardRegistrationInProgress($u_idx)) {
-                CardService::useRegisteredCard($u_idx);
-                self::useCreatedPin($u_idx);
-            }
-
             $user->enableOnetouchPay();
             UserRepository::getRepository()->save($user);
 
@@ -254,11 +308,6 @@ class UserAppService
         $em->beginTransaction();
 
         try {
-            if (CardService::isCardRegistrationInProgress($u_idx)) {
-                CardService::useRegisteredCard($u_idx);
-                self::useCreatedPin($u_idx);
-            }
-
             $user->disableOnetouchPay();
             UserRepository::getRepository()->save($user);
 

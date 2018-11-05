@@ -1,11 +1,11 @@
 {% extends "mail_base.twig" %}
 {% block contents %}
-  <h1 style="margin: 0; padding: 40px 0; font-size: 28px; font-weight: 600; color: #2b2f33; text-align: center; line-height: 1.4em;">
+  <h1 style="margin: 0; padding: 40px 0 10px; font-size: 28px; font-weight: 600; color: #2b2f33; text-align: center; line-height: 1.4em;">
     카드 삭제 안내
   </h1>
   <p
     style="
-      font-size: 14px;
+      font-size: 16px;
       font-weight: normal;
       font-style: normal;
       font-stretch: normal;
@@ -25,7 +25,7 @@
           삭제 일시
         </th>
         <td style="padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">
-          {{}}
+          {{ "now"|date("Y년 m월 d일 H:i") }}
         </td>
       </tr>
       <tr>
@@ -33,7 +33,7 @@
           카드사
         </th>
         <td style="padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">
-          {{}}
+          {{ card_issuer_name }}
         </td>
       </tr>
       <tr>
@@ -41,14 +41,15 @@
           카드 번호
         </th>
         <td style="padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">
-          {{}}
+          {% import "macros.twig" as macros %}
+          {{ macros.format_iin(iin) }}
         </td>
       </tr>
     </tbody>
   </table>
-  <div style="padding: 20px 0 40px 0; text-align: center;">
+  <div style="padding: 30px 0 40px 0; text-align: center;">
     <a
-      href="{{ HOST_LINK }}"
+      href="{{ RIDI_PAY_SETTINGS_URL }}"
       style="
         display: inline-block;
         text-decoration: none;

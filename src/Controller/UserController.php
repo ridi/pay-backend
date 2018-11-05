@@ -12,11 +12,13 @@ use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
+use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
+use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
 use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
@@ -442,7 +444,7 @@ class UserController extends BaseController
             $body = json_decode($request->getContent());
             UserAppService::updatePin($this->getUidx(), $body->pin, $body->validation_token);
 
-            $data = [];
+            $data = ['u_id' => $this->getUid()];
             $email_body = (new TemplateRenderer())->render('pin-change-alert.twig', $data);
             EmailSender::send(
                 $this->getEmail(),
@@ -663,19 +665,15 @@ class UserController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
-     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired"),
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedCardRegistration")
      *       }
      *     )
      *   ),
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
-     *         @OA\Schema(ref="#/components/schemas/OnetouchPaySettingChangeDeclined")
-     *       }
-     *     )
+     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
      *   ),
      *   @OA\Response(
      *     response="404",
@@ -696,13 +694,14 @@ class UserController extends BaseController
     {
         try {
             $body = json_decode($request->getContent());
-            if ($body->enable_onetouch_pay) {
-                UserAppService::enableOnetouchPay($this->getUidx(), null);
-            } else {
-                UserAppService::disableOnetouchPay($this->getUidx());
-            }
+            UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
 
-            $data = [];
+            $card = CardAppService::finishCardRegistration($this->getUidx());
+
+            $data = [
+                'card_issuer_name' => $card->issuer_name,
+                'iin' => $card->iin
+            ];
             $email_body = (new TemplateRenderer())->render('card-registration-alert.twig', $data);
             EmailSender::send(
                 $this->getEmail(),
@@ -721,10 +720,10 @@ class UserController extends BaseController
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
-        } catch (OnetouchPaySettingChangeDeclinedException $e) {
+        } catch (UnauthorizedCardRegistrationException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
-                UserErrorCodeConstant::ONETOUCH_PAY_SETTING_CHANGE_DECLINED,
+                UserErrorCodeConstant::UNAUTHORIZED_CARD_REGISTRATION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
@@ -818,17 +817,20 @@ class UserController extends BaseController
                 }
 
                 UserAppService::enableOnetouchPay($this->getUidx(), $body->validation_token);
-
-                $data = [];
-                $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
-                EmailSender::send(
-                    $this->getEmail(),
-                    "[RIDI Pay] {$this->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
-                    $email_body
-                );
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }
+
+            $data = [
+                'u_id' => $this->getUid(),
+                'enable_onetouch_pay' => $body->enable_onetouch_pay
+            ];
+            $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
+            EmailSender::send(
+                $this->getEmail(),
+                "[RIDI Pay] {$this->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
+                $email_body
+            );
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
