@@ -80,7 +80,7 @@ class UserEntity
      * @return string
      * @throws WrongFormattedPinException
      */
-    public function createPin(string $pin): string
+    public static function createPin(string $pin): string
     {
         self::assertValidPin($pin);
 

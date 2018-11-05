@@ -57,7 +57,7 @@ class OneTimePaymentTest extends ControllerTestCase
     public function testOneTimePaymentLifeCycleInCaseOfOnetouchPay()
     {
         self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::signUp(
+        self::$payment_method_id = TestUtil::registerCard(
             self::$u_idx,
             '123456',
             true,
@@ -111,7 +111,7 @@ class OneTimePaymentTest extends ControllerTestCase
     {
         $pin = '123456';
         self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::signUp(
+        self::$payment_method_id = TestUtil::registerCard(
             self::$u_idx,
             $pin,
             false,

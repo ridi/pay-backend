@@ -25,7 +25,7 @@ class CardRegistrationValidator
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public function validate()
+    public function validate(): void
     {
         $this->assertNotHavingCard();
     }

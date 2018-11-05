@@ -83,7 +83,7 @@ class UserInformationInquiryTest extends ControllerTestCase
     {
         $user_indices = [TestUtil::getRandomUidx(), TestUtil::getRandomUidx(), TestUtil::getRandomUidx()];
 
-        $payment_method_id = TestUtil::signUp(
+        $payment_method_id = TestUtil::registerCard(
             $user_indices[0],
             '123456',
             true,

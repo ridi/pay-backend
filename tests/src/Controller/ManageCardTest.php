@@ -7,7 +7,6 @@ use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
-use RidiPay\Library\TemplateRenderer;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Tests\TestUtil;
@@ -43,13 +42,11 @@ class ManageCardTest extends ControllerTestCase
      */
     public static function setUpBeforeClass()
     {
-        Test::double(TemplateRenderer::class, ['render' => '']);
-        Test::double(EmailSender::class, ['send' => '']);
+        Test::double(EmailSender::class, ['send' => null]);
     }
 
     public static function tearDownAfterClass()
     {
-        Test::clean(TemplateRenderer::class);
         Test::clean(EmailSender::class);
     }
 
@@ -125,6 +122,8 @@ class ManageCardTest extends ControllerTestCase
      * @param int $http_status_code
      * @param null|string $error_code
      * @throws AuthorizationException
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
      * @throws UnsupportedPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -168,11 +167,11 @@ class ManageCardTest extends ControllerTestCase
     public function userAndCardProvider(): array
     {
         $user_indices = [];
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 2; $i++) {
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
-        TestUtil::signUp(
+        TestUtil::registerCard(
             $user_indices[1],
             self::PIN,
             true,
@@ -181,9 +180,6 @@ class ManageCardTest extends ControllerTestCase
             self::CARD_A['CARD_PASSWORD'],
             self::TAX_ID
         );
-
-        UserAppService::createUser($user_indices[2]);
-        UserAppService::deleteUser($user_indices[2]);
 
         return [
             [
@@ -203,15 +199,6 @@ class ManageCardTest extends ControllerTestCase
                 self::TAX_ID,
                 Response::HTTP_FORBIDDEN,
                 UserErrorCodeConstant::CARD_ALREADY_EXISTS
-            ],
-            [
-                $user_indices[2],
-                self::CARD_A['CARD_NUMBER'],
-                self::CARD_A['CARD_EXPIRATION_DATE'],
-                self::CARD_A['CARD_PASSWORD'],
-                self::TAX_ID,
-                Response::HTTP_FORBIDDEN,
-                UserErrorCodeConstant::LEAVED_USER
             ]
         ];
     }
@@ -234,7 +221,7 @@ class ManageCardTest extends ControllerTestCase
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
-        $payment_method_id_of_normal_user = TestUtil::signUp(
+        $payment_method_id_of_normal_user = TestUtil::registerCard(
             $user_indices[0],
             '123456',
             true,
@@ -244,7 +231,7 @@ class ManageCardTest extends ControllerTestCase
             self::TAX_ID
         );
 
-        $payment_method_id_of_leaved_user = TestUtil::signUp(
+        $payment_method_id_of_leaved_user = TestUtil::registerCard(
             $user_indices[1],
             '123456',
             true,

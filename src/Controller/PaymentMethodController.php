@@ -83,12 +83,7 @@ class PaymentMethodController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/CardAlreadyExists"),
-     *         @OA\Schema(ref="#/components/schemas/LeavedUser")
-     *       }
-     *     )
+     *     @OA\JsonContent(ref="#/components/schemas/CardAlreadyExists")
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -120,12 +115,6 @@ class PaymentMethodController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::CARD_ALREADY_EXISTS,
-                $e->getMessage()
-            );
-        } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (CardRegistrationException $e) {

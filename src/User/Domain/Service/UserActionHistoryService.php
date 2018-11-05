@@ -11,7 +11,6 @@ class UserActionHistoryService
 {
     private const REGISTER_CARD = 'REGISTER_CARD';
     private const DELETE_CARD = 'DELETE_CARD';
-    private const CREATE_PIN = 'CREATE_PIN';
     private const UPDATE_PIN = 'UPDATE_PIN';
     private const ENABLE_ONETOUCH_PAY = 'ENABLE_ONETOUCH_PAY';
     private const DISABLE_ONETOUCH_PAY = 'DISABLE_ONETOUCH_PAY';
@@ -20,7 +19,7 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
-    public static function logRegisterCard(int $u_idx)
+    public static function logRegisterCard(int $u_idx): void
     {
         self::logUserAction($u_idx, self::REGISTER_CARD);
     }
@@ -29,7 +28,7 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
-    public static function logDeleteCard(int $u_idx)
+    public static function logDeleteCard(int $u_idx): void
     {
         self::logUserAction($u_idx, self::DELETE_CARD);
     }
@@ -38,16 +37,7 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
-    public static function logCreatePin(int $u_idx)
-    {
-        self::logUserAction($u_idx, self::CREATE_PIN);
-    }
-
-    /**
-     * @param int $u_idx
-     * @throws \Exception
-     */
-    public static function logUpdatePin(int $u_idx)
+    public static function logUpdatePin(int $u_idx): void
     {
         self::logUserAction($u_idx, self::UPDATE_PIN);
     }
@@ -56,7 +46,7 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
-    public static function logEnableOnetouchPay(int $u_idx)
+    public static function logEnableOnetouchPay(int $u_idx): void
     {
         self::logUserAction($u_idx, self::ENABLE_ONETOUCH_PAY);
     }
@@ -65,7 +55,7 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
-    public static function logDisableOnetouchPay(int $u_idx)
+    public static function logDisableOnetouchPay(int $u_idx): void
     {
         self::logUserAction($u_idx, self::DISABLE_ONETOUCH_PAY);
     }
@@ -75,7 +65,7 @@ class UserActionHistoryService
      * @param string $action
      * @throws \Exception
      */
-    private static function logUserAction(int $u_idx, string $action)
+    private static function logUserAction(int $u_idx, string $action): void
     {
         $user = UserRepository::getRepository()->findOneByUidx($u_idx);
         $user_action_history = new UserActionHistoryEntity($user, $action);

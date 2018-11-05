@@ -57,7 +57,7 @@ class ValidatePinTest extends ControllerTestCase
     public function testPinEntryBlocked()
     {
         $u_idx = TestUtil::getRandomUidx();
-        TestUtil::signUp(
+        TestUtil::registerCard(
             $u_idx,
             self::VALID_PIN,
             true,
@@ -119,7 +119,7 @@ class ValidatePinTest extends ControllerTestCase
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
-        TestUtil::signUp(
+        TestUtil::registerCard(
             $user_indices[0],
             self::VALID_PIN,
             true,
@@ -129,7 +129,7 @@ class ValidatePinTest extends ControllerTestCase
             TestUtil::TAX_ID
         );
 
-        TestUtil::signUp(
+        TestUtil::registerCard(
             $user_indices[1],
             self::VALID_PIN,
             true,
@@ -140,7 +140,7 @@ class ValidatePinTest extends ControllerTestCase
         );
         UserAppService::deleteUser($user_indices[1]);
 
-        TestUtil::signUp(
+        TestUtil::registerCard(
             $user_indices[3],
             self::VALID_PIN,
             true,

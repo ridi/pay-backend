@@ -321,16 +321,6 @@ class UserController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
-     *   ),
-     *   @OA\Response(
-     *     response="404",
-     *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NotFoundUser")
-     *   ),
-     *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
      *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
@@ -345,18 +335,6 @@ class UserController extends BaseController
         try {
             $body = json_decode($request->getContent());
             UserAppService::createPin($this->getUidx(), $body->pin);
-        } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::LEAVED_USER,
-                $e->getMessage()
-            );
-        } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
         } catch (WrongFormattedPinException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,

@@ -22,8 +22,7 @@ use RidiPay\User\Domain\Entity\CardIssuerEntity;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
-use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
-use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
+use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 
@@ -135,8 +134,7 @@ class TestUtil
      * @throws CardRegistrationException
      * @throws LeavedUserException
      * @throws NotFoundUserException
-     * @throws OnetouchPaySettingChangeDeclinedException
-     * @throws UnregisteredPaymentMethodException
+     * @throws UnauthorizedCardRegistrationException
      * @throws UnsupportedPaymentMethodException
      * @throws UnsupportedPgException
      * @throws WrongFormattedPinException
@@ -144,7 +142,7 @@ class TestUtil
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function signUp(
+    public static function registerCard(
         int $u_idx,
         string $pin,
         bool $enable_onetouch_pay,
@@ -153,6 +151,7 @@ class TestUtil
         string $card_password,
         string $tax_id
     ) {
+        // 1단계: 카드 정보 등록
         CardAppService::registerCard(
             $u_idx,
             $card_number,
@@ -160,13 +159,12 @@ class TestUtil
             $card_password,
             $tax_id
         );
+        // 2단계: 결제 비밀번호 정보 등록
         UserAppService::createPin($u_idx, $pin);
-
-        if ($enable_onetouch_pay) {
-            UserAppService::enableOnetouchPay($u_idx, null);
-        } else {
-            UserAppService::disableOnetouchPay($u_idx);
-        }
+        // 3단계: 원터치 결제 설정 정보 등록
+        UserAppService::setOnetouchPay($u_idx, $enable_onetouch_pay);
+        // 4단계: 1 ~ 3단계의 등록 정보 저장
+        CardAppService::finishCardRegistration($u_idx);
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
 

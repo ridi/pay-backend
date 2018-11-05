@@ -28,7 +28,7 @@ class BillingPaymentTest extends ControllerTestCase
     public static function setUpBeforeClass()
     {
         self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::signUp(
+        self::$payment_method_id = TestUtil::registerCard(
             self::$u_idx,
             '123456',
             true,

@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RidiPay\Tests\Controller;
 
 use AspectMock\Test;
-use RidiPay\Library\TemplateRenderer;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Application\Service\EmailSender;
@@ -23,13 +22,11 @@ class UpdateOnetouchPayTest extends ControllerTestCase
      */
     public static function setUpBeforeClass()
     {
-        Test::double(TemplateRenderer::class, ['render' => '']);
-        Test::double(EmailSender::class, ['send' => '']);
+        Test::double(EmailSender::class, ['send' => null]);
     }
 
     public static function tearDownAfterClass()
     {
-        Test::clean(TemplateRenderer::class);
         Test::clean(EmailSender::class);
     }
 
@@ -61,7 +58,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         $pin = '123456';
 
         $u_idx = TestUtil::getRandomUidx();
-        TestUtil::signUp(
+        TestUtil::registerCard(
             $u_idx,
             $pin,
             false,
@@ -99,7 +96,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         $pin = '123456';
 
         $u_idx = TestUtil::getRandomUidx();
-        TestUtil::signUp(
+        TestUtil::registerCard(
             $u_idx,
             $pin,
             true,

@@ -29,7 +29,6 @@ class CardAppService
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @throws CardAlreadyExistsException
      * @throws CardRegistrationException
-     * @throws LeavedUserException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -42,34 +41,16 @@ class CardAppService
         string $card_password,
         string $tax_id
     ): void {
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
+        $card_registration_validator = new CardRegistrationValidator($u_idx);
+        $card_registration_validator->validate();
 
-        try {
-            try {
-                UserAppService::validateUser($u_idx);
-            } catch (NotFoundUserException $e) {
-                UserAppService::createUser($u_idx);
-            }
-
-            $card_registration_validator = new CardRegistrationValidator($u_idx);
-            $card_registration_validator->validate();
-
-            CardService::registerCard(
-                $u_idx,
-                $card_number,
-                $card_expiration_date,
-                $card_password,
-                $tax_id
-            );
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
+        CardService::registerCard(
+            $u_idx,
+            $card_number,
+            $card_expiration_date,
+            $card_password,
+            $tax_id
+        );
     }
 
     /**
@@ -142,6 +123,12 @@ class CardAppService
         $em->beginTransaction();
 
         try {
+            try {
+                UserAppService::validateUser($u_idx);
+            } catch (NotFoundUserException $e) {
+                UserAppService::createUser($u_idx);
+            }
+
             $payment_method = CardService::useRegisteredCard($u_idx);
             UserAppService::useCreatedPin($u_idx);
             UserAppService::useSavedOnetouchPaySetting($u_idx);

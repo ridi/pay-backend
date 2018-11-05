@@ -45,33 +45,12 @@ class UserAppService
     /**
      * @param int $u_idx
      * @param string $pin
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
      * @throws WrongFormattedPinException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
      */
     public static function createPin(int $u_idx, string $pin): void
     {
-        $user = self::getUser($u_idx);
-
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
-            $redis = self::getRedisClient();
-            $redis->hset(self::getUserKey($u_idx), 'pin', $user->createPin($pin));
-
-            UserActionHistoryService::logCreatePin($u_idx);
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
+        $redis = self::getRedisClient();
+        $redis->hset(self::getUserKey($u_idx), 'pin', UserEntity::createPin($pin));
     }
 
     /**
@@ -188,36 +167,11 @@ class UserAppService
     /**
      * @param int $u_idx
      * @param bool $enable_onetouch_pay
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
      */
     public static function setOnetouchPay(int $u_idx, bool $enable_onetouch_pay): void
     {
-        self::getUser($u_idx);
-
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
-            $redis = self::getRedisClient();
-            $redis->hset(self::getUserKey($u_idx), 'enable_onetouch_pay', $enable_onetouch_pay);
-
-            if ($enable_onetouch_pay) {
-                UserActionHistoryService::logEnableOnetouchPay($u_idx);
-            } else {
-                UserActionHistoryService::logDisableOnetouchPay($u_idx);
-            }
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
+        $redis = self::getRedisClient();
+        $redis->hset(self::getUserKey($u_idx), 'enable_onetouch_pay', $enable_onetouch_pay);
     }
 
     /**
@@ -244,7 +198,7 @@ class UserAppService
 
     /**
      * @param int $u_idx
-     * @param null|string $entered_validation_token
+     * @param string $entered_validation_token
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws OnetouchPaySettingChangeDeclinedException
@@ -252,11 +206,11 @@ class UserAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function enableOnetouchPay(int $u_idx, ?string $entered_validation_token): void
+    public static function enableOnetouchPay(int $u_idx, string $entered_validation_token): void
     {
         $user = self::getUser($u_idx);
         $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
-        if (!is_null($validation_token) && ($entered_validation_token !== $validation_token)) {
+        if ($entered_validation_token !== $validation_token) {
             throw new OnetouchPaySettingChangeDeclinedException('원터치 결제 설정을 변경할 수 없습니다.');
         }
 
@@ -394,28 +348,6 @@ class UserAppService
 
     /**
      * @param int $u_idx
-     * @return UserEntity
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    private static function getUser(int $u_idx): UserEntity
-    {
-        $user = UserRepository::getRepository()->findOneByUidx($u_idx);
-        if (is_null($user)) {
-            throw new NotFoundUserException();
-        }
-
-        if ($user->isLeaved()) {
-            throw new LeavedUserException();
-        }
-
-        return $user;
-    }
-
-    /**
-     * @param int $u_idx
      * @return string
      * @throws \Exception
      */
@@ -434,6 +366,28 @@ class UserAppService
         $policy = new PinEntryAbuseBlockPolicy();
         $abuse_blocker = new AbuseBlocker($policy, $u_idx);
         $abuse_blocker->initialize();
+    }
+
+    /**
+     * @param int $u_idx
+     * @return UserEntity
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    private static function getUser(int $u_idx): UserEntity
+    {
+        $user = UserRepository::getRepository()->findOneByUidx($u_idx);
+        if (is_null($user)) {
+            throw new NotFoundUserException();
+        }
+
+        if ($user->isLeaved()) {
+            throw new LeavedUserException();
+        }
+
+        return $user;
     }
 
     /**
