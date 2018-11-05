@@ -18,22 +18,24 @@ class EmailSender
      */
     public static function send(string $recipient, string $title, string $body): void
     {
-        $email = new Email(
-            EmailAddressConstant::NOREPLY_ADDRESS,
-            [$recipient],
-            $title,
-            $body
-        );
+        try {
+            $email = new Email(
+                EmailAddressConstant::NOREPLY_ADDRESS,
+                [$recipient],
+                $title,
+                $body
+            );
 
-        if (Kernel::isDev()) {
-            $client = Client::createWithDefaultRetry(['base_uri' => 'https://crm-api.dev.ridi.io']);
-        } else {
-            $client = Client::createWithDefaultRetry();
-        }
+            if (Kernel::isDev()) {
+                $client = Client::createWithDefaultRetry(['base_uri' => 'https://crm-api.dev.ridi.io']);
+            } else {
+                $client = Client::createWithDefaultRetry();
+            }
 
-        $response = $client->sendEmail($email);
-        if ($response->getStatusCode() !== 200) {
-            SentryHelper::captureMessage('Email 발송 실패', [], [], true);
+            $client->sendEmail($email);
+        } catch (\Exception $e) {
+            // 이메일 발송 실패로 인한 exception 발생 시, API 요청 자체에 영향을 주지 않도록 catch
+            SentryHelper::captureException($e);
         }
     }
 }
