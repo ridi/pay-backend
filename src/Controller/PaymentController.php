@@ -10,6 +10,7 @@ use RidiPay\Controller\Response\PartnerErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
+use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\Validation\ApiSecretValidationException;
 use RidiPay\Library\Validation\ApiSecretValidator;
@@ -132,6 +133,8 @@ class PaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -274,6 +277,8 @@ class PaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -409,6 +414,8 @@ class PaymentController extends BaseController
                 TransactionErrorCodeConstant::UNVALIDATED_TRANSACTION
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -547,6 +554,8 @@ class PaymentController extends BaseController
                 ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -685,6 +694,8 @@ class PaymentController extends BaseController
                 ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -827,6 +838,8 @@ class PaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -957,6 +970,8 @@ class PaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -1071,6 +1086,8 @@ class PaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -1190,6 +1207,8 @@ class PaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -1349,6 +1368,8 @@ class PaymentController extends BaseController
                 ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR

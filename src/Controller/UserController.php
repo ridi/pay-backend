@@ -9,6 +9,7 @@ use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
+use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
@@ -93,6 +94,8 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -142,6 +145,8 @@ class UserController extends BaseController
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -247,6 +252,8 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -357,6 +364,8 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -482,6 +491,8 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -613,6 +624,8 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -727,6 +740,8 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -850,6 +865,8 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR

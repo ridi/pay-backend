@@ -9,6 +9,7 @@ use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
+use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
@@ -135,6 +136,8 @@ class PaymentMethodController extends BaseController
                 ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
@@ -244,6 +247,8 @@ class PaymentMethodController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
