@@ -36,7 +36,7 @@ before_install:
 
 install:
   - docker exec -it -w /app test /bin/bash -c "composer validate && composer install"
-  - docker exec -it node sh -c "apk --update add git py3-pip && pip3 install awscli && yarn global add redoc-cli"
+  - docker exec -it node sh -c "apk --update add git py3-pip && pip3 install awscli && yarn global add redoc-cli styled-components"
 
 stages:
   - test
