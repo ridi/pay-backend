@@ -810,20 +810,20 @@ class UserController extends BaseController
                 }
 
                 UserAppService::enableOnetouchPay($this->getUidx(), $body->validation_token);
+
+                $data = [
+                    'u_id' => $this->getUid(),
+                    'enable_onetouch_pay' => $body->enable_onetouch_pay
+                ];
+                $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
+                EmailSender::send(
+                    $this->getEmail(),
+                    "[RIDI Pay] {$this->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
+                    $email_body
+                );
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }
-
-            $data = [
-                'u_id' => $this->getUid(),
-                'enable_onetouch_pay' => $body->enable_onetouch_pay
-            ];
-            $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
-            EmailSender::send(
-                $this->getEmail(),
-                "[RIDI Pay] {$this->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
-                $email_body
-            );
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
