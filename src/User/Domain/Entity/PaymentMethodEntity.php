@@ -159,6 +159,14 @@ class PaymentMethodEntity
     }
 
     /**
+     * @return bool
+     */
+    public function isDeleted(): bool
+    {
+        return !is_null($this->deleted_at);
+    }
+
+    /**
      * SOFT DELETE
      */
     public function delete(): void

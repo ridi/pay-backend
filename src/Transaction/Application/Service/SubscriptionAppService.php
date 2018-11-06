@@ -20,6 +20,7 @@ use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManag
 use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\SubscriptionConstant;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class SubscriptionAppService
@@ -90,11 +91,12 @@ class SubscriptionAppService
      * @param string $subscription_uuid
      * @return SubscriptionResumptionDto
      * @throws AlreadyResumedSubscriptionException
+     * @throws DeletedPaymentMethodException
      * @throws NotFoundSubscriptionException
      * @throws UnauthorizedPartnerException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
-     * @throws \Exception
      */
     public static function resumeSubscription(
         string $partner_api_key,
@@ -108,6 +110,8 @@ class SubscriptionAppService
         if (is_null($subscription)) {
             throw new NotFoundSubscriptionException();
         }
+
+        PaymentMethodAppService::validatePaymentMethod($subscription->getPaymentMethodId());
 
         $subscription->resumeSubscription();
         $subscription_repo->save($subscription);

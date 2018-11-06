@@ -25,6 +25,7 @@ use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\Transaction\Domain\Exception\UnvalidatedTransactionException;
+use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
@@ -1160,12 +1161,22 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/AlreadyResumedSubscription")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/AlreadyResumedSubscription"),
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NotFoundSubscription")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotFoundSubscription"),
+     *         @OA\Schema(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -1198,6 +1209,18 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (UnregisteredPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (AlreadyResumedSubscriptionException $e) {

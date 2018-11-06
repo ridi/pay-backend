@@ -15,6 +15,13 @@ use Symfony\Component\HttpFoundation\Response;
  *   @OA\Property(property="message", type="string", example="카드는 하나만 등록할 수 있습니다.")
  * )
  * @OA\Schema(
+ *   schema="DeletedPaymentMethod",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="DELETED_PAYMENT_METHOD"),
+ *   @OA\Property(property="message", type="string", example="삭제된 결제 수단입니다.")
+ * )
+ * @OA\Schema(
  *   schema="LeavedUser",
  *   type="object",
  *   required={"code", "message"},
@@ -88,6 +95,7 @@ use Symfony\Component\HttpFoundation\Response;
 class UserErrorCodeConstant
 {
     public const CARD_ALREADY_EXISTS = 'CARD_ALREADY_EXISTS';
+    public const DELETED_PAYMENT_METHOD = 'DELETED_PAYMENT_METHOD';
     public const LEAVED_USER = 'LEAVED_USER';
     public const NOT_FOUND_USER = 'NOT_FOUND_USER';
     public const ONETOUCH_PAY_SETTING_CHANGE_DECLINED = 'ONETOUCH_PAY_SETTING_CHANGE_DECLINED';
@@ -101,6 +109,7 @@ class UserErrorCodeConstant
 
     public const HTTP_STATUS_CODES = [
         self::CARD_ALREADY_EXISTS => Response::HTTP_FORBIDDEN,
+        self::DELETED_PAYMENT_METHOD => Response::HTTP_FORBIDDEN,
         self::LEAVED_USER => Response::HTTP_FORBIDDEN,
         self::NOT_FOUND_USER => Response::HTTP_NOT_FOUND,
         self::ONETOUCH_PAY_SETTING_CHANGE_DECLINED => Response::HTTP_FORBIDDEN,

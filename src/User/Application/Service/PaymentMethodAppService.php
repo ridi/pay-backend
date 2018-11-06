@@ -8,6 +8,7 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Application\Dto\AvailablePaymentMethodsDto;
 use RidiPay\User\Application\Dto\PaymentMethodDto;
 use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
+use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
@@ -16,6 +17,25 @@ use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 
 class PaymentMethodAppService
 {
+    /**
+     * @param int $payment_method_id
+     * @throws DeletedPaymentMethodException
+     * @throws UnregisteredPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function validatePaymentMethod(int $payment_method_id): void
+    {
+        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+        if (is_null($payment_method)) {
+            throw new UnregisteredPaymentMethodException();
+        }
+
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
+    }
+
     /**
      * @param int $u_idx
      * @return AvailablePaymentMethodsDto
