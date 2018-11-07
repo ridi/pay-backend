@@ -8,6 +8,20 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Schema(
+ *   schema="AlreadyApprovedTransaction",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="ALREADY_APPROVED_TRANSACTION"),
+ *   @OA\Property(property="message", type="string", example="이미 승인된 결제입니다.")
+ * )
+ * @OA\Schema(
+ *   schema="AlreadyCancelledTransaction",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="ALREADY_CANCELLED_TRANSACTION"),
+ *   @OA\Property(property="message", type="string", example="이미 취소된 결제입니다.")
+ * )
+ * @OA\Schema(
  *   schema="AlreadyResumedSubscription",
  *   type="object",
  *   required={"code", "message"},
@@ -45,6 +59,8 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class TransactionErrorCodeConstant
 {
+    public const ALREADY_APPROVED_TRANSACTION = 'ALREADY_APPROVED_TRANSACTION';
+    public const ALREADY_CANCELLED_TRANSACTION = 'ALREADY_CANCELLED_TRANSACTION';
     public const ALREADY_RESUMED_SUBSCRIPTION = 'ALREADY_RESUMED_SUBSCRIPTION';
     public const NOT_FOUND_SUBSCRIPTION = 'NOT_FOUND_SUBSCRIPTION';
     public const NOT_FOUND_TRANSACTION = 'NOT_FOUND_TRANSACTION';
@@ -52,6 +68,8 @@ class TransactionErrorCodeConstant
     public const UNVALIDATED_TRANSACTION = 'UNVALIDATED_TRANSACTION';
 
     public const HTTP_STATUS_CODES = [
+        self::ALREADY_APPROVED_TRANSACTION => Response::HTTP_FORBIDDEN,
+        self::ALREADY_CANCELLED_TRANSACTION => Response::HTTP_FORBIDDEN,
         self::ALREADY_RESUMED_SUBSCRIPTION => Response::HTTP_FORBIDDEN,
         self::NOT_FOUND_SUBSCRIPTION => Response::HTTP_NOT_FOUND,
         self::NOT_FOUND_TRANSACTION => Response::HTTP_NOT_FOUND,

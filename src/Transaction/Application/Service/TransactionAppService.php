@@ -23,6 +23,8 @@ use RidiPay\Transaction\Application\Dto\CreateTransactionDto;
 use RidiPay\Transaction\Application\Dto\TransactionStatusDto;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
+use RidiPay\Transaction\Domain\Exception\AlreadyApprovedTransactionException;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Transaction\Domain\Exception\UnvalidatedTransactionException;
@@ -167,6 +169,8 @@ class TransactionAppService
      * @param string $partner_secret_key
      * @param string $transaction_id
      * @return ApproveTransactionDto
+     * @throws AlreadyApprovedTransactionException
+     * @throws AlreadyCancelledTransactionException
      * @throws NotFoundTransactionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
@@ -183,6 +187,13 @@ class TransactionAppService
         PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
         $transaction = self::getTransaction($transaction_id);
+        if ($transaction->isApproved()) {
+            throw new AlreadyApprovedTransactionException();
+        }
+        if ($transaction->isCanceled()) {
+            throw new AlreadyCancelledTransactionException();
+        }
+
         $pg = PgAppService::getPgById($transaction->getPgId());
         $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
 
@@ -353,6 +364,7 @@ class TransactionAppService
      * @param string $partner_secret_key
      * @param string $transaction_id
      * @return CancelTransactionDto
+     * @throws AlreadyCancelledTransactionException
      * @throws NotFoundTransactionException
      * @throws TransactionCancellationException
      * @throws UnauthorizedPartnerException
@@ -369,6 +381,9 @@ class TransactionAppService
         PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
         $transaction = self::getTransaction($transaction_id);
+        if ($transaction->isCanceled()) {
+            throw new AlreadyCancelledTransactionException();
+        }
 
         $pg = PgAppService::getPgById($transaction->getPgId());
         $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);

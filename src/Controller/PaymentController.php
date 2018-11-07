@@ -18,6 +18,8 @@ use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
+use RidiPay\Transaction\Domain\Exception\AlreadyApprovedTransactionException;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
@@ -505,6 +507,16 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner"),
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/AlreadyApprovedTransaction"),
+     *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledTransaction")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(ref="#/components/schemas/NotFoundTransaction")
@@ -545,6 +557,18 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (AlreadyApprovedTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_APPROVED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (AlreadyCancelledTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {
@@ -645,6 +669,11 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner"),
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/AlreadyCancelledTransaction"),
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(ref="#/components/schemas/NotFoundTransaction")
@@ -685,6 +714,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (AlreadyCancelledTransactionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionCancellationException $e) {
