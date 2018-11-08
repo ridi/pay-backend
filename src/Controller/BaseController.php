@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use Ridibooks\OAuth2\Symfony\Provider\OAuth2ServiceProvider;
+use Ridibooks\OAuth2\Symfony\Provider\User;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -74,6 +75,14 @@ abstract class BaseController extends Controller
                 $headers
             );
         }
+    }
+
+    /**
+     * @return User
+     */
+    protected function getUser(): User
+    {
+        return $this->oauth2_service_provider->getMiddleware()->getUser();
     }
 
     /**

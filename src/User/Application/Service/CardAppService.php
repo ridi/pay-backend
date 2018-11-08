@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
+use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\TemplateRenderer;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
@@ -54,7 +56,7 @@ class CardAppService
     }
 
     /**
-     * @param int $u_idx
+     * @param User $oauth2_user
      * @param string $payment_method_id
      * @return CardDto
      * @throws LeavedUserException
@@ -65,8 +67,9 @@ class CardAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function deleteCard(int $u_idx, string $payment_method_id): CardDto
+    public static function deleteCard(User $oauth2_user, string $payment_method_id): CardDto
     {
+        $u_idx = $oauth2_user->getUidx();
         UserAppService::validateUser($u_idx);
 
         $payment_method_repo = PaymentMethodRepository::getRepository();
@@ -100,11 +103,23 @@ class CardAppService
             throw $t;
         }
 
-        return new CardDto($payment_method->getCardForOneTimePayment());
+        $card = new CardDto($payment_method->getCardForOneTimePayment());
+        $data = [
+            'card_issuer_name' => $card->issuer_name,
+            'iin' => $card->iin
+        ];
+        $email_body = (new TemplateRenderer())->render('card-deletion-alert.twig', $data);
+        EmailSender::send(
+            $oauth2_user->getEmail(),
+            "[RIDI Pay] {$oauth2_user->getUid()}님, 카드 삭제 안내드립니다.",
+            $email_body
+        );
+
+        return $card;
     }
 
     /**
-     * @param int $u_idx
+     * @param User $oauth2_user
      * @return CardDto
      * @throws LeavedUserException
      * @throws NotFoundUserException
@@ -113,8 +128,10 @@ class CardAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function finishCardRegistration(int $u_idx): CardDto
+    public static function finishCardRegistration(User $oauth2_user): CardDto
     {
+        $u_idx = $oauth2_user->getUidx();
+
         if (!CardService::isCardRegistrationInProgress($u_idx)) {
             throw new UnauthorizedCardRegistrationException();
         }
@@ -141,8 +158,18 @@ class CardAppService
             throw $t;
         }
 
-        // 단건 결제용 카드와 정기 결제용 카드는 연동 PG사 분기 가능성을 고려해서 나눠진 것 뿐이고,
-        // 두 카드는 동일한 카드라서 단건 결제용 카드를 외부로 전달한다.
-        return new CardDto($payment_method->getCardForOneTimePayment());
+        $card = new CardDto($payment_method->getCardForOneTimePayment());
+        $data = [
+            'card_issuer_name' => $card->issuer_name,
+            'iin' => $card->iin
+        ];
+        $email_body = (new TemplateRenderer())->render('card-registration-alert.twig', $data);
+        EmailSender::send(
+            $oauth2_user->getEmail(),
+            "[RIDI Pay] {$oauth2_user->getUid()}님, 카드 등록 안내드립니다.",
+            $email_body
+        );
+
+        return $card;
     }
 }

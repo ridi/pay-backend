@@ -10,10 +10,8 @@ use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\SentryHelper;
-use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
-use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -205,18 +203,7 @@ class PaymentMethodController extends BaseController
     public function deleteCard(string $payment_method_id): JsonResponse
     {
         try {
-            $card = CardAppService::deleteCard($this->getUidx(), $payment_method_id);
-
-            $data = [
-                'card_issuer_name' => $card->issuer_name,
-                'iin' => $card->iin
-            ];
-            $email_body = (new TemplateRenderer())->render('card-deletion-alert.twig', $data);
-            EmailSender::send(
-                $this->getEmail(),
-                "[RIDI Pay] {$this->getUid()}님, 카드 삭제 안내드립니다.",
-                $email_body
-            );
+            CardAppService::deleteCard($this->getUser(), $payment_method_id);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,

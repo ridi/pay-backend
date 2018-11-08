@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Service;
 
 use Predis\Client;
+use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\User\Application\Dto\UserInformationDto;
@@ -72,7 +74,7 @@ class UserAppService
     }
 
     /**
-     * @param int $u_idx
+     * @param User $oauth2_user
      * @param string $pin
      * @param string $entered_validation_token
      * @throws LeavedUserException
@@ -84,10 +86,13 @@ class UserAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function updatePin(int $u_idx, string $pin, string $entered_validation_token): void
+    public static function updatePin(User $oauth2_user, string $pin, string $entered_validation_token): void
     {
+        $u_idx = $oauth2_user->getUidx();
         $user = self::getUser($u_idx);
-        $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
+        $user_key = self::getUserKey($u_idx);
+
+        $validation_token = ValidationTokenManager::get($user_key);
         if ($validation_token !== $entered_validation_token) {
             throw new UnauthorizedPinChangeException();
         }
@@ -109,7 +114,15 @@ class UserAppService
             throw $t;
         }
 
-        ValidationTokenManager::invalidate(self::getUserKey($u_idx));
+        ValidationTokenManager::invalidate($user_key);
+
+        $data = ['u_id' => $oauth2_user->getUid()];
+        $email_body = (new TemplateRenderer())->render('pin-change-alert.twig', $data);
+        EmailSender::send(
+            $oauth2_user->getEmail(),
+            "[RIDI Pay] {$oauth2_user->getUid()}님, 결제 비밀번호 변경 안내드립니다.",
+            $email_body
+        );
     }
 
     /**
@@ -197,7 +210,7 @@ class UserAppService
     }
 
     /**
-     * @param int $u_idx
+     * @param User $oauth2_user
      * @param string $entered_validation_token
      * @throws LeavedUserException
      * @throws NotFoundUserException
@@ -206,9 +219,11 @@ class UserAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function enableOnetouchPay(int $u_idx, string $entered_validation_token): void
+    public static function enableOnetouchPay(User $oauth2_user, string $entered_validation_token): void
     {
+        $u_idx = $oauth2_user->getUidx();
         $user = self::getUser($u_idx);
+
         $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
         if ($entered_validation_token !== $validation_token) {
             throw new OnetouchPaySettingChangeDeclinedException('원터치 결제 설정을 변경할 수 없습니다.');
@@ -230,6 +245,14 @@ class UserAppService
 
             throw $t;
         }
+
+        $data = ['u_id' => $oauth2_user->getUid()];
+        $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
+        EmailSender::send(
+            $oauth2_user->getEmail(),
+            "[RIDI Pay] {$oauth2_user->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
+            $email_body
+        );
     }
 
     /**

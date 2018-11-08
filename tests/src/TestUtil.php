@@ -151,20 +151,30 @@ class TestUtil
         string $card_password,
         string $tax_id
     ) {
+        $oauth2_user = new User(json_encode([
+            'result' => [
+                'id' => self::U_ID,
+                'idx' => $u_idx,
+                'email' => 'oauth2-test@ridi.com',
+                'is_verified_adult' => true,
+            ],
+            'message' => '정상적으로 완료되었습니다.'
+        ]));
+
         // 1단계: 카드 정보 등록
         CardAppService::registerCard(
-            $u_idx,
+            $oauth2_user->getUidx(),
             $card_number,
             $card_expiration_date,
             $card_password,
             $tax_id
         );
         // 2단계: 결제 비밀번호 정보 등록
-        UserAppService::createPin($u_idx, $pin);
+        UserAppService::createPin($oauth2_user->getUidx(), $pin);
         // 3단계: 원터치 결제 설정 정보 등록
-        UserAppService::setOnetouchPay($u_idx, $enable_onetouch_pay);
+        UserAppService::setOnetouchPay($oauth2_user->getUidx(), $enable_onetouch_pay);
         // 4단계: 1 ~ 3단계의 등록 정보 저장
-        CardAppService::finishCardRegistration($u_idx);
+        CardAppService::finishCardRegistration($oauth2_user);
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
 

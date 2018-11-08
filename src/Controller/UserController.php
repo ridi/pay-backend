@@ -10,11 +10,9 @@ use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\SentryHelper;
-use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\User\Application\Service\CardAppService;
-use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -429,15 +427,7 @@ class UserController extends BaseController
     {
         try {
             $body = json_decode($request->getContent());
-            UserAppService::updatePin($this->getUidx(), $body->pin, $body->validation_token);
-
-            $data = ['u_id' => $this->getUid()];
-            $email_body = (new TemplateRenderer())->render('pin-change-alert.twig', $data);
-            EmailSender::send(
-                $this->getEmail(),
-                "[RIDI Pay] {$this->getUid()}님, 결제 비밀번호 변경 안내드립니다.",
-                $email_body
-            );
+            UserAppService::updatePin($this->getUser(), $body->pin, $body->validation_token);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -687,18 +677,7 @@ class UserController extends BaseController
             $body = json_decode($request->getContent());
             UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
 
-            $card = CardAppService::finishCardRegistration($this->getUidx());
-
-            $data = [
-                'card_issuer_name' => $card->issuer_name,
-                'iin' => $card->iin
-            ];
-            $email_body = (new TemplateRenderer())->render('card-registration-alert.twig', $data);
-            EmailSender::send(
-                $this->getEmail(),
-                "[RIDI Pay] {$this->getUid()}님, 카드 등록 안내드립니다.",
-                $email_body
-            );
+            $card = CardAppService::finishCardRegistration($this->getUser());
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -809,18 +788,7 @@ class UserController extends BaseController
                     );
                 }
 
-                UserAppService::enableOnetouchPay($this->getUidx(), $body->validation_token);
-
-                $data = [
-                    'u_id' => $this->getUid(),
-                    'enable_onetouch_pay' => $body->enable_onetouch_pay
-                ];
-                $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
-                EmailSender::send(
-                    $this->getEmail(),
-                    "[RIDI Pay] {$this->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
-                    $email_body
-                );
+                UserAppService::enableOnetouchPay($this->getUser(), $body->validation_token);
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }
