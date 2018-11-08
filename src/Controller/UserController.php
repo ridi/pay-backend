@@ -726,7 +726,7 @@ class UserController extends BaseController
             );
         }
 
-        return self::createSuccessResponse();
+        return self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);
     }
 
     /**
