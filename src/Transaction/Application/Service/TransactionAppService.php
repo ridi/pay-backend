@@ -31,6 +31,7 @@ use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
@@ -47,6 +48,7 @@ class TransactionAppService
      * @param int $amount
      * @param string $return_url
      * @return string
+     * @throws DeletedPaymentMethodException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
@@ -162,6 +164,7 @@ class TransactionAppService
      * @return ApproveTransactionDto
      * @throws AlreadyApprovedTransactionException
      * @throws AlreadyCancelledTransactionException
+     * @throws DeletedPaymentMethodException
      * @throws NotFoundTransactionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
@@ -258,6 +261,7 @@ class TransactionAppService
      * @param int $amount
      * @param \DateTime $subscribed_at
      * @return ApproveTransactionDto
+     * @throws DeletedPaymentMethodException
      * @throws TransactionApprovalException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException

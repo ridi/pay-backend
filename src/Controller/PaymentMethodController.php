@@ -13,6 +13,7 @@ use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
+use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
@@ -202,7 +203,12 @@ class PaymentMethodController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
@@ -252,6 +258,12 @@ class PaymentMethodController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {

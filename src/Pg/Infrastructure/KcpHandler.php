@@ -13,6 +13,7 @@ use RidiPay\Pg\Domain\Service\TransactionApprovalResponse;
 use RidiPay\Pg\Domain\Service\TransactionCancellationResponse;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class KcpHandler implements PgHandlerInterface
@@ -100,6 +101,7 @@ class KcpHandler implements PgHandlerInterface
     /**
      * @param TransactionEntity $transaction
      * @return TransactionApprovalResponse
+     * @throws DeletedPaymentMethodException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException

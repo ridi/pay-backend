@@ -94,6 +94,11 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
@@ -140,6 +145,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
@@ -512,7 +523,8 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/AlreadyApprovedTransaction"),
-     *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledTransaction")
+     *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledTransaction"),
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
      *       }
      *     )
      *   ),
@@ -576,6 +588,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {
@@ -980,6 +998,11 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
@@ -1024,6 +1047,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
@@ -1398,6 +1427,11 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(
@@ -1452,6 +1486,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_SUBSCRIPTION,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            return self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {

@@ -32,6 +32,7 @@ class SubscriptionAppService
      * @param string $product_name
      * @param int $amount
      * @return SubscriptionDto
+     * @throws DeletedPaymentMethodException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
@@ -125,6 +126,7 @@ class SubscriptionAppService
      * @param string $subscription_uuid
      * @param string $partner_transaction_id
      * @return SubscriptionPaymentDto
+     * @throws DeletedPaymentMethodException
      * @throws NotFoundSubscriptionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
@@ -148,7 +150,7 @@ class SubscriptionAppService
         }
 
         $payment_method_id = $subscription->getPaymentMethodId();
-        $u_idx = PaymentMethodAppService::getUidxById($subscription->getPaymentMethodId());
+        $u_idx = PaymentMethodAppService::getUidxById($payment_method_id);
 
         $approve_transaction_dto = TransactionAppService::approveTransactionBySubscription(
             $u_idx,

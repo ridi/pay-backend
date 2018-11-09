@@ -341,7 +341,7 @@ class UserAppService
             $user->leave();
             UserRepository::getRepository()->save($user);
 
-            PaymentMethodAppService::deletePaymentMethods($u_idx);
+            PaymentMethodAppService::deleteAllPaymentMethods($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {

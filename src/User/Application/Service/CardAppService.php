@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Application\Service;
 
-use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\TemplateRenderer;
@@ -14,6 +13,7 @@ use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\User\Application\Dto\CardDto;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
+use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
@@ -59,43 +59,41 @@ class CardAppService
 
     /**
      * @param User $oauth2_user
-     * @param string $payment_method_id
-     * @return CardDto
+     * @param string $payment_method_uuid
      * @throws LeavedUserException
      * @throws NotFoundUserException
+     * @throws DeletedPaymentMethodException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function deleteCard(User $oauth2_user, string $payment_method_id): CardDto
+    public static function deleteCard(User $oauth2_user, string $payment_method_uuid)
     {
         $u_idx = $oauth2_user->getUidx();
         UserAppService::validateUser($u_idx);
 
-        $payment_method_repo = PaymentMethodRepository::getRepository();
-        $payment_method = $payment_method_repo->findOneByUuid(Uuid::fromString($payment_method_id));
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
+        $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
 
         try {
+            $payment_method_repo = PaymentMethodRepository::getRepository();
+            $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
             $payment_method->delete();
             $payment_method_repo->save($payment_method);
 
             UserActionHistoryService::logDeleteCard($u_idx);
 
-            if (empty($payment_method_repo->getAvailablePaymentMethods($u_idx))) {
+            $available_payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+            if (empty($available_payment_methods->cards)) {
                 UserAppService::initializePinEntryHistory($u_idx);
                 UserAppService::deletePin($u_idx);
                 UserAppService::deleteOnetouchPay($u_idx);
             }
 
-            SubscriptionAppService::optoutFirstPartySubscriptions($u_idx, $payment_method->getId());
+            SubscriptionAppService::optoutFirstPartySubscriptions($u_idx, $payment_method_id);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -116,8 +114,6 @@ class CardAppService
             "[RIDI Pay] {$oauth2_user->getUid()}님, 카드 삭제 안내드립니다.",
             $email_body
         );
-
-        return $card;
     }
 
     /**

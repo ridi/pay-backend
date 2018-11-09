@@ -61,7 +61,7 @@ class TransactionStatusDto
         $this->partner_transaction_id = $transaction->getPartnerTransactionId();
 
         $payment_method_id = $transaction->getPaymentMethodId();
-        $payment_method = PaymentMethodAppService::getPaymentMethodById($payment_method_id);
+        $payment_method = PaymentMethodAppService::getPaymentMethod($payment_method_id);
         $this->payment_method_id = $payment_method->payment_method_id;
         $this->payment_method_type = $payment_method->getType();
 

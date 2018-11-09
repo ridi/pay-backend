@@ -8,6 +8,7 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Application\Dto\AvailablePaymentMethodsDto;
 use RidiPay\User\Application\Dto\PaymentMethodDto;
 use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
+use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -26,14 +27,7 @@ class PaymentMethodAppService
      */
     public static function validatePaymentMethod(int $payment_method_id): void
     {
-        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
-
-        if ($payment_method->isDeleted()) {
-            throw new DeletedPaymentMethodException();
-        }
+        self::getPaymentMethodById($payment_method_id);
     }
 
     /**
@@ -64,7 +58,7 @@ class PaymentMethodAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getPaymentMethodById(int $payment_method_id): PaymentMethodDto
+    public static function getPaymentMethod(int $payment_method_id): PaymentMethodDto
     {
         $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
         if (is_null($payment_method)) {
@@ -76,37 +70,15 @@ class PaymentMethodAppService
 
     /**
      * @param string $payment_method_uuid
-     * @return PaymentMethodDto
-     * @throws UnregisteredPaymentMethodException
-     * @throws UnsupportedPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function getPaymentMethodByUuid(string $payment_method_uuid): PaymentMethodDto
-    {
-        $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_uuid));
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
-
-        return PaymentMethodDtoFactory::create($payment_method);
-    }
-
-    /**
-     * @param string $payment_method_uuid
      * @return int
+     * @throws DeletedPaymentMethodException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
      */
     public static function getPaymentMethodIdByUuid(string $payment_method_uuid): int
     {
-        $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_uuid));
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
+        $payment_method = self::getPaymentMethodByUuid($payment_method_uuid);
 
         return $payment_method->getId();
     }
@@ -114,16 +86,14 @@ class PaymentMethodAppService
     /**
      * @param int $payment_method_id
      * @return int
+     * @throws DeletedPaymentMethodException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     public static function getUidxById(int $payment_method_id): int
     {
-        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
+        $payment_method = self::getPaymentMethodById($payment_method_id);
 
         return $payment_method->getUidx();
     }
@@ -131,16 +101,14 @@ class PaymentMethodAppService
     /**
      * @param int $payment_method_id
      * @return string
+     * @throws DeletedPaymentMethodException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     public static function getOneTimePaymentPgBillKey(int $payment_method_id): string
     {
-        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
+        $payment_method = self::getPaymentMethodById($payment_method_id);
 
         return $payment_method->getCardForOneTimePayment()->getPgBillKey();
     }
@@ -148,16 +116,14 @@ class PaymentMethodAppService
     /**
      * @param int $payment_method_id
      * @return string
+     * @throws DeletedPaymentMethodException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     public static function getBillingPaymentPgBillKey(int $payment_method_id): string
     {
-        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
-        if (is_null($payment_method)) {
-            throw new UnregisteredPaymentMethodException();
-        }
+        $payment_method = self::getPaymentMethodById($payment_method_id);
 
         return $payment_method->getCardForBillingPayment()->getPgBillKey();
     }
@@ -168,7 +134,7 @@ class PaymentMethodAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function deletePaymentMethods(int $u_idx): void
+    public static function deleteAllPaymentMethods(int $u_idx): void
     {
         $payment_method_repo = PaymentMethodRepository::getRepository();
         $payment_methods = $payment_method_repo->getAvailablePaymentMethods($u_idx);
@@ -189,5 +155,47 @@ class PaymentMethodAppService
 
             throw $t;
         }
+    }
+
+    /**
+     * @param int $payment_method_id
+     * @return PaymentMethodEntity
+     * @throws DeletedPaymentMethodException
+     * @throws UnregisteredPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    private static function getPaymentMethodById(int $payment_method_id): PaymentMethodEntity
+    {
+        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+        if (is_null($payment_method)) {
+            throw new UnregisteredPaymentMethodException();
+        }
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
+
+        return $payment_method;
+    }
+
+    /**
+     * @param string $payment_method_uuid
+     * @return PaymentMethodEntity
+     * @throws DeletedPaymentMethodException
+     * @throws UnregisteredPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    private static function getPaymentMethodByUuid(string $payment_method_uuid): PaymentMethodEntity
+    {
+        $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_uuid));
+        if (is_null($payment_method)) {
+            throw new UnregisteredPaymentMethodException();
+        }
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
+
+        return $payment_method;
     }
 }
