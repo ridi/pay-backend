@@ -190,8 +190,9 @@ class TransactionAppService
 
         $pg = PgAppService::getPgById($transaction->getPgId());
         $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+        $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
 
-        $response = $pg_handler->approveTransaction($transaction);
+        $response = $pg_handler->approveTransaction($transaction, $pg_bill_key);
         if (!$response->isSuccess()) {
             $transaction_history = TransactionHistoryEntity::createApproveHistory(
                 $transaction,
@@ -263,6 +264,7 @@ class TransactionAppService
      * @return ApproveTransactionDto
      * @throws DeletedPaymentMethodException
      * @throws TransactionApprovalException
+     * @throws UnregisteredPaymentMethodException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -291,7 +293,9 @@ class TransactionAppService
             $amount,
             $subscribed_at
         );
-        $response = $pg_handler->approveTransaction($transaction);
+        $pg_bill_key = PaymentMethodAppService::getBillingPaymentPgBillKey($transaction->getPaymentMethodId());
+
+        $response = $pg_handler->approveTransaction($transaction, $pg_bill_key);
         if (!$response->isSuccess()) {
             $transaction_history = TransactionHistoryEntity::createApproveHistory(
                 $transaction,

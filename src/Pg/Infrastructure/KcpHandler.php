@@ -12,9 +12,6 @@ use RidiPay\Pg\Domain\Service\PgHandlerInterface;
 use RidiPay\Pg\Domain\Service\TransactionApprovalResponse;
 use RidiPay\Pg\Domain\Service\TransactionCancellationResponse;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
-use RidiPay\User\Application\Service\PaymentMethodAppService;
-use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
-use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class KcpHandler implements PgHandlerInterface
 {
@@ -100,14 +97,11 @@ class KcpHandler implements PgHandlerInterface
 
     /**
      * @param TransactionEntity $transaction
+     * @param string $pg_bill_key
      * @return TransactionApprovalResponse
-     * @throws DeletedPaymentMethodException
-     * @throws UnregisteredPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
      * @throws \Exception
      */
-    public function approveTransaction(TransactionEntity $transaction): TransactionApprovalResponse
+    public function approveTransaction(TransactionEntity $transaction, string $pg_bill_key): TransactionApprovalResponse
     {
         // TODO: 아래 값 필요 여부 확인
         $buyer_name = '';
@@ -124,7 +118,6 @@ class KcpHandler implements PgHandlerInterface
             $buyer_tel1,
             $buyer_tel2
         );
-        $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
         $response = $this->client->batchOrder($pg_bill_key, $order);
 
         return new TransactionApprovalResponse(

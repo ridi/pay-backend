@@ -23,9 +23,10 @@ interface PgHandlerInterface
 
     /**
      * @param TransactionEntity $transaction
+     * @param string $pg_bill_key
      * @return TransactionApprovalResponse
      */
-    public function approveTransaction(TransactionEntity $transaction): TransactionApprovalResponse;
+    public function approveTransaction(TransactionEntity $transaction, string $pg_bill_key): TransactionApprovalResponse;
 
     /**
      * @param string $pg_transaction_id
