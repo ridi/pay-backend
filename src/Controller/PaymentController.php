@@ -110,6 +110,13 @@ class PaymentController extends BaseController
      */
     public function reservePayment(Request $request): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -242,11 +249,19 @@ class PaymentController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param string $reservation_id
      * @return JsonResponse
      */
-    public function getReservation(string $reservation_id): JsonResponse
+    public function getReservation(Request $request, string $reservation_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $is_pin_validation_required = TransactionAppService::isPinValidationRequired(
                 $reservation_id,
@@ -398,6 +413,13 @@ class PaymentController extends BaseController
      */
     public function createPayment(Request $request, string $reservation_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $body = json_decode($request->getContent());
             $result = TransactionAppService::createTransaction(
@@ -539,6 +561,13 @@ class PaymentController extends BaseController
      */
     public function approvePayment(Request $request, string $transaction_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -696,6 +725,13 @@ class PaymentController extends BaseController
      */
     public function cancelPayment(Request $request, string $transaction_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -853,6 +889,13 @@ class PaymentController extends BaseController
      */
     public function getPaymentStatus(Request $request, string $transaction_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -982,6 +1025,13 @@ class PaymentController extends BaseController
      */
     public function subscribe(Request $request): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -1101,6 +1151,13 @@ class PaymentController extends BaseController
      */
     public function unsubscribe(Request $request, string $subscription_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -1226,6 +1283,13 @@ class PaymentController extends BaseController
      */
     public function resumeSubscription(Request $request, string $subscription_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -1390,6 +1454,13 @@ class PaymentController extends BaseController
      */
     public function paySubscription(Request $request, string $subscription_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             ApiSecretValidator::validate($request);
 

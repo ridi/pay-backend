@@ -100,6 +100,13 @@ class PaymentMethodController extends BaseController
      */
     public function registerCard(Request $request): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $body = json_decode($request->getContent());
             CardAppService::registerCard(
@@ -197,11 +204,19 @@ class PaymentMethodController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param string $payment_method_id
      * @return JsonResponse
      */
-    public function deleteCard(string $payment_method_id): JsonResponse
+    public function deleteCard(Request $request, string $payment_method_id): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             CardAppService::deleteCard($this->getUser(), $payment_method_id);
         } catch (LeavedUserException $e) {

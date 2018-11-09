@@ -72,11 +72,19 @@ class UserController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function deleteUser(int $u_idx): JsonResponse
+    public function deleteUser(Request $request, int $u_idx): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             UserAppService::deleteUser($u_idx);
         } catch (LeavedUserException $e) {
@@ -135,11 +143,19 @@ class UserController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getPaymentMethods(int $u_idx): JsonResponse
+    public function getPaymentMethods(Request $request, int $u_idx): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
         } catch (\Throwable $t) {
@@ -231,10 +247,18 @@ class UserController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function getMyInformation(): JsonResponse
+    public function getMyInformation(Request $request): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $user_information = UserAppService::getUserInformation($this->getUidx());
         } catch (LeavedUserException $e) {
@@ -330,6 +354,13 @@ class UserController extends BaseController
      */
     public function createPin(Request $request): JsonResponse
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $body = json_decode($request->getContent());
             UserAppService::createPin($this->getUidx(), $body->pin);
@@ -425,6 +456,13 @@ class UserController extends BaseController
      */
     public function updatePin(Request $request)
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $body = json_decode($request->getContent());
             UserAppService::updatePin($this->getUser(), $body->pin, $body->validation_token);
@@ -558,6 +596,13 @@ class UserController extends BaseController
      */
     public function validatePin(Request $request)
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $body = json_decode($request->getContent());
             UserAppService::validatePin($this->getUidx(), $body->pin);
@@ -673,6 +718,13 @@ class UserController extends BaseController
      */
     public function setOnetouchPay(Request $request)
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $body = json_decode($request->getContent());
             UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
@@ -777,6 +829,13 @@ class UserController extends BaseController
      */
     public function changeOnetouchPay(Request $request)
     {
+        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
         try {
             $body = json_decode($request->getContent());
             if ($body->enable_onetouch_pay) {
