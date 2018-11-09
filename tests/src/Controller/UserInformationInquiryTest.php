@@ -33,7 +33,7 @@ class UserInformationInquiryTest extends ControllerTestCase
     ) {
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
-        $client = self::createClientWithOAuth2AccessToken();
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_GET, '/me');
 
         $response_status_code = $client->getResponse()->getStatusCode();

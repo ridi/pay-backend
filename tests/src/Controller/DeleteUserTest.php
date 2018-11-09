@@ -35,7 +35,7 @@ class DeleteUserTest extends ControllerTestCase
      */
     public function testDeleteUser(int $u_idx, int $http_status_code, ?string $error_code)
     {
-        $client = self::createClient();
+        $client = self::createClient([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_DELETE, '/users/' . $u_idx);
         $this->assertSame($http_status_code, $client->getResponse()->getStatusCode());
 

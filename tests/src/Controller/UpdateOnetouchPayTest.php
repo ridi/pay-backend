@@ -5,7 +5,6 @@ namespace RidiPay\Tests\Controller;
 
 use AspectMock\Test;
 use RidiPay\Tests\TestUtil;
-use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
@@ -30,29 +29,6 @@ class UpdateOnetouchPayTest extends ControllerTestCase
         Test::clean(EmailSender::class);
     }
 
-    public function testEnableOnetouchPayWhenAddingFirstPaymentMethod()
-    {
-        $u_idx = TestUtil::getRandomUidx();
-        CardAppService::registerCard(
-            $u_idx,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
-        UserAppService::createPin($u_idx, '123456');
-
-        self::$client = self::createClientWithOAuth2AccessToken();
-        TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
-
-        $body = json_encode(['enable_onetouch_pay' => true]);
-        self::$client->request(Request::METHOD_POST, '/me/onetouch', [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $this->assertTrue(UserAppService::isUsingOnetouchPay($u_idx));
-
-        TestUtil::tearDownOAuth2Doubles();
-    }
-
     public function testEnableOnetouchPay()
     {
         $pin = '123456';
@@ -68,7 +44,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
             TestUtil::TAX_ID
         );
 
-        self::$client = self::createClientWithOAuth2AccessToken();
+        self::$client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $body = json_encode(['enable_onetouch_pay' => false]);
@@ -106,7 +82,7 @@ class UpdateOnetouchPayTest extends ControllerTestCase
             TestUtil::TAX_ID
         );
 
-        self::$client = self::createClientWithOAuth2AccessToken();
+        self::$client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $body = json_encode(['pin' => $pin]);

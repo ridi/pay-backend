@@ -43,7 +43,8 @@ class BillingPaymentTest extends ControllerTestCase
             [],
             [
                 'HTTP_Api-Key' => self::$partner->api_key,
-                'HTTP_Secret-Key' => self::$partner->secret_key
+                'HTTP_Secret-Key' => self::$partner->secret_key,
+                'CONTENT_TYPE' => 'application/json'
             ]
         );
     }

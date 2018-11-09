@@ -43,7 +43,8 @@ class OneTimePaymentTest extends ControllerTestCase
             [],
             [
                 'HTTP_Api-Key' => self::$partner->api_key,
-                'HTTP_Secret-Key' => self::$partner->secret_key
+                'HTTP_Secret-Key' => self::$partner->secret_key,
+                'CONTENT_TYPE' => 'application/json'
             ]
         );
         TestUtil::setUpJwtDoubles();
@@ -228,7 +229,8 @@ class OneTimePaymentTest extends ControllerTestCase
             [],
             [
                 'HTTP_Api-Key' => self::$partner->api_key,
-                'HTTP_Secret-Key' => self::$partner->secret_key
+                'HTTP_Secret-Key' => self::$partner->secret_key,
+                'CONTENT_TYPE' => 'application/json'
             ]
         );
         $body = json_encode(['validation_token' => $validation_token]);

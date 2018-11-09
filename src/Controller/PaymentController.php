@@ -245,7 +245,6 @@ class PaymentController extends BaseController
      *   )
      * )
      *
-     * @param Request $request
      * @param string $reservation_id
      * @return JsonResponse
      */
@@ -868,13 +867,6 @@ class PaymentController extends BaseController
      */
     public function getPaymentStatus(Request $request, string $transaction_id): JsonResponse
     {
-        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
-            );
-        }
-
         try {
             ApiSecretValidator::validate($request);
 

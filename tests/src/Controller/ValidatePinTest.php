@@ -33,7 +33,7 @@ class ValidatePinTest extends ControllerTestCase
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $body = json_encode(['pin' => $pin]);
-        $client = self::createClientWithOAuth2AccessToken();
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $body);
         $this->assertSame($http_status_code, $client->getResponse()->getStatusCode());
 
@@ -68,7 +68,7 @@ class ValidatePinTest extends ControllerTestCase
         );
 
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
-        $client = self::createClientWithOAuth2AccessToken();
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
 
         // PIN 입력 불일치
         $policy = new PinEntryAbuseBlockPolicy();

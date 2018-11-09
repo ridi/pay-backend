@@ -83,32 +83,38 @@ class ManageCardTest extends ControllerTestCase
             'card_password' => $card_password,
             'tax_id' => $tax_id
         ]);
-        $client = self::createClientWithOAuth2AccessToken();
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_POST, '/me/cards', [], [], [], $body);
         $this->assertSame($http_status_code, $client->getResponse()->getStatusCode());
 
         $response_content = json_decode($client->getResponse()->getContent());
         if (isset($response_content->code)) {
             $this->assertSame($error_code, $response_content->code);
-        }
+        } else {
+            $body = json_encode([
+                'pin' => self::PIN,
+                'validation_token' => $response_content->validation_token
+            ]);
+            $client->request(Request::METHOD_POST, '/me/pin', [], [], [], $body);
 
-        $body = json_encode(['pin' => self::PIN]);
-        $client->request(Request::METHOD_POST, '/me/pin', [], [], [], $body);
+            $body = json_encode([
+                'enable_onetouch_pay' => true,
+                'validation_token' => $response_content->validation_token
+            ]);
+            $client->request(Request::METHOD_POST, '/me/onetouch', [], [], [], $body);
 
-        $body = json_encode(['enable_onetouch_pay' => true]);
-        $client->request(Request::METHOD_POST, '/me/onetouch', [], [], [], $body);
+            $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+            if (!empty($payment_methods->cards)) {
+                $card = $payment_methods->cards[0];
+                $payment_method = PaymentMethodRepository::getRepository()
+                    ->findOneByUuid(Uuid::fromString($card->payment_method_id));
 
-        $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-        if (!empty($payment_methods->cards)) {
-            $card = $payment_methods->cards[0];
-            $payment_method = PaymentMethodRepository::getRepository()
-                ->findOneByUuid(Uuid::fromString($card->payment_method_id));
+                $card_for_one_time_payment = $payment_method->getCardForOneTimePayment();
+                $this->assertNotNull($card_for_one_time_payment);
 
-            $card_for_one_time_payment = $payment_method->getCardForOneTimePayment();
-            $this->assertNotNull($card_for_one_time_payment);
-
-            $card_for_billing_payment = $payment_method->getCardForBillingPayment();
-            $this->assertNotNull($card_for_billing_payment);
+                $card_for_billing_payment = $payment_method->getCardForBillingPayment();
+                $this->assertNotNull($card_for_billing_payment);
+            }
         }
 
         TestUtil::tearDownOAuth2Doubles();
@@ -136,7 +142,7 @@ class ManageCardTest extends ControllerTestCase
     ) {
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
-        $client = self::createClientWithOAuth2AccessToken();
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_DELETE, "/me/cards/{$payment_method_id}");
         $this->assertSame($http_status_code, $client->getResponse()->getStatusCode());
 

@@ -143,19 +143,11 @@ class UserController extends BaseController
      *   )
      * )
      *
-     * @param Request $request
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getPaymentMethods(Request $request, int $u_idx): JsonResponse
+    public function getPaymentMethods(int $u_idx): JsonResponse
     {
-        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
-            );
-        }
-
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
         } catch (\Throwable $t) {
