@@ -125,6 +125,9 @@ class SubscriptionAppService
      * @param string $partner_secret_key
      * @param string $subscription_uuid
      * @param string $partner_transaction_id
+     * @param string $buyer_id
+     * @param string $buyer_name
+     * @param string $buyer_email
      * @return SubscriptionPaymentDto
      * @throws DeletedPaymentMethodException
      * @throws NotFoundSubscriptionException
@@ -140,7 +143,10 @@ class SubscriptionAppService
         string $partner_api_key,
         string $partner_secret_key,
         string $subscription_uuid,
-        string $partner_transaction_id
+        string $partner_transaction_id,
+        string $buyer_id,
+        string $buyer_name,
+        string $buyer_email
     ) {
         $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
@@ -160,7 +166,10 @@ class SubscriptionAppService
             $subscription->getId(),
             $subscription->getProductName(),
             $subscription->getAmount(),
-            $subscription->getSubscribedAt()
+            $subscription->getSubscribedAt(),
+            $buyer_id,
+            $buyer_name,
+            $buyer_email
         );
 
         return new SubscriptionPaymentDto($approve_transaction_dto, $subscription);

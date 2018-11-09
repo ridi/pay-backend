@@ -268,7 +268,12 @@ class OneTimePaymentTest extends ControllerTestCase
         int $amount
     ): void {
         // 결제 승인
-        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/approve");
+        $body = json_encode([
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com'
+        ]);
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/approve", [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);

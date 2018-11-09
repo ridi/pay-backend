@@ -449,6 +449,11 @@ class PaymentController extends BaseController
      *     "transaction_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
      *   }
      * )
+     * @ParamValidator(
+     *   {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="buyer_email", "constraints"={"NotBlank", {"Type"="string"}}}
+     * )
      *
      * @OA\Post(
      *   path="/payments/{transaction_id}/approve",
@@ -561,10 +566,14 @@ class PaymentController extends BaseController
         try {
             ApiSecretValidator::validate($request);
 
+            $body = json_decode($request->getContent());
             $result = TransactionAppService::approveTransaction(
                 ApiSecretValidator::getApiKey($request),
                 ApiSecretValidator::getSecretKey($request),
-                $transaction_id
+                $transaction_id,
+                $body->buyer_id,
+                $body->buyer_name,
+                $body->buyer_email
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
@@ -1354,7 +1363,10 @@ class PaymentController extends BaseController
      *   }
      * )
      * @ParamValidator(
-     *   {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}}
+     *   {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="buyer_email", "constraints"={"NotBlank", {"Type"="string"}}}
      * )
      *
      * @OA\Post(
@@ -1474,7 +1486,10 @@ class PaymentController extends BaseController
                 ApiSecretValidator::getApiKey($request),
                 ApiSecretValidator::getSecretKey($request),
                 $subscription_id,
-                $body->partner_transaction_id
+                $body->partner_transaction_id,
+                $body->buyer_id,
+                $body->buyer_name,
+                $body->buyer_email
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(

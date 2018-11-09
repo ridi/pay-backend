@@ -68,10 +68,14 @@ class BillingPaymentTest extends ControllerTestCase
 
         // 정기 결제 승인
         $body = json_encode([
-            'partner_transaction_id' => $partner_transaction_id
+            'partner_transaction_id' => $partner_transaction_id,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com'
         ]);
         self::$client->request(
-            Request::METHOD_POST, "/payments/subscriptions/{$response_content->subscription_id}/pay",
+            Request::METHOD_POST,
+            "/payments/subscriptions/{$response_content->subscription_id}/pay",
             [],
             [],
             [],

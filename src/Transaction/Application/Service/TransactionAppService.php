@@ -16,6 +16,7 @@ use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
+use RidiPay\Pg\Domain\Service\Buyer;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\Transaction\Application\Dto\ApproveTransactionDto;
 use RidiPay\Transaction\Application\Dto\CancelTransactionDto;
@@ -161,6 +162,9 @@ class TransactionAppService
      * @param string $partner_api_key
      * @param string $partner_secret_key
      * @param string $transaction_id
+     * @param string $buyer_id
+     * @param string $buyer_name
+     * @param string $buyer_email
      * @return ApproveTransactionDto
      * @throws AlreadyApprovedTransactionException
      * @throws AlreadyCancelledTransactionException
@@ -176,7 +180,10 @@ class TransactionAppService
     public static function approveTransaction(
         string $partner_api_key,
         string $partner_secret_key,
-        string $transaction_id
+        string $transaction_id,
+        string $buyer_id,
+        string $buyer_name,
+        string $buyer_email
     ): ApproveTransactionDto {
         PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
 
@@ -192,7 +199,8 @@ class TransactionAppService
         $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
         $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
 
-        $response = $pg_handler->approveTransaction($transaction, $pg_bill_key);
+        $buyer = new Buyer($buyer_id, $buyer_name, $buyer_email);
+        $response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
         if (!$response->isSuccess()) {
             $transaction_history = TransactionHistoryEntity::createApproveHistory(
                 $transaction,
@@ -261,6 +269,9 @@ class TransactionAppService
      * @param string $product_name
      * @param int $amount
      * @param \DateTime $subscribed_at
+     * @param string $buyer_id
+     * @param string $buyer_name
+     * @param string $buyer_email
      * @return ApproveTransactionDto
      * @throws DeletedPaymentMethodException
      * @throws TransactionApprovalException
@@ -278,7 +289,10 @@ class TransactionAppService
         int $subscription_id,
         string $product_name,
         int $amount,
-        \DateTime $subscribed_at
+        \DateTime $subscribed_at,
+        string $buyer_id,
+        string $buyer_name,
+        string $buyer_email
     ): ApproveTransactionDto {
         $pg = PgAppService::getActivePg();
         $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
@@ -295,7 +309,8 @@ class TransactionAppService
         );
         $pg_bill_key = PaymentMethodAppService::getBillingPaymentPgBillKey($transaction->getPaymentMethodId());
 
-        $response = $pg_handler->approveTransaction($transaction, $pg_bill_key);
+        $buyer = new Buyer($buyer_id, $buyer_name, $buyer_email);
+        $response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
         if (!$response->isSuccess()) {
             $transaction_history = TransactionHistoryEntity::createApproveHistory(
                 $transaction,

@@ -7,6 +7,7 @@ use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Order;
 use RidiPay\Library\Pg\Kcp\Util;
+use RidiPay\Pg\Domain\Service\Buyer;
 use RidiPay\Pg\Domain\Service\CardRegistrationResponse;
 use RidiPay\Pg\Domain\Service\PgHandlerInterface;
 use RidiPay\Pg\Domain\Service\TransactionApprovalResponse;
@@ -98,25 +99,23 @@ class KcpHandler implements PgHandlerInterface
     /**
      * @param TransactionEntity $transaction
      * @param string $pg_bill_key
+     * @param Buyer $buyer
      * @return TransactionApprovalResponse
      * @throws \Exception
      */
-    public function approveTransaction(TransactionEntity $transaction, string $pg_bill_key): TransactionApprovalResponse
-    {
-        // TODO: 아래 값 필요 여부 확인
-        $buyer_name = '';
-        $buyer_email = '';
-        $buyer_tel1 = '';
-        $buyer_tel2 = '';
-
+    public function approveTransaction(
+        TransactionEntity $transaction,
+        string $pg_bill_key,
+        Buyer $buyer
+    ): TransactionApprovalResponse {
         $order = new Order(
             $transaction->getUuid()->toString(),
             $transaction->getProductName(),
             $transaction->getAmount(),
-            $buyer_name,
-            $buyer_email,
-            $buyer_tel1,
-            $buyer_tel2
+            $buyer->getName(),
+            $buyer->getEmail(),
+            '',
+            ''
         );
         $response = $this->client->batchOrder($pg_bill_key, $order);
 
