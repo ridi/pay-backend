@@ -17,7 +17,6 @@ use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
-use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Repository\UserRepository;
@@ -76,26 +75,18 @@ class UserAppService
     /**
      * @param User $oauth2_user
      * @param string $pin
-     * @param string $entered_validation_token
      * @throws LeavedUserException
      * @throws NotFoundUserException
-     * @throws UnauthorizedPinChangeException
      * @throws UnchangedPinException
      * @throws WrongFormattedPinException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function updatePin(User $oauth2_user, string $pin, string $entered_validation_token): void
+    public static function updatePin(User $oauth2_user, string $pin): void
     {
         $u_idx = $oauth2_user->getUidx();
         $user = self::getUser($u_idx);
-        $user_key = self::getUserKey($u_idx);
-
-        $validation_token = ValidationTokenManager::get($user_key);
-        if ($validation_token !== $entered_validation_token) {
-            throw new UnauthorizedPinChangeException();
-        }
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -113,8 +104,6 @@ class UserAppService
 
             throw $t;
         }
-
-        ValidationTokenManager::invalidate($user_key);
 
         $data = ['u_id' => $oauth2_user->getUid()];
         $email_body = (new TemplateRenderer())->render('pin-change-alert.twig', $data);
@@ -211,7 +200,6 @@ class UserAppService
 
     /**
      * @param User $oauth2_user
-     * @param string $entered_validation_token
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws OnetouchPaySettingChangeDeclinedException
@@ -219,15 +207,10 @@ class UserAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function enableOnetouchPay(User $oauth2_user, string $entered_validation_token): void
+    public static function enableOnetouchPay(User $oauth2_user): void
     {
         $u_idx = $oauth2_user->getUidx();
         $user = self::getUser($u_idx);
-
-        $validation_token = ValidationTokenManager::get(self::getUserKey($u_idx));
-        if ($entered_validation_token !== $validation_token) {
-            throw new OnetouchPaySettingChangeDeclinedException('원터치 결제 설정을 변경할 수 없습니다.');
-        }
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
@@ -425,7 +408,7 @@ class UserAppService
      * @param int $u_idx
      * @return string
      */
-    private static function getUserKey(int $u_idx): string
+    public static function getUserKey(int $u_idx): string
     {
         return "user:${u_idx}";
     }

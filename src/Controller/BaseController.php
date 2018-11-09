@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 abstract class BaseController extends Controller
 {
-    protected const REQUEST_CONTENT_TYPE = 'application/json';
+    protected const REQUEST_CONTENT_TYPE = 'json'; // Symfony\Component\HttpFoundation\Request::initializeFormats() 참고
 
     /** @var OAuth2ServiceProvider */
     protected $oauth2_service_provider;

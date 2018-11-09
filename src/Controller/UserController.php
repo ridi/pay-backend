@@ -11,6 +11,7 @@ use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
+use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
@@ -18,7 +19,6 @@ use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
-use RidiPay\User\Domain\Exception\UnauthorizedPinChangeException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
@@ -78,7 +78,7 @@ class UserController extends BaseController
      */
     public function deleteUser(Request $request, int $u_idx): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -149,7 +149,7 @@ class UserController extends BaseController
      */
     public function getPaymentMethods(Request $request, int $u_idx): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -247,18 +247,10 @@ class UserController extends BaseController
      *   )
      * )
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function getMyInformation(Request $request): JsonResponse
+    public function getMyInformation(): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
-            );
-        }
-
         try {
             $user_information = UserAppService::getUserInformation($this->getUidx());
         } catch (LeavedUserException $e) {
@@ -303,7 +295,10 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/pin", methods={"POST"})
-     * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
+     * @ParamValidator(
+     *   {"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}},
+     *   {"param"="validation_token", "constraints"={"Uuid"}}
+     * )
      * @OAuth2()
      *
      * @OA\Post(
@@ -354,15 +349,24 @@ class UserController extends BaseController
      */
     public function createPin(Request $request): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
             );
         }
 
+        $body = json_decode($request->getContent());
+        $card_registration_key = CardAppService::getCardRegistrationKey($this->getUidx());
+        $validation_token = ValidationTokenManager::get($card_registration_key);
+        if ($validation_token !== $body->validation_token) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+            );
+        }
+
         try {
-            $body = json_decode($request->getContent());
             UserAppService::createPin($this->getUidx(), $body->pin);
         } catch (WrongFormattedPinException $e) {
             return self::createErrorResponse(
@@ -429,8 +433,8 @@ class UserController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/InvalidValidationToken"),
      *         @OA\Schema(ref="#/components/schemas/LoginRequired"),
-     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPinChange")
      *       }
      *     )
      *   ),
@@ -456,16 +460,26 @@ class UserController extends BaseController
      */
     public function updatePin(Request $request)
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
             );
         }
 
+        $body = json_decode($request->getContent());
+        $user_key = UserAppService::getUserKey($this->getUidx());
+        $validation_token = ValidationTokenManager::get($user_key);
+        if ($validation_token !== $body->validation_token) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+            );
+        }
+
         try {
-            $body = json_decode($request->getContent());
-            UserAppService::updatePin($this->getUser(), $body->pin, $body->validation_token);
+            UserAppService::updatePin($this->getUser(), $body->pin);
+            ValidationTokenManager::invalidate($user_key);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -476,12 +490,6 @@ class UserController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
-        } catch (UnauthorizedPinChangeException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::UNAUTHORIZED_PIN_CHANGE,
                 $e->getMessage()
             );
         } catch (UnchangedPinException $e) {
@@ -596,7 +604,7 @@ class UserController extends BaseController
      */
     public function validatePin(Request $request)
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -661,12 +669,15 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/onetouch", methods={"POST"})
-     * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
+     * @ParamValidator(
+     *   {"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}},
+     *   {"param"="validation_token", "constraints"={"Uuid"}}
+     * )
      * @OAuth2()
      *
      * @OA\Post(
      *   path="/me/onetouch",
-     *   summary="원터치 결제 이용 여부 변경",
+     *   summary="원터치 결제 설정",
      *   tags={"private-api"},
      *   @OA\RequestBody(
      *     @OA\JsonContent(
@@ -691,6 +702,7 @@ class UserController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/InvalidValidationToken"),
      *         @OA\Schema(ref="#/components/schemas/LoginRequired"),
      *         @OA\Schema(ref="#/components/schemas/UnauthorizedCardRegistration")
      *       }
@@ -718,18 +730,27 @@ class UserController extends BaseController
      */
     public function setOnetouchPay(Request $request)
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
             );
         }
 
-        try {
-            $body = json_decode($request->getContent());
-            UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
+        $body = json_decode($request->getContent());
+        $card_registration_key = CardAppService::getCardRegistrationKey($this->getUidx());
+        $validation_token = ValidationTokenManager::get($card_registration_key);
+        if ($validation_token !== $body->validation_token) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+            );
+        }
 
+        try {
+            UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
             $card = CardAppService::finishCardRegistration($this->getUser());
+            ValidationTokenManager::invalidate($card_registration_key);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -829,7 +850,7 @@ class UserController extends BaseController
      */
     public function changeOnetouchPay(Request $request)
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -839,15 +860,17 @@ class UserController extends BaseController
         try {
             $body = json_decode($request->getContent());
             if ($body->enable_onetouch_pay) {
-                if (!isset($body->validation_token)) {
+                $user_key = UserAppService::getUserKey($this->getUidx());
+                $validation_token = ValidationTokenManager::get($user_key);
+                if (!isset($body->validation_token) || $validation_token !== $body->validation_token) {
                     return self::createErrorResponse(
                         CommonErrorCodeConstant::class,
-                        CommonErrorCodeConstant::INVALID_PARAMETER,
-                        "validation_token: Parameter doesn't exist."
+                        CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
                     );
                 }
 
-                UserAppService::enableOnetouchPay($this->getUser(), $body->validation_token);
+                UserAppService::enableOnetouchPay($this->getUser());
+                ValidationTokenManager::invalidate($user_key);
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }

@@ -64,13 +64,6 @@ use Symfony\Component\HttpFoundation\Response;
  *   @OA\Property(property="message", type="string", example="카드를 등록할 수 없습니다.")
  * )
  * @OA\Schema(
- *   schema="UnauthorizedPinChange",
- *   type="object",
- *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="UNAUTHORIZED_PIN_CHANGE"),
- *   @OA\Property(property="message", type="string", example="결제 비밀번호를 변경할 수 없습니다.")
- * )
- * @OA\Schema(
  *   schema="UnchangedPin",
  *   type="object",
  *   required={"code", "message"},
@@ -102,7 +95,6 @@ class UserErrorCodeConstant
     public const PIN_ENTRY_BLOCKED = 'PIN_ENTRY_BLOCKED';
     public const PIN_UNMATCHED = 'PIN_UNMATCHED';
     public const UNAUTHORIZED_CARD_REGISTRATION = 'UNAUTHORIZED_CARD_REGISTRATION';
-    public const UNAUTHORIZED_PIN_CHANGE = 'UNAUTHORIZED_PIN_CHANGE';
     public const UNCHANGED_PIN = 'UNCHANGED_PIN';
     public const UNREGISTERED_PAYMENT_METHOD = 'UNREGISTERED_PAYMENT_METHOD';
     public const WRONG_FORMATTED_PIN = 'WRONG_FORMATTED_PIN';
@@ -116,7 +108,6 @@ class UserErrorCodeConstant
         self::PIN_ENTRY_BLOCKED => Response::HTTP_FORBIDDEN,
         self::PIN_UNMATCHED => Response::HTTP_BAD_REQUEST,
         self::UNAUTHORIZED_CARD_REGISTRATION => Response::HTTP_UNAUTHORIZED,
-        self::UNAUTHORIZED_PIN_CHANGE => Response::HTTP_UNAUTHORIZED,
         self::UNCHANGED_PIN => Response::HTTP_BAD_REQUEST,
         self::UNREGISTERED_PAYMENT_METHOD => Response::HTTP_NOT_FOUND,
         self::WRONG_FORMATTED_PIN => Response::HTTP_BAD_REQUEST

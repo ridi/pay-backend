@@ -7,6 +7,8 @@ use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\TemplateRenderer;
+use RidiPay\Library\TimeUnitConstant;
+use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
@@ -171,5 +173,27 @@ class CardAppService
         );
 
         return $card;
+    }
+
+    /**
+     * @param int $u_idx
+     * @return string
+     * @throws \Exception
+     */
+    public static function generateValidationToken(int $u_idx): string
+    {
+        return ValidationTokenManager::generate(
+            self::getCardRegistrationKey($u_idx),
+            5 * TimeUnitConstant::SEC_IN_MINUTE
+        );
+    }
+
+    /**
+     * @param int $u_idx
+     * @return string
+     */
+    public static function getCardRegistrationKey(int $u_idx): string
+    {
+        return "card-registration:{$u_idx}";
     }
 }

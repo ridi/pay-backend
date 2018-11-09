@@ -8,17 +8,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Schema(
+ *   schema="InvalidAccessToken",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="INVALID_ACCESS_TOKEN"),
+ *   @OA\Property(property="message", type="string")
+ * )
+ * @OA\Schema(
  *   schema="InvalidContentType",
  *   type="object",
  *   required={"code", "message"},
  *   @OA\Property(property="code", type="string", example="INVALID_CONTENT_TYPE"),
- *   @OA\Property(property="message", type="string")
- * )
- * @OA\Schema(
- *   schema="InvalidParameter",
- *   type="object",
- *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="INVALID_PARAMETER"),
  *   @OA\Property(property="message", type="string")
  * )
  * @OA\Schema(
@@ -29,10 +29,17 @@ use Symfony\Component\HttpFoundation\Response;
  *   @OA\Property(property="message", type="string")
  * )
  * @OA\Schema(
- *   schema="InvalidAccessToken",
+ *   schema="InvalidParameter",
  *   type="object",
  *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="INVALID_ACCESS_TOKEN"),
+ *   @OA\Property(property="code", type="string", example="INVALID_PARAMETER"),
+ *   @OA\Property(property="message", type="string")
+ * )
+ * @OA\Schema(
+ *   schema="InvalidValidationToken",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="INVALID_VALIDATION_TOKEN"),
  *   @OA\Property(property="message", type="string")
  * )
  * @OA\Schema(
@@ -55,6 +62,7 @@ class CommonErrorCodeConstant
     public const INVALID_CONTENT_TYPE = 'INVALID_CONTENT_TYPE';
     public const INVALID_PARAMETER = 'INVALID_PARAMETER';
     public const INVALID_JWT = 'INVALID_JWT';
+    public const INVALID_VALIDATION_TOKEN = 'INVALID_VALIDATION_TOKEN';
     public const INVALID_ACCESS_TOKEN = 'INVALID_ACCESS_TOKEN';
     public const LOGIN_REQUIRED = 'LOGIN_REQUIRED';
     public const INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR';
@@ -63,6 +71,7 @@ class CommonErrorCodeConstant
         self::INVALID_CONTENT_TYPE => Response::HTTP_BAD_REQUEST,
         self::INVALID_PARAMETER => Response::HTTP_BAD_REQUEST,
         self::INVALID_JWT => Response::HTTP_UNAUTHORIZED,
+        self::INVALID_VALIDATION_TOKEN => Response::HTTP_UNAUTHORIZED,
         self::INVALID_ACCESS_TOKEN => Response::HTTP_UNAUTHORIZED,
         self::LOGIN_REQUIRED => Response::HTTP_UNAUTHORIZED,
         self::INTERNAL_SERVER_ERROR => Response::HTTP_INTERNAL_SERVER_ERROR

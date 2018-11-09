@@ -27,7 +27,6 @@ use RidiPay\Transaction\Domain\Exception\AlreadyApprovedTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
-use RidiPay\Transaction\Domain\Exception\UnvalidatedTransactionException;
 use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
@@ -96,7 +95,6 @@ class TransactionAppService
      * @throws NotFoundUserException
      * @throws NotReservedTransactionException
      * @throws UnsupportedPaymentMethodException
-     * @throws UnvalidatedTransactionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
@@ -128,20 +126,15 @@ class TransactionAppService
     /**
      * @param int $u_idx
      * @param string $reservation_id
-     * @param string $validation_token
      * @return CreateTransactionDto
      * @throws NotReservedTransactionException
-     * @throws UnvalidatedTransactionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function createTransaction(
-        int $u_idx,
-        string $reservation_id,
-        string $validation_token
-    ): CreateTransactionDto {
-        $reserved_transaction = self::getReservedTransaction($reservation_id, $validation_token);
+    public static function createTransaction(int $u_idx, string $reservation_id): CreateTransactionDto
+    {
+        $reserved_transaction = self::getReservedTransaction($reservation_id);
         $pg = PgAppService::getActivePg();
 
         $transaction = new TransactionEntity(
@@ -155,8 +148,6 @@ class TransactionAppService
             \DateTime::createFromFormat(DATE_ATOM, $reserved_transaction['reserved_at'])
         );
         TransactionRepository::getRepository()->save($transaction);
-
-        ValidationTokenManager::invalidate(self::getReservationKey($reservation_id));
 
         return new CreateTransactionDto(
             $transaction->getUuid()->toString(),
@@ -461,12 +452,10 @@ class TransactionAppService
 
     /**
      * @param string $reservation_id
-     * @param null|string $validation_token
      * @return array
      * @throws NotReservedTransactionException
-     * @throws UnvalidatedTransactionException
      */
-    private static function getReservedTransaction(string $reservation_id, ?string $validation_token = null): array
+    private static function getReservedTransaction(string $reservation_id): array
     {
         $reservation_key = self::getReservationKey($reservation_id);
 
@@ -474,11 +463,6 @@ class TransactionAppService
         $reserved_transaction = $redis->hgetall($reservation_key);
         if (empty($reserved_transaction)) {
             throw new NotReservedTransactionException();
-        }
-        if (isset($reserved_transaction['validation_token'])
-            && ($reserved_transaction['validation_token'] !== $validation_token)
-        ) {
-            throw new UnvalidatedTransactionException();
         }
 
         return $reserved_transaction;
@@ -488,7 +472,7 @@ class TransactionAppService
      * @param string $reservation_id
      * @return string
      */
-    private static function getReservationKey(string $reservation_id): string
+    public static function getReservationKey(string $reservation_id): string
     {
         return "reservation:${reservation_id}";
     }

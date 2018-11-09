@@ -14,6 +14,7 @@ use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\Validation\ApiSecretValidationException;
 use RidiPay\Library\Validation\ApiSecretValidator;
+use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
@@ -26,7 +27,6 @@ use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
-use RidiPay\Transaction\Domain\Exception\UnvalidatedTransactionException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -110,7 +110,7 @@ class PaymentController extends BaseController
      */
     public function reservePayment(Request $request): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -218,6 +218,7 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/InvalidValidationToken"),
      *         @OA\Schema(ref="#/components/schemas/LoginRequired")
      *       }
      *     )
@@ -225,12 +226,7 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
-     *         @OA\Schema(ref="#/components/schemas/UnvalidatedTransaction")
-     *       }
-     *     )
+     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
      *   ),
      *   @OA\Response(
      *     response="404",
@@ -253,15 +249,8 @@ class PaymentController extends BaseController
      * @param string $reservation_id
      * @return JsonResponse
      */
-    public function getReservation(Request $request, string $reservation_id): JsonResponse
+    public function getReservation(string $reservation_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
-            );
-        }
-
         try {
             $is_pin_validation_required = TransactionAppService::isPinValidationRequired(
                 $reservation_id,
@@ -286,12 +275,6 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
-                $e->getMessage()
-            );
-        } catch (UnvalidatedTransactionException $e) {
-            return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::UNVALIDATED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
@@ -391,11 +374,6 @@ class PaymentController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/UnvalidatedTransaction")
-     *   ),
-     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(ref="#/components/schemas/NotReservedTransaction")
@@ -413,30 +391,31 @@ class PaymentController extends BaseController
      */
     public function createPayment(Request $request, string $reservation_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
             );
         }
 
-        try {
-            $body = json_decode($request->getContent());
-            $result = TransactionAppService::createTransaction(
-                $this->getUidx(),
-                $reservation_id,
-                $body->validation_token
+        $body = json_decode($request->getContent());
+        $reservation_key = TransactionAppService::getReservationKey($reservation_id);
+        $validation_token = ValidationTokenManager::get($reservation_key);
+        if ($validation_token !== $body->validation_token) {
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
             );
+        }
+
+        try {
+            $result = TransactionAppService::createTransaction($this->getUidx(), $reservation_id);
+            ValidationTokenManager::invalidate($reservation_key);
         } catch (NotReservedTransactionException $e) {
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
                 $e->getMessage()
-            );
-        } catch (UnvalidatedTransactionException $e) {
-            return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::UNVALIDATED_TRANSACTION
             );
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
@@ -561,7 +540,7 @@ class PaymentController extends BaseController
      */
     public function approvePayment(Request $request, string $transaction_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -725,7 +704,7 @@ class PaymentController extends BaseController
      */
     public function cancelPayment(Request $request, string $transaction_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -889,7 +868,7 @@ class PaymentController extends BaseController
      */
     public function getPaymentStatus(Request $request, string $transaction_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -1025,7 +1004,7 @@ class PaymentController extends BaseController
      */
     public function subscribe(Request $request): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -1151,7 +1130,7 @@ class PaymentController extends BaseController
      */
     public function unsubscribe(Request $request, string $subscription_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -1283,7 +1262,7 @@ class PaymentController extends BaseController
      */
     public function resumeSubscription(Request $request, string $subscription_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
@@ -1454,7 +1433,7 @@ class PaymentController extends BaseController
      */
     public function paySubscription(Request $request, string $subscription_id): JsonResponse
     {
-        if (!$request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
+        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INVALID_CONTENT_TYPE
