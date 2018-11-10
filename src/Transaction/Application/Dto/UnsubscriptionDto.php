@@ -29,7 +29,6 @@ class UnsubscriptionDto
     {
         $this->subscription_id = $subscription->getUuid()->toString();
         $this->product_name = $subscription->getProductName();
-        $this->amount = $subscription->getAmount();
         $this->subscribed_at = $subscription->getSubscribedAt();
         $this->unsubscribed_at = $subscription->getUnsubscribedAt();
     }

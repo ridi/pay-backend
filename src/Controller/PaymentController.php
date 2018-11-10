@@ -947,8 +947,7 @@ class PaymentController extends BaseController
      * @Route("/payments/subscriptions", methods={"POST"})
      * @ParamValidator(
      *   {"param"="payment_method_id", "constraints"={"Uuid"}},
-     *   {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
+     *   {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}}
      * )
      *
      * @OA\Post(
@@ -960,15 +959,14 @@ class PaymentController extends BaseController
      *   @OA\RequestBody(
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"payment_method_id", "product_name", "amount"},
+     *       required={"payment_method_id", "product_name"},
      *       @OA\Property(
      *         property="payment_method_id",
      *         type="string",
      *         description="RIDI Pay 결제 수단 ID",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       ),
-     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
-     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000")
+     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책")
      *     )
      *   ),
      *   @OA\Response(
@@ -979,7 +977,6 @@ class PaymentController extends BaseController
      *       required={
      *         "subscription_id",
      *         "product_name",
-     *         "amount",
      *         "subscribed_at"
      *       },
      *       @OA\Property(
@@ -989,7 +986,6 @@ class PaymentController extends BaseController
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
      *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
-     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
      *       @OA\Property(
      *         property="subscribed_at",
      *         type="string",
@@ -1040,8 +1036,7 @@ class PaymentController extends BaseController
                 ApiSecretValidator::getApiKey($request),
                 ApiSecretValidator::getSecretKey($request),
                 $body->payment_method_id,
-                $body->product_name,
-                $body->amount
+                $body->product_name
             );
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             return self::createErrorResponse(
@@ -1073,7 +1068,6 @@ class PaymentController extends BaseController
         return self::createSuccessResponse([
             'subscription_id' => $result->subscription_id,
             'product_name' => $result->product_name,
-            'amount' => $result->amount,
             'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
         ]);
     }
@@ -1108,7 +1102,6 @@ class PaymentController extends BaseController
      *       required={
      *         "subscription_id",
      *         "product_name",
-     *         "amount",
      *         "subscribed_at",
      *         "unsubscribed_at",
      *       },
@@ -1119,7 +1112,6 @@ class PaymentController extends BaseController
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
      *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
-     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
      *       @OA\Property(
      *         property="subscribed_at",
      *         type="string",
@@ -1196,7 +1188,6 @@ class PaymentController extends BaseController
         return self::createSuccessResponse([
             'subscription_id' => $result->subscription_id,
             'product_name' => $result->product_name,
-            'amount' => $result->amount,
             'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
             'unsubscribed_at' => $result->unsubscribed_at->format(DATE_ATOM)
         ]);
@@ -1232,7 +1223,6 @@ class PaymentController extends BaseController
      *       required={
      *         "subscription_id",
      *         "product_name",
-     *         "amount",
      *         "subscribed_at",
      *       },
      *       @OA\Property(
@@ -1242,7 +1232,6 @@ class PaymentController extends BaseController
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
      *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
-     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
      *       @OA\Property(
      *         property="subscribed_at",
      *         type="string",
@@ -1346,7 +1335,6 @@ class PaymentController extends BaseController
         return self::createSuccessResponse([
             'subscription_id' => $result->subscription_id,
             'product_name' => $result->product_name,
-            'amount' => $result->amount,
             'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
         ]);
     }
@@ -1361,6 +1349,7 @@ class PaymentController extends BaseController
      * )
      * @ParamValidator(
      *   {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *   {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
      *   {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
      *   {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
      *   {"param"="buyer_email", "constraints"={"NotBlank", {"Type"="string"}}}
@@ -1487,6 +1476,7 @@ class PaymentController extends BaseController
                 ApiSecretValidator::getSecretKey($request),
                 $subscription_id,
                 $body->partner_transaction_id,
+                intval($body->amount),
                 $body->buyer_id,
                 $body->buyer_name,
                 $body->buyer_email

@@ -30,13 +30,11 @@ class SubscriptionAppService
      * @param string $partner_secret_key
      * @param string $payment_method_uuid
      * @param string $product_name
-     * @param int $amount
      * @return SubscriptionDto
      * @throws DeletedPaymentMethodException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Exception
      */
@@ -44,13 +42,12 @@ class SubscriptionAppService
         string $partner_api_key,
         string $partner_secret_key,
         string $payment_method_uuid,
-        string $product_name,
-        int $amount
+        string $product_name
     ): SubscriptionDto {
         $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
 
-        $subscription = new SubscriptionEntity($payment_method_id, $partner_id, $product_name, $amount);
+        $subscription = new SubscriptionEntity($payment_method_id, $partner_id, $product_name);
         SubscriptionRepository::getRepository()->save($subscription);
 
         return new SubscriptionDto($subscription);
@@ -125,6 +122,7 @@ class SubscriptionAppService
      * @param string $partner_secret_key
      * @param string $subscription_uuid
      * @param string $partner_transaction_id
+     * @param int $amount
      * @param string $buyer_id
      * @param string $buyer_name
      * @param string $buyer_email
@@ -144,6 +142,7 @@ class SubscriptionAppService
         string $partner_secret_key,
         string $subscription_uuid,
         string $partner_transaction_id,
+        int $amount,
         string $buyer_id,
         string $buyer_name,
         string $buyer_email
@@ -165,7 +164,7 @@ class SubscriptionAppService
             $partner_transaction_id,
             $subscription->getId(),
             $subscription->getProductName(),
-            $subscription->getAmount(),
+            $amount,
             $subscription->getSubscribedAt(),
             $buyer_id,
             $buyer_name,

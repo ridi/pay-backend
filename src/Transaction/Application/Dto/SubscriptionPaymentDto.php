@@ -40,7 +40,7 @@ class SubscriptionPaymentDto
         $this->transaction_id = $approve_transaction_dto->transaction_id;
         $this->partner_transaction_id = $approve_transaction_dto->partner_transaction_id;
         $this->product_name = $subscription->getProductName();
-        $this->amount = $subscription->getAmount();
+        $this->amount = $approve_transaction_dto->amount;
         $this->subscribed_at = $subscription->getSubscribedAt();
         $this->approved_at = $approve_transaction_dto->approved_at;
     }

@@ -13,9 +13,6 @@ class SubscriptionDto
     /** @var string */
     public $product_name;
 
-    /** @var int */
-    public $amount;
-
     /** @var \DateTime */
     public $subscribed_at;
 
@@ -26,7 +23,6 @@ class SubscriptionDto
     {
         $this->subscription_id = $subscription->getUuid()->toString();
         $this->product_name = $subscription->getProductName();
-        $this->amount = $subscription->getAmount();
         $this->subscribed_at = $subscription->getSubscribedAt();
     }
 }

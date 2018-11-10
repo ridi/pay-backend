@@ -65,13 +65,6 @@ class SubscriptionEntity
     private $product_name;
 
     /**
-     * @var int
-     *
-     * @Column(name="amount", type="integer", nullable=false, options={"comment"="주문 금액"})
-     */
-    private $amount;
-
-    /**
      * @var \DateTime
      *
      * @Column(name="subscribed_at", type="datetime", nullable=false, options={"default"="CURRENT_TIMESTAMP"})
@@ -89,20 +82,14 @@ class SubscriptionEntity
      * @param int $payment_method_id
      * @param int $partner_id
      * @param string $product_name
-     * @param int $amount
      * @throws \Exception
      */
-    public function __construct(
-        int $payment_method_id,
-        int $partner_id,
-        string $product_name,
-        int $amount
-    ) {
+    public function __construct(int $payment_method_id, int $partner_id, string $product_name)
+    {
         $this->payment_method_id = $payment_method_id;
         $this->partner_id = $partner_id;
         $this->uuid = Uuid::uuid4();
         $this->product_name = $product_name;
-        $this->amount = $amount;
         $this->subscribed_at = new \DateTime();
         $this->unsubscribed_at = null;
     }
@@ -145,14 +132,6 @@ class SubscriptionEntity
     public function getProductName(): string
     {
         return $this->product_name;
-    }
-
-    /**
-     * @return int
-     */
-    public function getAmount(): int
-    {
-        return $this->amount;
     }
 
     /**
