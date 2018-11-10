@@ -1,6 +1,6 @@
 {
-    "name": "ridi/pay",
-    "description": "RIDI Pay Web Backend",
+    "name": "ridi/pay-backend",
+    "description": "RIDI Pay Backend API",
     "type": "project",
     "license": "proprietary",
     "authors": [
