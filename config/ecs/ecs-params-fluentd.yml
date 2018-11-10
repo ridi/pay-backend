@@ -1,6 +1,8 @@
 version: 1
 
 task_definition:
+  task_role_arn: fluentdRole
+  task_execution_role: ecsTaskExecutionRole
   services:
     fluentd:
       mem_limit: 256m

@@ -1,6 +1,8 @@
 version: 1
 
 task_definition:
+  task_role_arn: apiRole
+  task_execution_role: ecsTaskExecutionRole
   services:
     api:
       mem_limit: 256m
