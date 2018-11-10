@@ -29,7 +29,7 @@ RUN pip3 install awscli
 
 RUN a2enmod rewrite
 RUN a2dissite 000-default && rm /etc/apache2/sites-available/000-default.conf
-COPY /config/docker/apache/ridi-pay.conf.template /etc/apache2/sites-available/ridi-pay.conf
+COPY /config/docker/apache/ridi-pay.conf /etc/apache2/sites-available/ridi-pay.conf
 RUN a2ensite ridi-pay
 
 # Install composer
