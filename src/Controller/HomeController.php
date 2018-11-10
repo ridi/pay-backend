@@ -17,4 +17,15 @@ class HomeController extends BaseController
     {
         return new Response("It's healthy");
     }
+
+    /**
+     * Ignore requests for favicon.ico
+     * @Route("/favicon.ico", methods={"GET"})
+     *
+     * @return Response
+     */
+    public function favicon(): Response
+    {
+        return new Response('', Response::HTTP_NO_CONTENT);
+    }
 }
