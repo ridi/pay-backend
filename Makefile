@@ -30,6 +30,7 @@ deploy:
         --ecs-params ./config/ecs/ecs-params-fluentd.yml \
         --project-name fluentd \
         service up \
+        --timeout 10 \
         --target-group-arn ${FLUENTD_TARGET_GROUP_ARN} \
         --container-name fluentd \
         --container-port 24224
@@ -37,6 +38,7 @@ deploy:
 	    --ecs-params ./config/ecs/ecs-params-api.yml \
 	    --project-name api \
 		service up \
+		--timeout 10 \
 		--target-group-arn ${API_TARGET_GROUP_ARN} \
 		--container-name api \
 		--container-port 80
