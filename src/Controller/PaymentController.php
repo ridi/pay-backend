@@ -472,13 +472,10 @@ class PaymentController extends BaseController
      *   @OA\RequestBody(
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"validation_token"},
-     *       @OA\Property(
-     *         property="validation_token",
-     *         type="string",
-     *         description="결제 인증 후 발급된 토큰",
-     *         example="550E8400-E29B-41D4-A716-446655440000"
-     *       )
+     *       required={"buyer_id", "buyer_name", "buyer_email"},
+     *       @OA\Property(property="buyer_id", type="string", description="구매자 ID(가맹점)"),
+     *       @OA\Property(property="buyer_name", type="string", description="구매자 이름"),
+     *       @OA\Property(property="buyer_email", type="string", description="구매자 Email")
      *     )
      *   ),
      *   @OA\Response(
@@ -1386,8 +1383,11 @@ class PaymentController extends BaseController
      *   @OA\RequestBody(
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"partner_transaction_id"},
-     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호")
+     *       required={"partner_transaction_id", "buyer_id", "buyer_name", "buyer_email"},
+     *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호"),
+     *       @OA\Property(property="buyer_id", type="string", description="구매자 ID(가맹점)"),
+     *       @OA\Property(property="buyer_name", type="string", description="구매자 이름"),
+     *       @OA\Property(property="buyer_email", type="string", description="구매자 Email")
      *     )
      *   ),
      *   @OA\Response(
