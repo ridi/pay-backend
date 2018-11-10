@@ -82,7 +82,7 @@ abstract class BaseController extends Controller
     /**
      * @return User
      */
-    protected function getUser(): User
+    protected function getOAuth2User(): User
     {
         return $this->oauth2_service_provider->getMiddleware()->getUser();
     }

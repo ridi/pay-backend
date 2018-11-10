@@ -241,7 +241,7 @@ class PaymentMethodController extends BaseController
         }
 
         try {
-            CardAppService::deleteCard($this->getUser(), $payment_method_id);
+            CardAppService::deleteCard($this->getOAuth2User(), $payment_method_id);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,

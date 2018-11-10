@@ -470,7 +470,7 @@ class UserController extends BaseController
         }
 
         try {
-            UserAppService::updatePin($this->getUser(), $body->pin);
+            UserAppService::updatePin($this->getOAuth2User(), $body->pin);
             ValidationTokenManager::invalidate($user_key);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
@@ -741,7 +741,7 @@ class UserController extends BaseController
 
         try {
             UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
-            $card = CardAppService::finishCardRegistration($this->getUser());
+            $card = CardAppService::finishCardRegistration($this->getOAuth2User());
             ValidationTokenManager::invalidate($card_registration_key);
         } catch (LeavedUserException $e) {
             return self::createErrorResponse(
@@ -861,7 +861,7 @@ class UserController extends BaseController
                     );
                 }
 
-                UserAppService::enableOnetouchPay($this->getUser());
+                UserAppService::enableOnetouchPay($this->getOAuth2User());
                 ValidationTokenManager::invalidate($user_key);
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
