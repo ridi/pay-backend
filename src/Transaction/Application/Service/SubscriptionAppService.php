@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Application\Service;
 
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
@@ -131,6 +132,7 @@ class SubscriptionAppService
      * @throws NotFoundSubscriptionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
+     * @throws UnderMinimumPaymentAmountException
      * @throws UnregisteredPaymentMethodException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException

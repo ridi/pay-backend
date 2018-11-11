@@ -5,6 +5,7 @@ namespace RidiPay\Pg\Infrastructure;
 
 use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
+use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\Pg\Kcp\Order;
 use RidiPay\Library\Pg\Kcp\Util;
 use RidiPay\Pg\Domain\Service\Buyer;
@@ -101,7 +102,7 @@ class KcpHandler implements PgHandlerInterface
      * @param string $pg_bill_key
      * @param Buyer $buyer
      * @return TransactionApprovalResponse
-     * @throws \Exception
+     * @throws UnderMinimumPaymentAmountException
      */
     public function approveTransaction(
         TransactionEntity $transaction,

@@ -6,7 +6,7 @@ namespace RidiPay\Library\Pg\Kcp;
 class Order
 {
     /** @var int KRW 최소결제금액 */
-    const GOOD_PRICE_KRW_MIN = 100;
+    public const GOOD_PRICE_KRW_MIN = 100;
 
     /** @var string */
     private $id;
@@ -37,7 +37,7 @@ class Order
      * @param string $buyer_email 구매자 이메일 (KCP 결제 메일 수신 주소)
      * @param string $buyer_tel1 구매자 전화번호
      * @param string $buyer_tel2 구매자 휴대폰 번호 (KCP 결제알리미 설정시 문자 수신 번호)
-     * @throws \Exception
+     * @throws UnderMinimumPaymentAmountException
      */
     public function __construct(
         string $id,
@@ -49,7 +49,7 @@ class Order
         string $buyer_tel2
     ) {
         if ($good_price_krw < self::GOOD_PRICE_KRW_MIN) {
-            throw new \Exception('최소결제금액 미달');
+            throw new UnderMinimumPaymentAmountException();
         }
 
         $this->id = $id;

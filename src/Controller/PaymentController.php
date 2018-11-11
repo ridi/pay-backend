@@ -10,6 +10,7 @@ use RidiPay\Controller\Response\PartnerErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
+use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\Validation\ApiSecretValidationException;
@@ -86,7 +87,12 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="400",
      *     description="Bad Request",
-     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidParameter"),
+     *         @OA\Schema(ref="#/components/schemas/UnderMinimumPaymentAmount")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -151,6 +157,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (UnderMinimumPaymentAmountException $e) {
+            return self::createErrorResponse(
+                PgErrorCodeConstant::class,
+                PgErrorCodeConstant::UNDER_MINIMUM_PAYMENT_AMOUNT,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
@@ -515,6 +527,11 @@ class PaymentController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(ref="#/components/schemas/UnderMinimumPaymentAmount"),
+     *   ),
+     *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner"),
@@ -600,6 +617,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (UnderMinimumPaymentAmountException $e) {
+            return self::createErrorResponse(
+                PgErrorCodeConstant::class,
+                PgErrorCodeConstant::UNDER_MINIMUM_PAYMENT_AMOUNT,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {
@@ -1423,6 +1446,11 @@ class PaymentController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(ref="#/components/schemas/UnderMinimumPaymentAmount")
+     *   ),
+     *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
@@ -1503,6 +1531,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (UnderMinimumPaymentAmountException $e) {
+            return self::createErrorResponse(
+                PgErrorCodeConstant::class,
+                PgErrorCodeConstant::UNDER_MINIMUM_PAYMENT_AMOUNT,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {

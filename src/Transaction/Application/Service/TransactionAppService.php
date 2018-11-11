@@ -7,6 +7,8 @@ use Predis\Client;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Kernel;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\Pg\Kcp\Order;
+use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
@@ -51,6 +53,7 @@ class TransactionAppService
      * @return string
      * @throws DeletedPaymentMethodException
      * @throws UnauthorizedPartnerException
+     * @throws UnderMinimumPaymentAmountException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\NonUniqueResultException
@@ -68,6 +71,9 @@ class TransactionAppService
     ): string {
         $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
+        if ($amount < Order::GOOD_PRICE_KRW_MIN) {
+            throw new UnderMinimumPaymentAmountException();
+        }
 
         $reservation_id = Uuid::uuid4()->toString();
         $reservation_key = self::getReservationKey($reservation_id);
@@ -172,6 +178,7 @@ class TransactionAppService
      * @throws NotFoundTransactionException
      * @throws TransactionApprovalException
      * @throws UnauthorizedPartnerException
+     * @throws UnderMinimumPaymentAmountException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -275,6 +282,7 @@ class TransactionAppService
      * @return ApproveTransactionDto
      * @throws DeletedPaymentMethodException
      * @throws TransactionApprovalException
+     * @throws UnderMinimumPaymentAmountException
      * @throws UnregisteredPaymentMethodException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
