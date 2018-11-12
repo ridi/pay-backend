@@ -34,7 +34,7 @@ class RidiCashAutoChargeSubscriptionOptoutManager
                 ]
             );
         } catch (\Exception $e) {
-            SentryHelper::getClient()->captureException($e);
+            SentryHelper::captureException($e);
 
             throw $e;
         }

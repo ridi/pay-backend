@@ -29,14 +29,6 @@ class SentryHelper
     }
 
     /**
-     * @return \Raven_Client
-     */
-    public static function getClient(): \Raven_Client
-    {
-        return self::$client;
-    }
-
-    /**
      * @param \Exception $e
      * @param array $data
      * @param null $logger
