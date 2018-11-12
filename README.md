@@ -48,25 +48,39 @@ aws-vault exec <profile_name> -- docker-compose up [--build]
 [링크](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)
 
 ## Deploy
-1.
+#### 0. Requirements
+- Install `awscli`
+```
+brew install awscli
+aws configure
+```
+
+- Install [ecs-cli](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
+
+- Clone a directory for deploy
 ```
 git clone git@github.com:ridi/pay-backend.git pay-backend-deploy
 cd pay-backend-deploy
-aws-vault exec <profile_name> -- make deploy-build
 ```
 
-2.
-- test 환경
+#### 1. Build
 ```
-aws-vault exec <profile_name> -- bash -c "APP_ENV=test FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
-```
-
-- staging 환경
-```
-aws-vault exec <profile_name> -- bash -c "APP_ENV=staging FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
+$(aws ecr get-login --no-include-email --region ap-northeast-2)
+make deploy-build
 ```
 
-- prod 환경
+#### 2. Deploy
+- test
 ```
-aws-vault exec <profile_name> -- bash -c "APP_ENV=prod FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
+APP_ENV=test FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy
+```
+
+- staging
+```
+APP_ENV=staging FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy
+```
+
+- prod
+```
+APP_ENV=prod FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
 ```
