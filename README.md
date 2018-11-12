@@ -46,3 +46,27 @@ aws-vault exec <profile_name> -- docker-compose up [--build]
 
 ## API 문서
 [링크](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)
+
+## Deploy
+1.
+```
+git clone git@github.com:ridi/pay-backend.git pay-backend-deploy
+cd pay-backend-deploy
+aws-vault exec <profile_name> -- make deploy-build
+```
+
+2.
+- test 환경
+```
+aws-vault exec <profile_name> -- bash -c "APP_ENV=test FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
+```
+
+- staging 환경
+```
+aws-vault exec <profile_name> -- bash -c "APP_ENV=staging FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
+```
+
+- prod 환경
+```
+aws-vault exec <profile_name> -- bash -c "APP_ENV=prod FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
+```
