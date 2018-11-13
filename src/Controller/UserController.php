@@ -252,11 +252,10 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
+            return self::createSuccessResponse([
+                'code' => UserErrorCodeConstant::NOT_FOUND_USER,
+                'message' => $e->getMessage()
+            ]);
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
