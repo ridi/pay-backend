@@ -40,7 +40,7 @@ class UserInformationInquiryTest extends ControllerTestCase
         $response_content = $client->getResponse()->getContent();
 
         $this->assertSame($http_status_code, $response_status_code);
-        if ($response_status_code === Response::HTTP_OK) {
+        if (is_null($error_code)) {
             $expected_response = json_encode([
                 'user_id' => TestUtil::U_ID,
                 'payment_methods' => [
@@ -99,7 +99,7 @@ class UserInformationInquiryTest extends ControllerTestCase
         return [
             [$user_indices[0], $payment_method_id, Response::HTTP_OK, null],
             [$user_indices[1], null, Response::HTTP_FORBIDDEN, UserErrorCodeConstant::LEAVED_USER],
-            [$user_indices[2], null, Response::HTTP_NOT_FOUND, UserErrorCodeConstant::NOT_FOUND_USER]
+            [$user_indices[2], null, Response::HTTP_OK, UserErrorCodeConstant::NOT_FOUND_USER]
         ];
     }
 }
