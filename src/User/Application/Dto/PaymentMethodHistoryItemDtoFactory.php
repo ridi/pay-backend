@@ -31,6 +31,11 @@ class PaymentMethodHistoryItemDtoFactory
         }
     }
 
+    /**
+     * @param PaymentMethodEntity $payment_method
+     * @return PaymentMethodHistoryItemDto
+     * @throws UnsupportedPaymentMethodException
+     */
     public static function createWithDeletion(PaymentMethodEntity $payment_method): PaymentMethodHistoryItemDto
     {
         switch ($payment_method->getType()) {
