@@ -8,6 +8,8 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Application\Dto\AvailablePaymentMethodsDto;
 use RidiPay\User\Application\Dto\PaymentMethodDto;
 use RidiPay\User\Application\Dto\PaymentMethodDtoFactory;
+use RidiPay\User\Application\Dto\PaymentMethodHistoryItemDto;
+use RidiPay\User\Application\Dto\PaymentMethodHistoryItemDtoFactory;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -197,5 +199,32 @@ class PaymentMethodAppService
         }
 
         return $payment_method;
+    }
+
+    /**
+     * @param int $u_idx
+     * @return PaymentMethodHistoryItemDto[]
+     * @throws UnsupportedPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getPaymentMethodsHistory(int $u_idx): array
+    {
+        $history = [];
+
+        $payment_methods = PaymentMethodRepository::getRepository()->findByUidx($u_idx);
+        foreach ($payment_methods as $payment_method) {
+            $history[] = PaymentMethodHistoryItemDtoFactory::createWithRegistration($payment_method);
+            if ($payment_method->isDeleted()) {
+                $history[] = PaymentMethodHistoryItemDtoFactory::createWithDeletion($payment_method);
+            }
+        }
+
+        // 최신 순 정렬
+        usort($history, function (PaymentMethodHistoryItemDto $a, PaymentMethodHistoryItemDto $b) {
+            return $a->processed_at < $b->processed_at;
+        });
+
+        return $history;
     }
 }

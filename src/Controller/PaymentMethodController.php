@@ -67,12 +67,6 @@ class PaymentMethodController extends BaseController
      *       required={"validation_token"},
      *       @OA\Property(
      *         property="validation_token",
-     *         type="boolean",
-     *         description="결제 비밀번호 검증 필요 여부",
-     *         example=true
-     *       ),
-     *       @OA\Property(
-     *         property="validation_token",
      *         type="string",
      *         description="카드 등록, 결제 비밀번호 등록, 원터치 결제 설정까지 필요한 인증 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"

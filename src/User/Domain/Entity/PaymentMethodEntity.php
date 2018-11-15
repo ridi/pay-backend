@@ -159,11 +159,27 @@ class PaymentMethodEntity
     }
 
     /**
+     * @return \DateTime
+     */
+    public function getCreatedAt(): \DateTime
+    {
+        return $this->created_at;
+    }
+
+    /**
      * @return bool
      */
     public function isDeleted(): bool
     {
         return !is_null($this->deleted_at);
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getDeletedAt(): \DateTime
+    {
+        return $this->deleted_at;
     }
 
     /**

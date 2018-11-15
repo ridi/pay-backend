@@ -32,6 +32,10 @@ use OpenApi\Annotations as OA;
  *   name="private-api-for-first-party",
  *   description="RIDI 서비스에서 호출 가능한 API"
  * )
+ * @OA\Tag(
+ *   name="cms-api",
+ *   description="CMS에서 호출 가능한 API"
+ * )
  */
 $openapi = OpenApi\scan([
     __DIR__,

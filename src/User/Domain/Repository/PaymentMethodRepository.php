@@ -44,6 +44,21 @@ class PaymentMethodRepository extends BaseEntityRepository
     /**
      * @param int $u_idx
      * @return PaymentMethodEntity[]
+     */
+    public function findByUidx(int $u_idx): array
+    {
+        $qb = $this->createQueryBuilder('pm')
+            ->addSelect('c')
+            ->leftJoin('pm.cards', 'c')
+            ->where('pm.u_idx = :u_idx')
+            ->setParameter('u_idx', $u_idx, Type::INTEGER);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @param int $u_idx
+     * @return PaymentMethodEntity[]
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
