@@ -6,22 +6,17 @@ namespace RidiPay\User\Domain\Service;
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
 use RidiPay\User\Domain\Repository\UserActionHistoryRepository;
 use RidiPay\User\Domain\Repository\UserRepository;
+use RidiPay\User\Domain\UserActionHistoryConstant;
 
 class UserActionHistoryService
 {
-    private const REGISTER_CARD = 'REGISTER_CARD';
-    private const DELETE_CARD = 'DELETE_CARD';
-    private const UPDATE_PIN = 'UPDATE_PIN';
-    private const ENABLE_ONETOUCH_PAY = 'ENABLE_ONETOUCH_PAY';
-    private const DISABLE_ONETOUCH_PAY = 'DISABLE_ONETOUCH_PAY';
-
     /**
      * @param int $u_idx
      * @throws \Exception
      */
     public static function logRegisterCard(int $u_idx): void
     {
-        self::logUserAction($u_idx, self::REGISTER_CARD);
+        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_REGISTER_CARD);
     }
 
     /**
@@ -30,7 +25,7 @@ class UserActionHistoryService
      */
     public static function logDeleteCard(int $u_idx): void
     {
-        self::logUserAction($u_idx, self::DELETE_CARD);
+        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_DELETE_CARD);
     }
 
     /**
@@ -39,7 +34,7 @@ class UserActionHistoryService
      */
     public static function logUpdatePin(int $u_idx): void
     {
-        self::logUserAction($u_idx, self::UPDATE_PIN);
+        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_UPDATE_PIN);
     }
 
     /**
@@ -48,7 +43,7 @@ class UserActionHistoryService
      */
     public static function logEnableOnetouchPay(int $u_idx): void
     {
-        self::logUserAction($u_idx, self::ENABLE_ONETOUCH_PAY);
+        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_ENABLE_ONETOUCH_PAY);
     }
 
     /**
@@ -57,7 +52,7 @@ class UserActionHistoryService
      */
     public static function logDisableOnetouchPay(int $u_idx): void
     {
-        self::logUserAction($u_idx, self::DISABLE_ONETOUCH_PAY);
+        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_DISABLE_ONETOUCH_PAY);
     }
 
     /**

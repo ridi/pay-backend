@@ -9,7 +9,10 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
+use RidiPay\User\Application\Dto\OnetouchPaySettingChangeHistoryItemDto;
+use RidiPay\User\Application\Dto\PinUpdateHistoryItemDto;
 use RidiPay\User\Application\Dto\UserInformationDto;
+use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -19,10 +22,12 @@ use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
+use RidiPay\User\Domain\Repository\UserActionHistoryRepository;
 use RidiPay\User\Domain\Repository\UserRepository;
 use RidiPay\User\Domain\Service\AbuseBlocker;
 use RidiPay\User\Domain\Service\PinEntryAbuseBlockPolicy;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
+use RidiPay\User\Domain\UserActionHistoryConstant;
 
 class UserAppService
 {
@@ -168,6 +173,27 @@ class UserAppService
 
     /**
      * @param int $u_idx
+     * @return PinUpdateHistoryItemDto[]
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getPinUpdateHistory(int $u_idx): array
+    {
+        $actions = UserActionHistoryRepository::getRepository()->findByUidxAndActions(
+            $u_idx,
+            [UserActionHistoryConstant::ACTION_UPDATE_PIN]
+        );
+
+        return array_map(
+            function (UserActionHistoryEntity $action) {
+                return new PinUpdateHistoryItemDto($action);
+            },
+            $actions
+        );
+    }
+
+    /**
+     * @param int $u_idx
      * @param bool $enable_onetouch_pay
      */
     public static function setOnetouchPay(int $u_idx, bool $enable_onetouch_pay): void
@@ -298,6 +324,30 @@ class UserAppService
         $user = self::getUser($u_idx);
 
         return $user->isUsingOnetouchPay();
+    }
+
+    /**
+     * @param int $u_idx
+     * @return OnetouchPaySettingChangeHistoryItemDto[]
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getOnetouchPaySettingChangeHistory(int $u_idx): array
+    {
+        $actions = UserActionHistoryRepository::getRepository()->findByUidxAndActions(
+            $u_idx,
+            [
+                UserActionHistoryConstant::ACTION_ENABLE_ONETOUCH_PAY,
+                UserActionHistoryConstant::ACTION_DISABLE_ONETOUCH_PAY
+            ]
+        );
+
+        return array_map(
+            function (UserActionHistoryEntity $action) {
+                return new OnetouchPaySettingChangeHistoryItemDto($action);
+            },
+            $actions
+        );
     }
 
     /**

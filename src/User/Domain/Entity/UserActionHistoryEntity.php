@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
+use RidiPay\User\Domain\UserActionHistoryConstant;
+
 /**
  * @Table(
  *   name="user_action_history",
@@ -54,5 +56,29 @@ class UserActionHistoryEntity
         $this->user = $user;
         $this->action = $action;
         $this->created_at = new \DateTime();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isEnableOnetouchPay(): bool
+    {
+        return $this->action === UserActionHistoryConstant::ACTION_ENABLE_ONETOUCH_PAY;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDisableOnetouchPay(): bool
+    {
+        return $this->action === UserActionHistoryConstant::ACTION_DISABLE_ONETOUCH_PAY;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getCreatedAt(): \DateTime
+    {
+        return $this->created_at;
     }
 }
