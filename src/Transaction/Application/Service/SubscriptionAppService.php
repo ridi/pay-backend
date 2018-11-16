@@ -14,6 +14,7 @@ use RidiPay\Transaction\Application\Dto\SubscriptionResumptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
 use RidiPay\Transaction\Application\Dto\UnsubscriptionDto;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
+use RidiPay\Transaction\Domain\Exception\AlreadyRegisteredSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
@@ -32,6 +33,7 @@ class SubscriptionAppService
      * @param string $payment_method_uuid
      * @param string $product_name
      * @return SubscriptionDto
+     * @throws AlreadyRegisteredSubscriptionException
      * @throws DeletedPaymentMethodException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
@@ -47,6 +49,13 @@ class SubscriptionAppService
     ): SubscriptionDto {
         $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
+
+        $subscriptions = SubscriptionRepository::getRepository()->findActiveOnesByPaymentMethodId($payment_method_id);
+        foreach ($subscriptions as $subscription) {
+            if ($subscription->getProductName() === $product_name) {
+                throw new AlreadyRegisteredSubscriptionException();
+            }
+        }
 
         $subscription = new SubscriptionEntity($payment_method_id, $partner_id, $product_name);
         SubscriptionRepository::getRepository()->save($subscription);
@@ -184,7 +193,7 @@ class SubscriptionAppService
      */
     public static function getSubscriptions(int $payment_method_id)
     {
-        $subscriptions = SubscriptionRepository::getRepository()->findByPaymentMethodId($payment_method_id);
+        $subscriptions = SubscriptionRepository::getRepository()->findActiveOnesByPaymentMethodId($payment_method_id);
 
         return array_map(
             function (SubscriptionEntity $subscription) {
@@ -203,7 +212,7 @@ class SubscriptionAppService
      */
     public static function optoutFirstPartySubscriptions(int $u_idx, int $payment_method_id): void
     {
-        $subscriptions = SubscriptionRepository::getRepository()->findByPaymentMethodId($payment_method_id);
+        $subscriptions = SubscriptionRepository::getRepository()->findActiveOnesByPaymentMethodId($payment_method_id);
         foreach ($subscriptions as $subscription) {
             if ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE) {
                 RidiCashAutoChargeSubscriptionOptoutManager::optout(
