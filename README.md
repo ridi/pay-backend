@@ -1,6 +1,10 @@
 [![Build Status](https://travis-ci.com/ridi/pay-backend.svg?token=xPAQFHxECFy2kMpwAYno&branch=master)](https://travis-ci.com/ridi/pay-backend)
 [![codecov](https://codecov.io/gh/ridi/pay-backend/branch/master/graph/badge.svg?token=g1l9Hrb9zH)](https://codecov.io/gh/ridi/pay-backend)
 
+## 보안 취약점 제보
+
+리디페이에 대한 보안 취약점은 security@ridi.com 을 통해 제보받고 있습니다.
+
 ## 개발 환경 구성
 
 #### 0. Requirements
