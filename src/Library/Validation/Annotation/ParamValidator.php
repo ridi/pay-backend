@@ -25,11 +25,11 @@ class ParamValidator
     private $rules;
 
     /**
-     * @param array $rules
+     * @param array $data
      */
-    public function __construct(array $rules)
+    public function __construct(array $data)
     {
-        $this->setRules($rules);
+        $this->setRules($data['rules']);
     }
 
     public function getRules(): array

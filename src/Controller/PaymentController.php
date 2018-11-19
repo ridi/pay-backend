@@ -42,11 +42,13 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/reserve", methods={"POST"})
      * @ParamValidator(
-     *   {"param"="payment_method_id", "constraints"={"Uuid"}},
-     *   {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
-     *   {"param"="return_url", "constraints"={"Url"}}
+     *   rules={
+     *     {"param"="payment_method_id", "constraints"={"Uuid"}},
+     *     {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="amount", "constraints"={{"Regex"="/^\d+$/"}}},
+     *     {"param"="return_url", "constraints"={"Url"}}
+     *   }
      * )
      *
      * @OA\Post(
@@ -183,7 +185,7 @@ class PaymentController extends BaseController
      *   "/payments/{reservation_id}",
      *   methods={"OPTIONS"},
      *   requirements={
-     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      * @Cors(methods={"GET"})
@@ -200,7 +202,7 @@ class PaymentController extends BaseController
      *   "/payments/{reservation_id}",
      *   methods={"GET"},
      *   requirements={
-     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      * @OAuth2()
@@ -322,7 +324,7 @@ class PaymentController extends BaseController
      *   "/payments/{reservation_id}",
      *   methods={"OPTIONS"},
      *   requirements={
-     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      * @Cors(methods={"POST"})
@@ -339,10 +341,14 @@ class PaymentController extends BaseController
      *   "/payments/{reservation_id}",
      *   methods={"POST"},
      *   requirements={
-     *     "reservation_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
-     * @ParamValidator({"param"="validation_token", "constraints"={"Uuid"}})
+     * @ParamValidator(
+     *   rules={
+     *     {"param"="validation_token", "constraints"={"Uuid"}}
+     *   }
+     * )
      * @OAuth2()
      *
      * @OA\Post(
@@ -459,13 +465,15 @@ class PaymentController extends BaseController
      *   "/payments/{transaction_id}/approve",
      *   methods={"POST"},
      *   requirements={
-     *     "transaction_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "transaction_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      * @ParamValidator(
-     *   {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="buyer_email", "constraints"={"NotBlank", {"Type"="string"}}}
+     *   rules={
+     *     {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="buyer_email", "constraints"={"Email"}}
+     *   }
      * )
      *
      * @OA\Post(
@@ -657,7 +665,7 @@ class PaymentController extends BaseController
      *   "/payments/{transaction_id}/cancel",
      *   methods={"POST"},
      *   requirements={
-     *     "transaction_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "transaction_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      *
@@ -816,7 +824,7 @@ class PaymentController extends BaseController
      *   "/payments/{transaction_id}/status",
      *   methods={"GET"},
      *   requirements={
-     *     "transaction_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "transaction_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      *
@@ -970,8 +978,10 @@ class PaymentController extends BaseController
     /**
      * @Route("/payments/subscriptions", methods={"POST"})
      * @ParamValidator(
-     *   {"param"="payment_method_id", "constraints"={"Uuid"}},
-     *   {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}}
+     *   rules={
+     *     {"param"="payment_method_id", "constraints"={"Uuid"}},
+     *     {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}}
+     *   }
      * )
      *
      * @OA\Post(
@@ -1111,7 +1121,7 @@ class PaymentController extends BaseController
      * @Route("/payments/subscriptions/{subscription_id}",
      *   methods={"DELETE"},
      *   requirements={
-     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "subscription_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      *
@@ -1232,7 +1242,7 @@ class PaymentController extends BaseController
      * @Route("/payments/subscriptions/{subscription_id}/resume",
      *   methods={"PUT"},
      *   requirements={
-     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "subscription_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      *
@@ -1379,15 +1389,17 @@ class PaymentController extends BaseController
      *   "/payments/subscriptions/{subscription_id}/pay",
      *   methods={"POST"},
      *   requirements={
-     *     "subscription_id"="[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}"
+     *     "subscription_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
      * @ParamValidator(
-     *   {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="amount", "constraints"={{"Regex"="/\d+/"}}},
-     *   {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
-     *   {"param"="buyer_email", "constraints"={"NotBlank", {"Type"="string"}}}
+     *   rules={
+     *     {"param"="partner_transaction_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="amount", "constraints"={{"Regex"="/^\d+$/"}}},
+     *     {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="buyer_email", "constraints"={"Email"}}
+     *   }
      * )
      *
      * @OA\Post(
