@@ -9,6 +9,7 @@ use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Company;
 use RidiPay\Library\Pg\Kcp\Order;
+use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\Pg\Kcp\Util;
 
 class KcpClientTest extends TestCase
@@ -24,28 +25,17 @@ class KcpClientTest extends TestCase
     private const DUMMY_ORDER_BUYER_TEL1 = '02-000-0000';
     private const DUMMY_ORDER_BUYER_TEL2 = '010-0000-0000';
 
-    public function testPaymentLifecycle()
+    /**
+     * @dataProvider cardAndOrderProvider
+     *
+     * @param Card $card
+     * @param Order $order
+     */
+    public function testPaymentLifecycle(Card $card, Order $order)
     {
         $client = Client::getTestClient();
 
-        $card = new Card(
-            self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
-            self::DUMMY_CARD_EXPIRY_MAX,
-            self::DUMMY_CARD_PASSWORD,
-            self::DUMMY_CARD_TAX_ID
-        );
         $card_company = Company::SHINHAN;
-
-        $order_id = Uuid::uuid4()->toString();
-        $order = new Order(
-            $order_id,
-            self::DUMMY_ORDER_GOOD_NAME,
-            Order::GOOD_PRICE_KRW_MIN,
-            self::DUMMY_ORDER_BUYER_NAME,
-            self::DUMMY_ORDER_BUYER_EMAIL,
-            self::DUMMY_ORDER_BUYER_TEL1,
-            self::DUMMY_ORDER_BUYER_TEL2
-        );
 
         $auth_res = $client->requestBatchKey($card);
         $this->assertTrue($auth_res->isSuccess());
@@ -54,8 +44,8 @@ class KcpClientTest extends TestCase
 
         $order_res = $client->batchOrder($auth_res->getBatchKey(), $order);
         $this->assertTrue($order_res->isSuccess());
-        $this->assertSame($order_id, $order_res->getOrderNo());
-        $this->assertSame($order_id, $order_res->getCaOrderId());
+        $this->assertSame($order->getId(), $order_res->getOrderNo());
+        $this->assertSame($order->getId(), $order_res->getCaOrderId());
         $this->assertSame($order->getGoodPrice(), $order_res->getAmount());
         $this->assertSame($order->getGoodPrice(), $order_res->getCardMny());
         $this->assertSame(0, $order_res->getCouponMny());
@@ -74,8 +64,8 @@ class KcpClientTest extends TestCase
         $kcp_tno = $order_res->getTno();
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
         $this->assertTrue($cancel_res->isSuccess());
-        $this->assertSame($order_id, $cancel_res->getOrderNo());
-        $this->assertSame($order_id, $cancel_res->getCaOrderId());
+        $this->assertSame($order->getId(), $cancel_res->getOrderNo());
+        $this->assertSame($order->getId(), $cancel_res->getCaOrderId());
         $this->assertSame($kcp_tno, $cancel_res->getTno());
         $this->assertSame($order->getGoodPrice(), $cancel_res->getAmount());
         $this->assertSame($order->getGoodPrice(), $cancel_res->getCardMny());
@@ -101,5 +91,49 @@ class KcpClientTest extends TestCase
                 'kcp_tno', 'order_no', 100
             )
         );
+    }
+
+    /**
+     * @return array
+     * @throws UnderMinimumPaymentAmountException
+     */
+    public function cardAndOrderProvider(): array
+    {
+        return [
+            [
+                new Card(
+                    self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
+                    self::DUMMY_CARD_EXPIRY_MAX,
+                    self::DUMMY_CARD_PASSWORD,
+                    self::DUMMY_CARD_TAX_ID
+                ),
+                new Order(
+                    Uuid::uuid4()->toString(),
+                    self::DUMMY_ORDER_GOOD_NAME,
+                    Order::GOOD_PRICE_KRW_MIN,
+                    self::DUMMY_ORDER_BUYER_NAME,
+                    self::DUMMY_ORDER_BUYER_EMAIL,
+                    self::DUMMY_ORDER_BUYER_TEL1,
+                    self::DUMMY_ORDER_BUYER_TEL2
+                )
+            ],
+            [
+                new Card(
+                    self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
+                    self::DUMMY_CARD_EXPIRY_MAX,
+                    self::DUMMY_CARD_PASSWORD,
+                    self::DUMMY_CARD_TAX_ID
+                ),
+                new Order(
+                    Uuid::uuid4()->toString(),
+                    '리디북스 전자책; echo $(pwd)',
+                    Order::GOOD_PRICE_KRW_MIN,
+                    'echo $(whoami)',
+                    'kcp-test@ridi.',
+                    self::DUMMY_ORDER_BUYER_TEL1,
+                    self::DUMMY_ORDER_BUYER_TEL2
+                )
+            ]
+        ];
     }
 }

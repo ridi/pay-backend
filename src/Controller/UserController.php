@@ -31,7 +31,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class UserController extends BaseController
 {
     /**
-     * @Route("/users/{u_idx}", methods={"DELETE"}, requirements={"u_idx"="\d+"})
+     * @Route("/users/{u_idx}", methods={"DELETE"}, requirements={"u_idx"="^\d+$"})
      * @JwtAuth()
      *
      * @OA\Delete(
@@ -112,7 +112,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_idx}/payment-methods", methods={"GET"}, requirements={"u_idx"="\d+"})
+     * @Route("/users/{u_idx}/payment-methods", methods={"GET"}, requirements={"u_idx"="^\d+$"})
      * @JwtAuth()
      *
      * @OA\Get(
@@ -287,8 +287,10 @@ class UserController extends BaseController
     /**
      * @Route("/me/pin", methods={"POST"})
      * @ParamValidator(
-     *   {"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}},
-     *   {"param"="validation_token", "constraints"={"Uuid"}}
+     *   rules={
+     *     {"param"="pin", "constraints"={{"Regex"="/^\d{6}$/"}}},
+     *     {"param"="validation_token", "constraints"={"Uuid"}}
+     *   }
      * )
      * @OAuth2()
      *
@@ -380,8 +382,10 @@ class UserController extends BaseController
     /**
      * @Route("/me/pin", methods={"PUT"})
      * @ParamValidator(
-     *   {"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}},
-     *   {"param"="validation_token", "constraints"={"Uuid"}}
+     *   rules={
+     *     {"param"="pin", "constraints"={{"Regex"="/^\d{6}$/"}}},
+     *     {"param"="validation_token", "constraints"={"Uuid"}}
+     *   }
      * )
      * @OAuth2()
      *
@@ -520,7 +524,11 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/pin/validate", methods={"POST"})
-     * @ParamValidator({"param"="pin", "constraints"={{"Regex"="/\d{6}/"}}})
+     * @ParamValidator(
+     *   rules={
+     *     {"param"="pin", "constraints"={{"Regex"="/^\d{6}$/"}}}
+     *   }
+     * )
      * @OAuth2()
      *
      * @OA\Post(
@@ -661,8 +669,10 @@ class UserController extends BaseController
     /**
      * @Route("/me/onetouch", methods={"POST"})
      * @ParamValidator(
-     *   {"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}},
-     *   {"param"="validation_token", "constraints"={"Uuid"}}
+     *   rules={
+     *     {"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}},
+     *     {"param"="validation_token", "constraints"={"Uuid"}}
+     *   }
      * )
      * @OAuth2()
      *
@@ -774,7 +784,11 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/onetouch", methods={"PUT"})
-     * @ParamValidator({"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}})
+     * @ParamValidator(
+     *   rules={
+     *     {"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}}
+     *   }
+     * )
      * @OAuth2()
      *
      * @OA\Put(

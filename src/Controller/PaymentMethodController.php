@@ -38,10 +38,12 @@ class PaymentMethodController extends BaseController
     /**
      * @Route("/me/cards", methods={"POST"})
      * @ParamValidator(
-     *     {"param"="card_number", "constraints"={{"Regex"="/\d{13,16}/"}}},
-     *     {"param"="card_expiration_date", "constraints"={{"Regex"="/\d{2}(0[1-9]|1[0-2])/"}}},
-     *     {"param"="card_password", "constraints"={{"Regex"="/\d{2}/"}}},
-     *     {"param"="tax_id", "constraints"={{"Regex"="/(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}/"}}}
+     *   rules={
+     *     {"param"="card_number", "constraints"={{"Regex"="/^\d{13,16}$/"}}},
+     *     {"param"="card_expiration_date", "constraints"={{"Regex"="/^\d{2}(0[1-9]|1[0-2])$/"}}},
+     *     {"param"="card_password", "constraints"={{"Regex"="/^\d{2}$/"}}},
+     *     {"param"="tax_id", "constraints"={{"Regex"="/^(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}$/"}}}
+     *   }
      * )
      * @OAuth2()
      *
@@ -160,7 +162,13 @@ class PaymentMethodController extends BaseController
     }
 
     /**
-     * @Route("/me/cards/{payment_method_id}", methods={"OPTIONS"})
+     * @Route(
+     *   "/me/cards/{payment_method_id}",
+     *   methods={"OPTIONS"},
+     *   requirements={
+     *     "payment_method_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
      * @Cors(methods={"DELETE"})
      *
      * @return JsonResponse
@@ -171,7 +179,13 @@ class PaymentMethodController extends BaseController
     }
 
     /**
-     * @Route("/me/cards/{payment_method_id}", methods={"DELETE"})
+     * @Route(
+     *   "/me/cards/{payment_method_id}",
+     *   methods={"DELETE"},
+     *   requirements={
+     *     "payment_method_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
      * @OAuth2()
      *
      * @OA\Delete(
