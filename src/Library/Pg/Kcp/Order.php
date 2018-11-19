@@ -86,9 +86,9 @@ class Order
     {
         return Util::flattenAssocArray([
             'ordr_data' => "ordr_idxx=$this->id",
-            'good_name' => "\"$this->good_name\"",
+            'good_name' => "'$this->good_name'",
             'good_mny' => $this->good_price,
-            'buyr_name' => "\"$this->buyer_name\"",
+            'buyr_name' => "'$this->buyer_name'",
             'buyr_tel1' => $this->buyer_tel1,
             'buyr_tel2' => $this->buyer_tel2,
             'buyr_mail' => $this->buyer_email,
