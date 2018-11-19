@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Application\Service;
 
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
@@ -14,6 +15,7 @@ use RidiPay\Transaction\Application\Dto\SubscriptionResumptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
 use RidiPay\Transaction\Application\Dto\UnsubscriptionDto;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyRegisteredSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
@@ -68,6 +70,7 @@ class SubscriptionAppService
      * @param string $partner_secret_key
      * @param string $subscription_uuid
      * @return UnsubscriptionDto
+     * @throws AlreadyCancelledSubscriptionException
      * @throws NotFoundSubscriptionException
      * @throws UnauthorizedPartnerException
      * @throws \Doctrine\DBAL\DBALException
@@ -83,7 +86,7 @@ class SubscriptionAppService
 
         $subscription_repo = SubscriptionRepository::getRepository();
         $subscription = $subscription_repo->findOneByUuid(Uuid::fromString($subscription_uuid));
-        if (is_null($subscription) || $subscription->isUnsubscribed()) {
+        if (is_null($subscription)) {
             throw new NotFoundSubscriptionException();
         }
 
@@ -206,25 +209,77 @@ class SubscriptionAppService
     /**
      * @param int $u_idx
      * @param int $payment_method_id
+     * @throws AlreadyCancelledSubscriptionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function optoutSubscriptions(int $u_idx, int $payment_method_id): void
+    {
+        $subscription_repo = SubscriptionRepository::getRepository();
+        $subscriptions = $subscription_repo->findActiveOnesByPaymentMethodId($payment_method_id);
+
+        $first_party_subscriptions = [];
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            foreach ($subscriptions as $subscription) {
+                if (self::isFirstPartySubscription($subscription)) {
+                    $first_party_subscriptions[] = $subscription;
+                }
+
+                $subscription->unsubscribe();
+                $subscription_repo->save($subscription);
+            }
+
+            $em->commit();
+        }
+        catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
+        }
+
+        foreach ($first_party_subscriptions as $subscription) {
+            self::optoutFirstPartySubscription($u_idx, $subscription);
+        }
+    }
+
+    /**
+     * @param SubscriptionEntity $subscription
+     * @return bool
+     */
+    private static function isFirstPartySubscription(SubscriptionEntity $subscription): bool
+    {
+        return in_array(
+            $subscription->getProductName(),
+            [
+                SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE,
+                SubscriptionConstant::PRODUCT_RIDISELECT
+            ]
+        );
+    }
+
+    /**
+     * @param int $u_idx
+     * @param SubscriptionEntity $subscription
      * @throws \Exception
      */
-    public static function optoutFirstPartySubscriptions(int $u_idx, int $payment_method_id): void
+    private static function optoutFirstPartySubscription(int $u_idx, SubscriptionEntity $subscription)
     {
-        $subscriptions = SubscriptionRepository::getRepository()->findActiveOnesByPaymentMethodId($payment_method_id);
-        foreach ($subscriptions as $subscription) {
-            if ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE) {
-                RidiCashAutoChargeSubscriptionOptoutManager::optout(
-                    $u_idx,
-                    $subscription->getUuid()->toString()
-                );
-            } elseif ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDISELECT) {
-                RidiSelectSubscriptionOptoutManager::optout(
-                    $u_idx,
-                    $subscription->getUuid()->toString()
-                );
-            }
+        if ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE) {
+            RidiCashAutoChargeSubscriptionOptoutManager::optout(
+                $u_idx,
+                $subscription->getUuid()->toString()
+            );
+        } elseif ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDISELECT) {
+            RidiSelectSubscriptionOptoutManager::optout(
+                $u_idx,
+                $subscription->getUuid()->toString()
+            );
         }
     }
 }

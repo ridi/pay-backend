@@ -7,11 +7,13 @@ use OpenApi\Annotations as OA;
 use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
+use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -220,7 +222,8 @@ class PaymentMethodController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
-     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod"),
+     *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledSubscription")
      *       }
      *     )
      *   ),
@@ -278,6 +281,12 @@ class PaymentMethodController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (AlreadyCancelledSubscriptionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_CANCELLED_SUBSCRIPTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {

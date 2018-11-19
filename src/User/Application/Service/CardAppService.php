@@ -11,6 +11,8 @@ use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\User\Application\Dto\CardDto;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
@@ -60,9 +62,10 @@ class CardAppService
     /**
      * @param User $oauth2_user
      * @param string $payment_method_uuid
+     * @throws AlreadyCancelledSubscriptionException
+     * @throws DeletedPaymentMethodException
      * @throws LeavedUserException
      * @throws NotFoundUserException
-     * @throws DeletedPaymentMethodException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -93,7 +96,7 @@ class CardAppService
                 UserAppService::deleteOnetouchPay($u_idx);
             }
 
-            SubscriptionAppService::optoutFirstPartySubscriptions($u_idx, $payment_method_id);
+            SubscriptionAppService::optoutSubscriptions($u_idx, $payment_method_id);
 
             $em->commit();
         } catch (\Throwable $t) {

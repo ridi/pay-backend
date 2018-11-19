@@ -21,6 +21,7 @@ use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyApprovedTransactionException;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyRegisteredSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
@@ -1177,6 +1178,11 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/AlreadyCancelledSubscription")
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(ref="#/components/schemas/NotFoundSubscription")
@@ -1219,6 +1225,12 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (AlreadyCancelledSubscriptionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_CANCELLED_SUBSCRIPTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
