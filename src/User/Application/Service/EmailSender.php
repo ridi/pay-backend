@@ -19,6 +19,10 @@ class EmailSender
     public static function send(string $recipient, string $title, string $body): void
     {
         try {
+            if (Kernel::isDev()) {
+                $title = "[Dev] {$title}";
+            }
+
             $email = new Email(
                 EmailAddressConstant::NOREPLY_ADDRESS,
                 [$recipient],
