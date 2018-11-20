@@ -6,7 +6,6 @@ namespace RidiPay\Transaction\Domain\Service;
 use GuzzleHttp\Client;
 use RidiPay\Library\Jwt\JwtAuthorizationHelper;
 use RidiPay\Library\Jwt\JwtAuthorizationServiceNameConstant;
-use RidiPay\Library\SentryHelper;
 
 class RidiSelectSubscriptionOptoutManager
 {
@@ -25,19 +24,13 @@ class RidiSelectSubscriptionOptoutManager
             JwtAuthorizationServiceNameConstant::RIDI_PAY,
             JwtAuthorizationServiceNameConstant::RIDISELECT
         );
-        try {
-            $client->delete(
-                "/api/select/users/{$u_idx}/subscription",
-                [
-                    'json' => $data,
-                    'headers' => $headers
-                ]
-            );
-        } catch (\Exception $e) {
-            SentryHelper::captureException($e);
-
-            throw $e;
-        }
+        $client->delete(
+            "/api/select/users/{$u_idx}/subscription",
+            [
+                'json' => $data,
+                'headers' => $headers
+            ]
+        );
     }
 
     /**

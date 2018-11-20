@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Application\Service;
 
+use GuzzleHttp\Exception\ServerException;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
+use RidiPay\Library\SentryHelper;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
@@ -234,7 +236,14 @@ class SubscriptionAppService
         }
 
         foreach ($first_party_subscriptions as $subscription) {
-            self::optoutFirstPartySubscription($u_idx, $subscription);
+            try {
+                self::optoutFirstPartySubscription($u_idx, $subscription);
+            } catch (\Exception $e) {
+                // First-party 구독 해지 요청 중 발생한 오류가 RIDI Pay의 구독 해지 과정에 영향을 주지 않도록 catch
+                if ($e instanceof ServerException) {
+                    SentryHelper::captureException($e);
+                }
+            }
         }
     }
 
