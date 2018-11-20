@@ -16,7 +16,6 @@ use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
 use RidiPay\Transaction\Application\Dto\UnsubscriptionDto;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
-use RidiPay\Transaction\Domain\Exception\AlreadyRegisteredSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
@@ -35,7 +34,6 @@ class SubscriptionAppService
      * @param string $payment_method_uuid
      * @param string $product_name
      * @return SubscriptionDto
-     * @throws AlreadyRegisteredSubscriptionException
      * @throws DeletedPaymentMethodException
      * @throws UnauthorizedPartnerException
      * @throws UnregisteredPaymentMethodException
@@ -51,13 +49,6 @@ class SubscriptionAppService
     ): SubscriptionDto {
         $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
-
-        $subscriptions = SubscriptionRepository::getRepository()->findActiveOnesByPaymentMethodId($payment_method_id);
-        foreach ($subscriptions as $subscription) {
-            if ($subscription->getProductName() === $product_name) {
-                throw new AlreadyRegisteredSubscriptionException();
-            }
-        }
 
         $subscription = new SubscriptionEntity($payment_method_id, $partner_id, $product_name);
         SubscriptionRepository::getRepository()->save($subscription);

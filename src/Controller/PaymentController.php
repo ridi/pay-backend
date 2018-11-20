@@ -23,7 +23,6 @@ use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyApprovedTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
-use RidiPay\Transaction\Domain\Exception\AlreadyRegisteredSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
@@ -1037,12 +1036,7 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod"),
-     *         @OA\Schema(ref="#/components/schemas/AlreadyRegisteredSubscription")
-     *       }
-     *     )
+     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
      *   ),
      *   @OA\Response(
      *     response="404",
@@ -1094,12 +1088,6 @@ class PaymentController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
-                $e->getMessage()
-            );
-        } catch (AlreadyRegisteredSubscriptionException $e) {
-            return self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::ALREADY_REGISTERED_SUBSCRIPTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
