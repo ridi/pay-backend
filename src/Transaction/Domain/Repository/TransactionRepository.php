@@ -20,6 +20,15 @@ class TransactionRepository extends BaseEntityRepository
     }
 
     /**
+     * @param string $partner_transaction_id
+     * @return TransactionEntity[]
+     */
+    public function findByPartnerTransactionId(string $partner_transaction_id): array
+    {
+        return $this->findBy(['partner_transaction_id' => $partner_transaction_id]);
+    }
+
+    /**
      * @return TransactionRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
