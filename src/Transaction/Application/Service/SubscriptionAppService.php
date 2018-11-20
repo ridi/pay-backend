@@ -226,8 +226,7 @@ class SubscriptionAppService
             }
 
             $em->commit();
-        }
-        catch (\Throwable $t) {
+        } catch (\Throwable $t) {
             $em->rollback();
             $em->close();
 
