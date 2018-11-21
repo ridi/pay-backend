@@ -86,7 +86,7 @@ class CmsController extends BaseController
      *     response="200",
      *     description="Success",
      *     @OA\JsonContent(
-     *       @OA\Items(ref="#/components/schemas/OnetouchPaySettingHistoryItemDto")
+     *       @OA\Items(ref="#/components/schemas/OnetouchPaySettingUpdateHistoryItemDto")
      *     )
      *   ),
      *   @OA\Response(
@@ -104,10 +104,10 @@ class CmsController extends BaseController
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getOnetouchPaySettingChangeHistory(int $u_idx): JsonResponse
+    public function getOnetouchPaySettingUpdateHistory(int $u_idx): JsonResponse
     {
         try {
-            $onetouch_pay_setting_change_history = UserAppService::getOnetouchPaySettingChangeHistory($u_idx);
+            $onetouch_pay_setting_change_history = UserAppService::getOnetouchPaySettingUpdateHistory($u_idx);
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 

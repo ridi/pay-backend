@@ -9,7 +9,7 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\TemplateRenderer;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
-use RidiPay\User\Application\Dto\OnetouchPaySettingChangeHistoryItemDto;
+use RidiPay\User\Application\Dto\OnetouchPaySettingUpdateHistoryItemDto;
 use RidiPay\User\Application\Dto\PinUpdateHistoryItemDto;
 use RidiPay\User\Application\Dto\UserInformationDto;
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
@@ -328,11 +328,11 @@ class UserAppService
 
     /**
      * @param int $u_idx
-     * @return OnetouchPaySettingChangeHistoryItemDto[]
+     * @return OnetouchPaySettingUpdateHistoryItemDto[]
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getOnetouchPaySettingChangeHistory(int $u_idx): array
+    public static function getOnetouchPaySettingUpdateHistory(int $u_idx): array
     {
         $actions = UserActionHistoryRepository::getRepository()->findByUidxAndActions(
             $u_idx,
@@ -344,7 +344,7 @@ class UserAppService
 
         return array_map(
             function (UserActionHistoryEntity $action) {
-                return new OnetouchPaySettingChangeHistoryItemDto($action);
+                return new OnetouchPaySettingUpdateHistoryItemDto($action);
             },
             $actions
         );
