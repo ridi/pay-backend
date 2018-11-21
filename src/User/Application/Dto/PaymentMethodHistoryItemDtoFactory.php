@@ -9,8 +9,8 @@ use RidiPay\User\Domain\PaymentMethodConstant;
 
 class PaymentMethodHistoryItemDtoFactory
 {
-    private const ACTION_REGISTRATION = '등록';
-    private const ACTION_DELETION = '삭제';
+    public const ACTION_REGISTRATION = '등록';
+    public const ACTION_DELETION = '삭제';
 
     /**
      * @param PaymentMethodEntity $payment_method
