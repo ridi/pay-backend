@@ -68,7 +68,7 @@ class CmsController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_idx}/onetouch/history", methods={"GET"}, requirements={"u_idx"="\d+"})
+     * @Route("/users/{u_idx}/onetouch/history", methods={"GET"}, requirements={"u_idx"="^\d+$"})
      * @JwtAuth()
      *
      * @OA\Get(
@@ -121,7 +121,7 @@ class CmsController extends BaseController
     }
 
     /**
-     * @Route("/users/{u_idx}/pin/history", methods={"GET"}, requirements={"u_idx"="\d+"})
+     * @Route("/users/{u_idx}/pin/history", methods={"GET"}, requirements={"u_idx"="^\d+$"})
      * @JwtAuth()
      *
      * @OA\Get(
