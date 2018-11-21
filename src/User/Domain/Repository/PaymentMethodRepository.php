@@ -13,6 +13,7 @@ use RidiPay\Pg\Application\Dto\PgDto;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use Doctrine\DBAL\Types\Type;
+use RidiPay\User\Domain\PaymentMethodConstant;
 
 class PaymentMethodRepository extends BaseEntityRepository
 {
@@ -45,13 +46,15 @@ class PaymentMethodRepository extends BaseEntityRepository
      * @param int $u_idx
      * @return PaymentMethodEntity[]
      */
-    public function findByUidx(int $u_idx): array
+    public function findCardsByUidx(int $u_idx): array
     {
         $qb = $this->createQueryBuilder('pm')
             ->addSelect('c')
-            ->leftJoin('pm.cards', 'c')
+            ->join('pm.cards', 'c')
             ->where('pm.u_idx = :u_idx')
-            ->setParameter('u_idx', $u_idx, Type::INTEGER);
+            ->andWhere('pm.type = :card_type')
+            ->setParameter('u_idx', $u_idx, Type::INTEGER)
+            ->setParameter('card_type', PaymentMethodConstant::TYPE_CARD, Type::STRING);
 
         return $qb->getQuery()->getResult();
     }

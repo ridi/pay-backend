@@ -15,12 +15,12 @@ use Symfony\Component\Routing\Annotation\Route;
 class CmsController extends BaseController
 {
     /**
-     * @Route("/users/{u_idx}/payment-methods/history", methods={"GET"}, requirements={"u_idx"="\d+"})
+     * @Route("/users/{u_idx}/cards/history", methods={"GET"}, requirements={"u_idx"="^\d+$"})
      * @JwtAuth()
      *
      * @OA\Get(
-     *   path="/users/{u_idx}/payment-methods/history",
-     *   summary="결제 수단 등록/삭제 이력 조회",
+     *   path="/users/{u_idx}/cards/history",
+     *   summary="카드 등록/삭제 이력 조회",
      *   tags={"cms-api"},
      *   @OA\Parameter(
      *     name="u_idx",
@@ -51,10 +51,10 @@ class CmsController extends BaseController
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getPaymentMethodHistory(int $u_idx): JsonResponse
+    public function getCardsHistory(int $u_idx): JsonResponse
     {
         try {
-            $payment_methods_history = PaymentMethodAppService::getPaymentMethodsHistory($u_idx);
+            $cards_history = PaymentMethodAppService::getCardsHistory($u_idx);
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
@@ -64,7 +64,7 @@ class CmsController extends BaseController
             );
         }
 
-        return self::createSuccessResponse($payment_methods_history);
+        return self::createSuccessResponse($cards_history);
     }
 
     /**

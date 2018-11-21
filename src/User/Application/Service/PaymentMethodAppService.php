@@ -208,11 +208,22 @@ class PaymentMethodAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getPaymentMethodsHistory(int $u_idx): array
+    public static function getCardsHistory(int $u_idx): array
+    {
+        $cards = PaymentMethodRepository::getRepository()->findCardsByUidx($u_idx);
+
+        return self::getPaymentMethodsHistory($cards);
+    }
+
+    /**
+     * @param PaymentMethodEntity[] $payment_methods
+     * @return array
+     * @throws UnsupportedPaymentMethodException
+     */
+    private static function getPaymentMethodsHistory(array $payment_methods): array
     {
         $history = [];
 
-        $payment_methods = PaymentMethodRepository::getRepository()->findByUidx($u_idx);
         foreach ($payment_methods as $payment_method) {
             $history[] = PaymentMethodHistoryItemDtoFactory::createWithRegistration($payment_method);
             if ($payment_method->isDeleted()) {
