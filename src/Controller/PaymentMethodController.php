@@ -7,11 +7,13 @@ use OpenApi\Annotations as OA;
 use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
+use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -38,10 +40,12 @@ class PaymentMethodController extends BaseController
     /**
      * @Route("/me/cards", methods={"POST"})
      * @ParamValidator(
-     *     {"param"="card_number", "constraints"={{"Regex"="/\d{13,16}/"}}},
-     *     {"param"="card_expiration_date", "constraints"={{"Regex"="/\d{2}(0[1-9]|1[0-2])/"}}},
-     *     {"param"="card_password", "constraints"={{"Regex"="/\d{2}/"}}},
-     *     {"param"="tax_id", "constraints"={{"Regex"="/(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}/"}}}
+     *   rules={
+     *     {"param"="card_number", "constraints"={{"Regex"="/^\d{13,16}$/"}}},
+     *     {"param"="card_expiration_date", "constraints"={{"Regex"="/^\d{2}(0[1-9]|1[0-2])$/"}}},
+     *     {"param"="card_password", "constraints"={{"Regex"="/^\d{2}$/"}}},
+     *     {"param"="tax_id", "constraints"={{"Regex"="/^(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}$/"}}}
+     *   }
      * )
      * @OAuth2()
      *
@@ -154,7 +158,13 @@ class PaymentMethodController extends BaseController
     }
 
     /**
-     * @Route("/me/cards/{payment_method_id}", methods={"OPTIONS"})
+     * @Route(
+     *   "/me/cards/{payment_method_id}",
+     *   methods={"OPTIONS"},
+     *   requirements={
+     *     "payment_method_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
      * @Cors(methods={"DELETE"})
      *
      * @return JsonResponse
@@ -165,7 +175,13 @@ class PaymentMethodController extends BaseController
     }
 
     /**
-     * @Route("/me/cards/{payment_method_id}", methods={"DELETE"})
+     * @Route(
+     *   "/me/cards/{payment_method_id}",
+     *   methods={"DELETE"},
+     *   requirements={
+     *     "payment_method_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
      * @OAuth2()
      *
      * @OA\Delete(
@@ -200,7 +216,8 @@ class PaymentMethodController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
-     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod"),
+     *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledSubscription")
      *       }
      *     )
      *   ),
@@ -258,6 +275,12 @@ class PaymentMethodController extends BaseController
             return self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (AlreadyCancelledSubscriptionException $e) {
+            return self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_CANCELLED_SUBSCRIPTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {

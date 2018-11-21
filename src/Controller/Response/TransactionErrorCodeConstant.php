@@ -29,6 +29,13 @@ use Symfony\Component\HttpFoundation\Response;
  *   @OA\Property(property="message", type="string", example="이미 해지 취소된 구독입니다.")
  * )
  * @OA\Schema(
+ *   schema="AlreadyCancelledSubscription",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="ALREADY_CANCELLED_SUBSCRIPTION"),
+ *   @OA\Property(property="message", type="string", example="이미 해지된 구독입니다.")
+ * )
+ * @OA\Schema(
  *   schema="NotFoundSubscription",
  *   type="object",
  *   required={"code", "message"},
@@ -55,6 +62,7 @@ class TransactionErrorCodeConstant
     public const ALREADY_APPROVED_TRANSACTION = 'ALREADY_APPROVED_TRANSACTION';
     public const ALREADY_CANCELLED_TRANSACTION = 'ALREADY_CANCELLED_TRANSACTION';
     public const ALREADY_RESUMED_SUBSCRIPTION = 'ALREADY_RESUMED_SUBSCRIPTION';
+    public const ALREADY_CANCELLED_SUBSCRIPTION = 'ALREADY_CANCELLED_SUBSCRIPTION';
     public const NOT_FOUND_SUBSCRIPTION = 'NOT_FOUND_SUBSCRIPTION';
     public const NOT_FOUND_TRANSACTION = 'NOT_FOUND_TRANSACTION';
     public const NOT_RESERVED_TRANSACTION = 'NOT_RESERVED_TRANSACTION';
@@ -63,6 +71,7 @@ class TransactionErrorCodeConstant
         self::ALREADY_APPROVED_TRANSACTION => Response::HTTP_FORBIDDEN,
         self::ALREADY_CANCELLED_TRANSACTION => Response::HTTP_FORBIDDEN,
         self::ALREADY_RESUMED_SUBSCRIPTION => Response::HTTP_FORBIDDEN,
+        self::ALREADY_CANCELLED_SUBSCRIPTION => Response::HTTP_FORBIDDEN,
         self::NOT_FOUND_SUBSCRIPTION => Response::HTTP_NOT_FOUND,
         self::NOT_FOUND_TRANSACTION => Response::HTTP_NOT_FOUND,
         self::NOT_RESERVED_TRANSACTION => Response::HTTP_NOT_FOUND

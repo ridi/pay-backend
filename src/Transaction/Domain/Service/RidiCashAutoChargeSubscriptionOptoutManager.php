@@ -6,7 +6,6 @@ namespace RidiPay\Transaction\Domain\Service;
 use GuzzleHttp\Client;
 use RidiPay\Library\Jwt\JwtAuthorizationHelper;
 use RidiPay\Library\Jwt\JwtAuthorizationServiceNameConstant;
-use RidiPay\Library\SentryHelper;
 
 class RidiCashAutoChargeSubscriptionOptoutManager
 {
@@ -25,19 +24,13 @@ class RidiCashAutoChargeSubscriptionOptoutManager
             JwtAuthorizationServiceNameConstant::RIDI_PAY,
             JwtAuthorizationServiceNameConstant::STORE
         );
-        try {
-            $client->delete(
-                "/api/users/{$u_idx}/cash-auto-charge",
-                [
-                    'json' => $data,
-                    'headers' => $headers
-                ]
-            );
-        } catch (\Exception $e) {
-            SentryHelper::captureException($e);
-
-            throw $e;
-        }
+        $client->delete(
+            "/api/users/{$u_idx}/cash-auto-charge",
+            [
+                'json' => $data,
+                'headers' => $headers
+            ]
+        );
     }
 
     /**

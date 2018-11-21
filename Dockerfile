@@ -5,6 +5,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 # 카카오 미러 서버로 저장소 변경
 RUN sed -i -e "s/\/\/archive\.ubuntu/\/\/mirror\.kakao/" /etc/apt/sources.list
 
+ENV LC_ALL=C.UTF-8
+
 RUN apt-get update --fix-missing && apt-get install --no-install-recommends -y \
     software-properties-common \
     python3-pip \

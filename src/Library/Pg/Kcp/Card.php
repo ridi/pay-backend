@@ -5,6 +5,11 @@ namespace RidiPay\Library\Pg\Kcp;
 
 class Card
 {
+    private const REGEX_NUMBER = '/^\d{13,16}$/';
+    private const REGEX_EXPIRY = '/^\d{2}(0[1-9]|1[0-2])$/';
+    private const REGEX_PASSWORD = '/^\d{2}$/';
+    private const REGEX_TAX_ID = '/^(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}$/';
+
     /** @var string */
     private $number;
 
@@ -29,10 +34,30 @@ class Card
         string $password,
         string $tax_id
     ) {
+        self::validate($number, $expiry, $password, $tax_id);
+
         $this->number = $number;
         $this->expiry = $expiry;
         $this->password = $password;
         $this->tax_id = $tax_id;
+    }
+
+    /**
+     * @param string $number
+     * @param string $expiry
+     * @param string $password
+     * @param string $tax_id
+     * @throws \InvalidArgumentException
+     */
+    private static function validate(string $number, string $expiry, string $password, string $tax_id)
+    {
+        if (!preg_match(self::REGEX_NUMBER, $number)
+            || !preg_match(self::REGEX_EXPIRY, $expiry)
+            || !preg_match(self::REGEX_PASSWORD, $password)
+            || !preg_match(self::REGEX_TAX_ID, $tax_id)
+        ) {
+            throw new \InvalidArgumentException();
+        }
     }
 
     /**

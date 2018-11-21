@@ -111,7 +111,7 @@ class UserAppService
         }
 
         $data = ['u_id' => $oauth2_user->getUid()];
-        $email_body = (new TemplateRenderer())->render('pin-change-alert.twig', $data);
+        $email_body = (new TemplateRenderer())->render('pin_change_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
             "[RIDI Pay] {$oauth2_user->getUid()}님, 결제 비밀번호 변경 안내드립니다.",
@@ -256,7 +256,7 @@ class UserAppService
         }
 
         $data = ['u_id' => $oauth2_user->getUid()];
-        $email_body = (new TemplateRenderer())->render('onetouch-pay-change-alert.twig', $data);
+        $email_body = (new TemplateRenderer())->render('onetouch_pay_change_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
             "[RIDI Pay] {$oauth2_user->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",

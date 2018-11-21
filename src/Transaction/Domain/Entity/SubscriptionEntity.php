@@ -5,6 +5,8 @@ namespace RidiPay\Transaction\Domain\Entity;
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
+use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 
 /**
@@ -158,8 +160,15 @@ class SubscriptionEntity
         return $this->unsubscribed_at;
     }
 
+    /**
+     * @throws AlreadyCancelledSubscriptionException
+     */
     public function unsubscribe(): void
     {
+        if (!is_null($this->unsubscribed_at)) {
+            throw new AlreadyCancelledSubscriptionException();
+        }
+
         $this->unsubscribed_at = new \DateTime();
     }
 

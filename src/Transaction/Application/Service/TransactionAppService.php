@@ -305,45 +305,34 @@ class TransactionAppService
         $pg = PgAppService::getActivePg();
         $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
 
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
+        $transaction = new TransactionEntity(
+            $u_idx,
+            $payment_method_id,
+            $pg->id,
+            $partner_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount,
+            $subscribed_at
+        );
+        TransactionRepository::getRepository()->save($transaction);
 
-        try {
-            $transaction = new TransactionEntity(
-                $u_idx,
-                $payment_method_id,
-                $pg->id,
-                $partner_id,
-                $partner_transaction_id,
-                $product_name,
-                $amount,
-                $subscribed_at
+        $pg_bill_key = PaymentMethodAppService::getBillingPaymentPgBillKey($transaction->getPaymentMethodId());
+        $buyer = new Buyer($buyer_id, $buyer_name, $buyer_email);
+        $response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
+        if (!$response->isSuccess()) {
+            $transaction_history = TransactionHistoryEntity::createApproveHistory(
+                $transaction,
+                false,
+                $response->getResponseCode(),
+                $response->getResponseMessage()
             );
-            TransactionRepository::getRepository()->save($transaction);
-            $pg_bill_key = PaymentMethodAppService::getBillingPaymentPgBillKey($transaction->getPaymentMethodId());
+            TransactionHistoryRepository::getRepository()->save($transaction_history);
 
-            $buyer = new Buyer($buyer_id, $buyer_name, $buyer_email);
-            $response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
-            if (!$response->isSuccess()) {
-                $transaction_history = TransactionHistoryEntity::createApproveHistory(
-                    $transaction,
-                    false,
-                    $response->getResponseCode(),
-                    $response->getResponseMessage()
-                );
-                TransactionHistoryRepository::getRepository()->save($transaction_history);
-
-                throw new TransactionApprovalException($response->getResponseMessage());
-            }
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
+            throw new TransactionApprovalException($response->getResponseMessage());
         }
 
+        $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
 
         try {

@@ -171,7 +171,7 @@ class Client
      */
     public function cancelTransaction(string $kcp_tno, string $reason): CancelTransactionResponse
     {
-        $reason = "\"$reason\"";
+        $reason = "'$reason'";
         $mod_type = self::MOD_TYPE_CANCEL_ORDER_FULL;
 
         $params = [
@@ -212,7 +212,7 @@ class Client
             Util::flattenAssocArray($params),
         ]);
 
-        $output = \exec($command, $_, $return_var);
+        $output = \exec(escapeshellcmd($command), $_, $return_var);
         return Util::parsePayPlusCliOutput($output);
     }
 }

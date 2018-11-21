@@ -160,4 +160,28 @@ class TransactionHistoryEntity
         $this->pg_response_message = $pg_response_message;
         $this->created_at = new \DateTime();
     }
+
+    /**
+     * @return bool
+     */
+    public function isSuccess(): bool
+    {
+        return $this->is_success;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPgResponseCode(): string
+    {
+        return $this->pg_response_code;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPgResponseMessage(): string
+    {
+        return $this->pg_response_message;
+    }
 }

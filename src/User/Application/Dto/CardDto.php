@@ -65,11 +65,11 @@ class CardDto extends PaymentMethodDto
         $this->issuer_name = $card->getCardIssuer()->getName();
         $this->color = $card->getCardIssuer()->getColor();
         $this->logo_image_url = $card->getCardIssuer()->getLogoImageUrl();
-        $this->subscriptions = array_map(
+        $this->subscriptions = array_unique(array_map(
             function (SubscriptionDto $subscription) {
                 return $subscription->product_name;
             },
             SubscriptionAppService::getSubscriptions($card->getPaymentMethod()->getId())
-        );
+        ));
     }
 }
