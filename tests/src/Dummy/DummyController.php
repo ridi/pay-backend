@@ -59,4 +59,29 @@ class DummyController extends Controller
     {
         return new Response();
     }
+
+    /**
+     * @Route("/success", methods={"GET"})
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function success(Request $request): Response
+    {
+        return new Response();
+    }
+
+    /**
+     * @Route("/exception-throwed", methods={"GET"})
+     *
+     * @param Request $request
+     * @return Response
+     * @throws \Exception
+     */
+    public function exceptionThrowed(Request $request): Response
+    {
+        throw new \Exception();
+
+        return new Response();
+    }
 }

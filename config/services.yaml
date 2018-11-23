@@ -29,6 +29,9 @@ services:
     arguments:
       - '@annotation_reader'
 
+  RidiPay\Library\KernelExceptionHandler:
+    class: RidiPay\Library\KernelExceptionHandler
+
   RidiPay\Controller\:
     resource: '../src/Controller/*Controller.php'
     arguments:
