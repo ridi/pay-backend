@@ -10,12 +10,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ControllerAccessLogger extends Logger
 {
-    // client_ip request_http_method request_uri request_protocol_version request_body
-    private const REQUEST_LOG_FORMAT = '%s %s %s %s %s';
-
-    // client_ip request_http_method request_uri request_protocol_version request_body response_http_status_code response_body
-    private const RESPONSE_LOG_FORMAT = '%s %s %s %s %s %d %s';
-
     /**
      * @param string $channel
      */
@@ -36,14 +30,16 @@ class ControllerAccessLogger extends Logger
     {
         $logger = new self('REQUEST');
 
-        $message = sprintf(
-            self::REQUEST_LOG_FORMAT,
-            $request->getClientIp(),
-            $request->getMethod(),
-            $request->getRequestUri(),
-            $request->getProtocolVersion(),
-            empty($request->getContent()) ? '-' : $request->getContent()
-        );
+        $data = [
+            'client_ip' => $request->getClientIp(),
+            'request_http_method' => $request->getMethod(),
+            'request_uri' => $request->getRequestUri(),
+            'request_protocol_version' => $request->getProtocolVersion()
+        ];
+        if (!empty($request->getContent())) {
+            $data['request_body'] = $request->getContent();
+        }
+        $message = json_encode($data);
 
         return $logger->info($message, $context);
     }
@@ -58,16 +54,18 @@ class ControllerAccessLogger extends Logger
     {
         $logger = new self('RESPONSE');
 
-        $message = sprintf(
-            self::RESPONSE_LOG_FORMAT,
-            $request->getClientIp(),
-            $request->getMethod(),
-            $request->getRequestUri(),
-            $request->getProtocolVersion(),
-            empty($request->getContent()) ? '-' : $request->getContent(),
-            $response->getStatusCode(),
-            $response->getContent()
-        );
+        $data = [
+            'client_ip' => $request->getClientIp(),
+            'request_http_method' => $request->getMethod(),
+            'request_uri' => $request->getRequestUri(),
+            'request_protocol_version' => $request->getProtocolVersion()
+        ];
+        if (!empty($request->getContent())) {
+            $data['request_body'] = $request->getContent();
+        }
+        $data['response_http_status_code'] = $response->getStatusCode();
+        $data['response_body'] = $response->getContent();
+        $message = json_encode($data);
 
         return $logger->info($message, $context);
     }

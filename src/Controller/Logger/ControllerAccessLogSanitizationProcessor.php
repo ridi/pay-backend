@@ -13,16 +13,15 @@ class ControllerAccessLogSanitizationProcessor implements ProcessorInterface
      */
     public function __invoke(array $records): array
     {
-        $message_components = explode(' ', $records['message']);
-        $request_body = $message_components[4];
-        if (!empty($request_body) && $request_body !== '-') {
+        $message_components = json_decode($records['message'], true);
+        if (isset($message_components['request_body'])) {
             $sanitized_body = [];
-            foreach (json_decode($request_body, true) as $key => $value) {
+            foreach (json_decode($message_components['request_body']) as $key => $value) {
                 $sanitized_body[$key] = self::sanitize($key, $value);
             }
-            $message_components[4] = json_encode($sanitized_body);
+            $message_components['request_body'] = json_encode($sanitized_body);
 
-            $records['message'] = implode(' ', $message_components);
+            $records['message'] = json_encode($message_components);
         }
 
         return $records;
