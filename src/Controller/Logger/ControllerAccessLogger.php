@@ -32,6 +32,7 @@ class ControllerAccessLogger extends Logger
 
         $data = [
             'client_ip' => $request->getClientIp(),
+            'user_agent' => $request->headers->get('User-Agent'),
             'request_http_method' => $request->getMethod(),
             'request_uri' => $request->getRequestUri(),
             'request_protocol_version' => $request->getProtocolVersion()
@@ -56,6 +57,7 @@ class ControllerAccessLogger extends Logger
 
         $data = [
             'client_ip' => $request->getClientIp(),
+            'user_agent' => $request->headers->get('User-Agent'),
             'request_http_method' => $request->getMethod(),
             'request_uri' => $request->getRequestUri(),
             'request_protocol_version' => $request->getProtocolVersion()
