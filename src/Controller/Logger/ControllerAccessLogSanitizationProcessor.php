@@ -35,7 +35,7 @@ class ControllerAccessLogSanitizationProcessor implements ProcessorInterface
     private static function sanitize(string $key, $value)
     {
         if (self::isCardNumber($key, $value)) {
-            $value = substr($value, 0, 6) . '**********';
+            $value = substr($value, 0, 6) . str_repeat('*', strlen($value) - 6);
         } elseif (self::isCardExpirationDate($key, $value)) {
             $value = '****';
         } elseif (self::isCardPassword($key, $value)) {
