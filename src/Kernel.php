@@ -72,6 +72,30 @@ class Kernel extends BaseKernel
     /**
      * @return bool
      */
+    public static function isProd(): bool
+    {
+        return self::getEnv() === self::ENV_PROD;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isStaging(): bool
+    {
+        return self::getEnv() === self::ENV_STAGING;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isTest(): bool
+    {
+        return self::getEnv() === self::ENV_TEST;
+    }
+
+    /**
+     * @return bool
+     */
     public static function isDev(): bool
     {
         return in_array(self::getEnv(), self::DEVELOPMENT_ENVIRONMENTS);
