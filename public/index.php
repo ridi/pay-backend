@@ -32,12 +32,12 @@ if (Kernel::isLocal()) {
     Debug::enable();
 }
 
-if ($trustedProxies = $_SERVER['TRUSTED_PROXIES'] ?? false) {
-    Request::setTrustedProxies(explode(',', $trustedProxies), Request::HEADER_X_FORWARDED_ALL ^ Request::HEADER_X_FORWARDED_HOST);
-}
-
-if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? false) {
-    Request::setTrustedHosts(explode(',', $trustedHosts));
+if (Kernel::isProd()) {
+    Request::setTrustedProxies(['10.0.0.0/16'], Request::HEADER_X_FORWARDED_ALL);
+} elseif (Kernel::isStaging()) {
+    Request::setTrustedProxies(['10.10.0.0/16'], Request::HEADER_X_FORWARDED_ALL);
+} elseif (Kernel::isTest()) {
+    Request::setTrustedProxies(['10.20.0.0/16'], Request::HEADER_X_FORWARDED_ALL);
 }
 
 $sentry_dsn = getenv('SENTRY_DSN');

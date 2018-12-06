@@ -5,6 +5,7 @@ namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
 use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
+use RidiPay\Controller\Logger\ControllerAccessLogger;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PartnerErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
@@ -131,6 +132,8 @@ class PaymentController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -144,26 +147,28 @@ class PaymentController extends BaseController
                 intval($body->amount),
                 $body->return_url
             );
+
+            $response = self::createSuccessResponse(['reservation_id' => $reservation_id]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (UnderMinimumPaymentAmountException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::UNDER_MINIMUM_PAYMENT_AMOUNT,
                 $e->getMessage()
@@ -171,13 +176,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse(['reservation_id' => $reservation_id]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -271,11 +278,15 @@ class PaymentController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param string $reservation_id
      * @return JsonResponse
      */
-    public function getReservation(string $reservation_id): JsonResponse
+    public function getReservation(Request $request, string $reservation_id): JsonResponse
     {
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
+
         try {
             $is_pin_validation_required = TransactionAppService::isPinValidationRequired(
                 $reservation_id,
@@ -284,20 +295,27 @@ class PaymentController extends BaseController
             if (!$is_pin_validation_required) {
                 $validation_token = TransactionAppService::generateValidationToken($reservation_id);
             }
+
+            $data = ['is_pin_validation_required' => $is_pin_validation_required];
+            if (isset($validation_token)) {
+                $data['validation_token'] = $validation_token;
+            }
+
+            $response = self::createSuccessResponse($data);
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
         } catch (NotReservedTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
                 $e->getMessage()
@@ -305,18 +323,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        $data = ['is_pin_validation_required' => $is_pin_validation_required];
-        if (isset($validation_token)) {
-            $data['validation_token'] = $validation_token;
-        }
+        ControllerAccessLogger::logResponse($request, $response);
 
-        return self::createSuccessResponse($data);
+        return $response;
     }
 
     /**
@@ -427,21 +442,31 @@ class PaymentController extends BaseController
             );
         }
 
-        $body = json_decode($request->getContent());
-        $reservation_key = TransactionAppService::getReservationKey($reservation_id);
-        $validation_token = ValidationTokenManager::get($reservation_key);
-        if ($validation_token !== $body->validation_token) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
-            );
-        }
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
 
         try {
+            $body = json_decode($request->getContent());
+            $reservation_key = TransactionAppService::getReservationKey($reservation_id);
+            $validation_token = ValidationTokenManager::get($reservation_key);
+            if ($validation_token !== $body->validation_token) {
+                $response = self::createErrorResponse(
+                    CommonErrorCodeConstant::class,
+                    CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+                );
+                ControllerAccessLogger::logResponse($request, $response, $context);
+
+                return $response;
+            }
+
             $result = TransactionAppService::createTransaction($this->getUidx(), $reservation_id);
             ValidationTokenManager::invalidate($reservation_key);
+
+            $response = self::createSuccessResponse([
+                'return_url' => $result->return_url . '?' . http_build_query(['transaction_id' => $result->transaction_id])
+            ]);
         } catch (NotReservedTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_RESERVED_TRANSACTION,
                 $e->getMessage()
@@ -449,15 +474,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'return_url' => $result->return_url . '?' . http_build_query(['transaction_id' => $result->transaction_id])
-        ]);
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 
     /**
@@ -586,6 +611,8 @@ class PaymentController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -598,44 +625,53 @@ class PaymentController extends BaseController
                 $body->buyer_name,
                 $body->buyer_email
             );
+
+            $response = self::createSuccessResponse([
+                'transaction_id' => $result->transaction_id,
+                'partner_transaction_id' => $result->partner_transaction_id,
+                'product_name' => $result->product_name,
+                'amount' => $result->amount,
+                'reserved_at' => $result->reserved_at->format(DATE_ATOM),
+                'approved_at' => $result->approved_at->format(DATE_ATOM)
+            ]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NotFoundTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
         } catch (AlreadyApprovedTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_APPROVED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (AlreadyCancelledTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (UnderMinimumPaymentAmountException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::UNDER_MINIMUM_PAYMENT_AMOUNT,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::TRANSACTION_APPROVAL_FAILED,
                 $e->getMessage(),
@@ -644,20 +680,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'transaction_id' => $result->transaction_id,
-            'partner_transaction_id' => $result->partner_transaction_id,
-            'product_name' => $result->product_name,
-            'amount' => $result->amount,
-            'reserved_at' => $result->reserved_at->format(DATE_ATOM),
-            'approved_at' => $result->approved_at->format(DATE_ATOM)
-        ]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -766,6 +797,8 @@ class PaymentController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -774,26 +807,36 @@ class PaymentController extends BaseController
                 ApiSecretValidator::getSecretKey($request),
                 $transaction_id
             );
+
+            $response = self::createSuccessResponse([
+                'transaction_id' => $result->transaction_id,
+                'partner_transaction_id' => $result->partner_transaction_id,
+                'product_name' => $result->product_name,
+                'amount' => $result->amount,
+                'reserved_at' => $result->reserved_at->format(DATE_ATOM),
+                'approved_at' => $result->approved_at->format(DATE_ATOM),
+                'canceled_at' => $result->canceled_at->format(DATE_ATOM)
+            ]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NotFoundTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
         } catch (AlreadyCancelledTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionCancellationException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::TRANSACTION_CANCELLATION_FAILED,
                 $e->getMessage(),
@@ -802,21 +845,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'transaction_id' => $result->transaction_id,
-            'partner_transaction_id' => $result->partner_transaction_id,
-            'product_name' => $result->product_name,
-            'amount' => $result->amount,
-            'reserved_at' => $result->reserved_at->format(DATE_ATOM),
-            'approved_at' => $result->approved_at->format(DATE_ATOM),
-            'canceled_at' => $result->canceled_at->format(DATE_ATOM)
-        ]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -923,6 +960,8 @@ class PaymentController extends BaseController
      */
     public function getPaymentStatus(Request $request, string $transaction_id): JsonResponse
     {
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -931,14 +970,35 @@ class PaymentController extends BaseController
                 ApiSecretValidator::getSecretKey($request),
                 $transaction_id
             );
+
+            $data = [
+                'transaction_id' => $result->transaction_id,
+                'partner_transaction_id' => $result->partner_transaction_id,
+                'payment_method_id' => $result->payment_method_id,
+                'payment_method_type' => $result->payment_method_type,
+                'status' => $result->status,
+                'product_name' => $result->product_name,
+                'amount' => $result->amount,
+                'reserved_at' => $result->reserved_at->format(DATE_ATOM)
+            ];
+            if (!is_null($result->approved_at)) {
+                $data['approved_at'] = $result->approved_at->format(DATE_ATOM);
+            }
+            if (!is_null($result->canceled_at)) {
+                $data['canceled_at'] = $result->canceled_at->format(DATE_ATOM);
+            }
+            if (!is_null($result->card_receipt_url)) {
+                $data['card_receipt_url'] = $result->card_receipt_url;
+            }
+            $response = self::createSuccessResponse($data);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NotFoundTransactionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
@@ -946,33 +1006,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        $data = [
-            'transaction_id' => $result->transaction_id,
-            'partner_transaction_id' => $result->partner_transaction_id,
-            'payment_method_id' => $result->payment_method_id,
-            'payment_method_type' => $result->payment_method_type,
-            'status' => $result->status,
-            'product_name' => $result->product_name,
-            'amount' => $result->amount,
-            'reserved_at' => $result->reserved_at->format(DATE_ATOM)
-        ];
-        if (!is_null($result->approved_at)) {
-            $data['approved_at'] = $result->approved_at->format(DATE_ATOM);
-        }
-        if (!is_null($result->canceled_at)) {
-            $data['canceled_at'] = $result->canceled_at->format(DATE_ATOM);
-        }
-        if (!is_null($result->card_receipt_url)) {
-            $data['card_receipt_url'] = $result->card_receipt_url;
-        }
+        ControllerAccessLogger::logResponse($request, $response);
 
-        return self::createSuccessResponse($data);
+        return $response;
     }
 
     /**
@@ -1062,6 +1104,8 @@ class PaymentController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -1072,20 +1116,26 @@ class PaymentController extends BaseController
                 $body->payment_method_id,
                 $body->product_name
             );
+
+            $response = self::createSuccessResponse([
+                'subscription_id' => $result->subscription_id,
+                'product_name' => $result->product_name,
+                'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
+            ]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
@@ -1093,17 +1143,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'subscription_id' => $result->subscription_id,
-            'product_name' => $result->product_name,
-            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
-        ]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -1195,6 +1243,8 @@ class PaymentController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -1203,20 +1253,27 @@ class PaymentController extends BaseController
                 ApiSecretValidator::getSecretKey($request),
                 $subscription_id
             );
+
+            $response = self::createSuccessResponse([
+                'subscription_id' => $result->subscription_id,
+                'product_name' => $result->product_name,
+                'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
+                'unsubscribed_at' => $result->unsubscribed_at->format(DATE_ATOM)
+            ]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NotFoundSubscriptionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
         } catch (AlreadyCancelledSubscriptionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_CANCELLED_SUBSCRIPTION,
                 $e->getMessage()
@@ -1224,18 +1281,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'subscription_id' => $result->subscription_id,
-            'product_name' => $result->product_name,
-            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
-            'unsubscribed_at' => $result->unsubscribed_at->format(DATE_ATOM)
-        ]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -1330,6 +1384,8 @@ class PaymentController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -1338,32 +1394,38 @@ class PaymentController extends BaseController
                 ApiSecretValidator::getSecretKey($request),
                 $subscription_id
             );
+
+            $response = self::createSuccessResponse([
+                'subscription_id' => $result->subscription_id,
+                'product_name' => $result->product_name,
+                'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
+            ]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NotFoundSubscriptionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (AlreadyResumedSubscriptionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_RESUMED_SUBSCRIPTION,
                 $e->getMessage()
@@ -1371,17 +1433,15 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'subscription_id' => $result->subscription_id,
-            'product_name' => $result->product_name,
-            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
-        ]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -1519,6 +1579,8 @@ class PaymentController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             ApiSecretValidator::validate($request);
 
@@ -1533,38 +1595,48 @@ class PaymentController extends BaseController
                 $body->buyer_name,
                 $body->buyer_email
             );
+
+            $response = self::createSuccessResponse([
+                'subscription_id' => $result->subscription_id,
+                'transaction_id' => $result->transaction_id,
+                'partner_transaction_id' => $result->partner_transaction_id,
+                'product_name' => $result->product_name,
+                'amount' => $result->amount,
+                'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
+                'approved_at' => $result->approved_at->format(DATE_ATOM)
+            ]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PartnerErrorCodeConstant::class,
                 PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
                 $e->getMessage()
             );
         } catch (NotFoundSubscriptionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_SUBSCRIPTION,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (UnderMinimumPaymentAmountException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::UNDER_MINIMUM_PAYMENT_AMOUNT,
                 $e->getMessage()
             );
         } catch (TransactionApprovalException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::TRANSACTION_APPROVAL_FAILED,
                 $e->getMessage(),
@@ -1573,20 +1645,14 @@ class PaymentController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'subscription_id' => $result->subscription_id,
-            'transaction_id' => $result->transaction_id,
-            'partner_transaction_id' => $result->partner_transaction_id,
-            'product_name' => $result->product_name,
-            'amount' => $result->amount,
-            'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
-            'approved_at' => $result->approved_at->format(DATE_ATOM)
-        ]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 }

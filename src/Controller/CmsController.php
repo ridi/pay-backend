@@ -4,12 +4,14 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
+use RidiPay\Controller\Logger\ControllerAccessLogger;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\SentryHelper;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
 class CmsController extends BaseController
@@ -48,23 +50,30 @@ class CmsController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getCardsHistory(int $u_idx): JsonResponse
+    public function getCardsHistory(Request $request, int $u_idx): JsonResponse
     {
+        ControllerAccessLogger::logRequest($request);
+
         try {
             $cards_history = PaymentMethodAppService::getCardsHistory($u_idx);
+
+            $response = self::createSuccessResponse($cards_history);
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse($cards_history);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -101,23 +110,30 @@ class CmsController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getOnetouchPaySettingUpdateHistory(int $u_idx): JsonResponse
+    public function getOnetouchPaySettingUpdateHistory(Request $request, int $u_idx): JsonResponse
     {
+        ControllerAccessLogger::logRequest($request);
+
         try {
-            $onetouch_pay_setting_change_history = UserAppService::getOnetouchPaySettingUpdateHistory($u_idx);
+            $onetouch_pay_setting_update_history = UserAppService::getOnetouchPaySettingUpdateHistory($u_idx);
+
+            $response = self::createSuccessResponse($onetouch_pay_setting_update_history);
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse($onetouch_pay_setting_change_history);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -154,23 +170,29 @@ class CmsController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getPinUpdateHistory(int $u_idx): JsonResponse
+    public function getPinUpdateHistory(Request $request, int $u_idx): JsonResponse
     {
+        ControllerAccessLogger::logRequest($request);
+
         try {
             $pin_update_history = UserAppService::getPinUpdateHistory($u_idx);
+
+            $response = self::createSuccessResponse($pin_update_history);
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR,
-                $t->getMessage()
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse($pin_update_history);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 }

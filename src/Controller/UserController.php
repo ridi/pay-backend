@@ -5,6 +5,7 @@ namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
 use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
+use RidiPay\Controller\Logger\ControllerAccessLogger;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Cors\Annotation\Cors;
@@ -85,16 +86,20 @@ class UserController extends BaseController
             );
         }
 
+        ControllerAccessLogger::logRequest($request);
+
         try {
             UserAppService::deleteUser($u_idx);
+
+            $response = self::createSuccessResponse();
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
@@ -102,13 +107,15 @@ class UserController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse();
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -143,23 +150,30 @@ class UserController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @param int $u_idx
      * @return JsonResponse
      */
-    public function getPaymentMethods(int $u_idx): JsonResponse
+    public function getPaymentMethods(Request $request, int $u_idx): JsonResponse
     {
+        ControllerAccessLogger::logRequest($request);
+
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+
+            $response = self::createSuccessResponse(['cards' => $payment_methods->cards]);
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse(['cards' => $payment_methods->cards]);
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
     }
 
     /**
@@ -239,38 +253,50 @@ class UserController extends BaseController
      *   )
      * )
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function getMyInformation(): JsonResponse
+    public function getMyInformation(Request $request): JsonResponse
     {
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
+
         try {
             $user_information = UserAppService::getUserInformation($this->getUidx());
+
+            $response = self::createSuccessResponse(
+                [
+                    'user_id' => $this->getUid(),
+                    'payment_methods' => $user_information->payment_methods,
+                    'has_pin' => $user_information->has_pin,
+                    'is_using_onetouch_pay' => $user_information->is_using_onetouch_pay
+                ]
+            );
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createSuccessResponse([
-                'code' => UserErrorCodeConstant::NOT_FOUND_USER,
-                'message' => $e->getMessage()
-            ]);
+            $response = self::createSuccessResponse(
+                [
+                    'code' => UserErrorCodeConstant::NOT_FOUND_USER,
+                    'message' => $e->getMessage()
+                ]
+            );
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse([
-            'user_id' => $this->getUid(),
-            'payment_methods' => $user_information->payment_methods,
-            'has_pin' => $user_information->has_pin,
-            'is_using_onetouch_pay' => $user_information->is_using_onetouch_pay
-        ]);
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 
     /**
@@ -349,20 +375,28 @@ class UserController extends BaseController
             );
         }
 
-        $body = json_decode($request->getContent());
-        $card_registration_key = CardAppService::getCardRegistrationKey($this->getUidx());
-        $validation_token = ValidationTokenManager::get($card_registration_key);
-        if ($validation_token !== $body->validation_token) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
-            );
-        }
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
 
         try {
+            $body = json_decode($request->getContent());
+            $card_registration_key = CardAppService::getCardRegistrationKey($this->getUidx());
+            $validation_token = ValidationTokenManager::get($card_registration_key);
+            if ($validation_token !== $body->validation_token) {
+                $response = self::createErrorResponse(
+                    CommonErrorCodeConstant::class,
+                    CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+                );
+                ControllerAccessLogger::logResponse($request, $response, $context);
+
+                return $response;
+            }
+
             UserAppService::createPin($this->getUidx(), $body->pin);
+
+            $response = self::createSuccessResponse();
         } catch (WrongFormattedPinException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::WRONG_FORMATTED_PIN,
                 $e->getMessage()
@@ -370,13 +404,15 @@ class UserController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse();
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 
     /**
@@ -462,39 +498,47 @@ class UserController extends BaseController
             );
         }
 
-        $body = json_decode($request->getContent());
-        $user_key = UserAppService::getUserKey($this->getUidx());
-        $validation_token = ValidationTokenManager::get($user_key);
-        if ($validation_token !== $body->validation_token) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
-            );
-        }
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
 
         try {
+            $body = json_decode($request->getContent());
+            $user_key = UserAppService::getUserKey($this->getUidx());
+            $validation_token = ValidationTokenManager::get($user_key);
+            if ($validation_token !== $body->validation_token) {
+                $response = self::createErrorResponse(
+                    CommonErrorCodeConstant::class,
+                    CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+                );
+                ControllerAccessLogger::logResponse($request, $response, $context);
+
+                return $response;
+            }
+
             UserAppService::updatePin($this->getOAuth2User(), $body->pin);
             ValidationTokenManager::invalidate($user_key);
+
+            $response = self::createSuccessResponse();
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
         } catch (UnchangedPinException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNCHANGED_PIN,
                 $e->getMessage()
             );
         } catch (WrongFormattedPinException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::WRONG_FORMATTED_PIN,
                 $e->getMessage()
@@ -502,13 +546,15 @@ class UserController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse();
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 
     /**
@@ -610,6 +656,9 @@ class UserController extends BaseController
             );
         }
 
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
+
         try {
             $body = json_decode($request->getContent());
             UserAppService::validatePin($this->getUidx(), $body->pin);
@@ -619,26 +668,28 @@ class UserController extends BaseController
             } else {
                 $validation_token = UserAppService::generateValidationToken($this->getUidx());
             }
+
+            $response = self::createSuccessResponse(['validation_token' => $validation_token]);
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
         } catch (UnmatchedPinException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::PIN_UNMATCHED,
                 $e->getMessage()
             );
         } catch (PinEntryBlockedException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::PIN_ENTRY_BLOCKED,
                 $e->getMessage()
@@ -646,13 +697,15 @@ class UserController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse(['validation_token' => $validation_token]);
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 
     /**
@@ -738,34 +791,42 @@ class UserController extends BaseController
             );
         }
 
-        $body = json_decode($request->getContent());
-        $card_registration_key = CardAppService::getCardRegistrationKey($this->getUidx());
-        $validation_token = ValidationTokenManager::get($card_registration_key);
-        if ($validation_token !== $body->validation_token) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
-            );
-        }
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
 
         try {
+            $body = json_decode($request->getContent());
+            $card_registration_key = CardAppService::getCardRegistrationKey($this->getUidx());
+            $validation_token = ValidationTokenManager::get($card_registration_key);
+            if ($validation_token !== $body->validation_token) {
+                $response = self::createErrorResponse(
+                    CommonErrorCodeConstant::class,
+                    CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+                );
+                ControllerAccessLogger::logResponse($request, $response, $context);
+
+                return $response;
+            }
+
             UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
             $card = CardAppService::finishCardRegistration($this->getOAuth2User());
             ValidationTokenManager::invalidate($card_registration_key);
+
+            $response = self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
         } catch (UnauthorizedCardRegistrationException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNAUTHORIZED_CARD_REGISTRATION,
                 $e->getMessage()
@@ -773,13 +834,15 @@ class UserController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 
     /**
@@ -862,16 +925,22 @@ class UserController extends BaseController
             );
         }
 
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
+
         try {
             $body = json_decode($request->getContent());
             if ($body->enable_onetouch_pay) {
                 $user_key = UserAppService::getUserKey($this->getUidx());
                 $validation_token = ValidationTokenManager::get($user_key);
                 if (!isset($body->validation_token) || $validation_token !== $body->validation_token) {
-                    return self::createErrorResponse(
+                    $response = self::createErrorResponse(
                         CommonErrorCodeConstant::class,
                         CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
                     );
+                    ControllerAccessLogger::logResponse($request, $response, $context);
+
+                    return $response;
                 }
 
                 UserAppService::enableOnetouchPay($this->getOAuth2User());
@@ -879,20 +948,22 @@ class UserController extends BaseController
             } else {
                 UserAppService::disableOnetouchPay($this->getUidx());
             }
+
+            $response = self::createSuccessResponse();
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
         } catch (OnetouchPaySettingChangeDeclinedException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::ONETOUCH_PAY_SETTING_CHANGE_DECLINED,
                 $e->getMessage()
@@ -900,12 +971,14 @@ class UserController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse();
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 }

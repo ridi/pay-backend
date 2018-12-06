@@ -5,6 +5,7 @@ namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
 use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
+use RidiPay\Controller\Logger\ControllerAccessLogger;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
@@ -121,6 +122,9 @@ class PaymentMethodController extends BaseController
             );
         }
 
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
+
         try {
             $body = json_decode($request->getContent());
             CardAppService::registerCard(
@@ -132,14 +136,16 @@ class PaymentMethodController extends BaseController
             );
 
             $validation_token = CardAppService::generateValidationToken($this->getUidx());
+
+            $response = self::createSuccessResponse(['validation_token' => $validation_token]);
         } catch (CardAlreadyExistsException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::CARD_ALREADY_EXISTS,
                 $e->getMessage()
             );
         } catch (CardRegistrationException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,
                 PgErrorCodeConstant::CARD_REGISTRATION_FAILED,
                 $e->getMessage(),
@@ -148,13 +154,15 @@ class PaymentMethodController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse(['validation_token' => $validation_token]);
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 
     /**
@@ -251,34 +259,39 @@ class PaymentMethodController extends BaseController
             );
         }
 
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
+
         try {
             CardAppService::deleteCard($this->getOAuth2User(), $payment_method_id);
+
+            $response = self::createSuccessResponse();
         } catch (LeavedUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::LEAVED_USER,
                 $e->getMessage()
             );
         } catch (NotFoundUserException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
                 $e->getMessage()
             );
         } catch (UnregisteredPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (AlreadyCancelledSubscriptionException $e) {
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_CANCELLED_SUBSCRIPTION,
                 $e->getMessage()
@@ -286,12 +299,14 @@ class PaymentMethodController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return self::createErrorResponse(
+            $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
                 CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
             );
         }
 
-        return self::createSuccessResponse();
+        ControllerAccessLogger::logResponse($request, $response, $context);
+
+        return $response;
     }
 }
