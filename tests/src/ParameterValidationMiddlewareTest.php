@@ -50,7 +50,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '2511',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_OK
             ],
@@ -64,7 +65,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '2511',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_BAD_REQUEST
             ],
@@ -78,7 +80,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '2511',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_BAD_REQUEST
             ],
@@ -92,7 +95,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '2511',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_BAD_REQUEST
             ],
@@ -106,7 +110,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '2511',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_BAD_REQUEST
             ],
@@ -120,7 +125,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https:/wrong.',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '2511',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_BAD_REQUEST
             ],
@@ -134,7 +140,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => "5164531234567890;echo 'Hello, World!'",
                     'card_expiration_date' => '2511',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_BAD_REQUEST
             ],
@@ -148,7 +155,8 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '1125',
-                    'tax_id' => '940101'
+                    'tax_id' => '940101',
+                    'email' => 'test@ridi.com'
                 ]),
                 Response::HTTP_BAD_REQUEST
             ],
@@ -162,7 +170,23 @@ class ParameterValidationMiddlewareTest extends WebTestCase
                     'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
                     'card_number' => '5164531234567890',
                     'card_expiration_date' => '1125',
-                    'tax_id' => '000001'
+                    'tax_id' => '000001',
+                    'email' => 'test@ridi.com'
+                ]),
+                Response::HTTP_BAD_REQUEST
+            ],
+            // 올바르지 않은 'email'
+            [
+                json_encode([
+                    'digits' => random_int(1, 999999),
+                    'not_blank_string' => '전자책',
+                    'boolean' => true,
+                    'uuid' => Uuid::uuid4()->toString(),
+                    'url' => 'https://ridibooks.com/payment/callback/ridi-pay/2018010100000000',
+                    'card_number' => '5164531234567890',
+                    'card_expiration_date' => '1125',
+                    'tax_id' => '940101',
+                    'email' => ''
                 ]),
                 Response::HTTP_BAD_REQUEST
             ]
