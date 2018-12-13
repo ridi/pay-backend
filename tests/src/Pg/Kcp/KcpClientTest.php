@@ -14,7 +14,7 @@ use RidiPay\Library\Pg\Kcp\Util;
 
 class KcpClientTest extends TestCase
 {
-    private const DUMMY_CARD_NUMBER_SHINHAN_CARD = '4499140000000000';
+    private const DUMMY_CARD_NUMBER_KOOKMIN_CARD = '5164530000000000';
     private const DUMMY_CARD_EXPIRY_MAX = '7912';
     private const DUMMY_CARD_PASSWORD = '00';
     private const DUMMY_CARD_TAX_ID = '000101';
@@ -35,7 +35,7 @@ class KcpClientTest extends TestCase
     {
         $client = Client::getTestClient();
 
-        $card_company = Company::SHINHAN;
+        $card_company = Company::KOOKMIN;
 
         $auth_res = $client->requestBatchKey($card);
         $this->assertTrue($auth_res->isSuccess());
@@ -59,7 +59,7 @@ class KcpClientTest extends TestCase
         $this->assertSame(Company::getKoreanName($order_res->getCardCd()), $order_res->getCardName());
         $this->assertSame(Company::getAcquirerFromIssuer($card_company), $order_res->getAcquCd());
         $this->assertSame(Company::getKoreanName($order_res->getAcquCd()), $order_res->getAcquName());
-        $this->assertSame(self::DUMMY_CARD_NUMBER_SHINHAN_CARD, $order_res->getCardNo());
+        $this->assertSame(self::DUMMY_CARD_NUMBER_KOOKMIN_CARD, $order_res->getCardNo());
 
         $kcp_tno = $order_res->getTno();
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
@@ -102,7 +102,7 @@ class KcpClientTest extends TestCase
         return [
             [
                 new Card(
-                    self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
+                    self::DUMMY_CARD_NUMBER_KOOKMIN_CARD,
                     self::DUMMY_CARD_EXPIRY_MAX,
                     self::DUMMY_CARD_PASSWORD,
                     self::DUMMY_CARD_TAX_ID
@@ -119,7 +119,7 @@ class KcpClientTest extends TestCase
             ],
             [
                 new Card(
-                    self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
+                    self::DUMMY_CARD_NUMBER_KOOKMIN_CARD,
                     self::DUMMY_CARD_EXPIRY_MAX,
                     self::DUMMY_CARD_PASSWORD,
                     self::DUMMY_CARD_TAX_ID
