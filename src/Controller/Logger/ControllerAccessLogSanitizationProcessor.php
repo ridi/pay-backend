@@ -47,8 +47,7 @@ class ControllerAccessLogSanitizationProcessor implements ProcessorInterface
         } elseif (self::isBuyerName($key)) {
             $value = str_repeat('*', mb_strlen($value));
         } elseif (self::isBuyerEmail($key)) {
-            [$id, $domain] = explode('@', $value);
-            $value = str_repeat('*', mb_strlen($id)) . '@' . str_repeat('*', mb_strlen($domain));
+            $value = str_repeat('*', mb_strlen($value));
         }
 
         return $value;
