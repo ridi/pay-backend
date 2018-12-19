@@ -30,9 +30,9 @@ class TestUtil
 {
     public const U_ID = 'ridipay';
 
-    // 국민카드
+    // 신한카드
     public const CARD = [
-        'CARD_NUMBER' => '5164530000000000',
+        'CARD_NUMBER' => '4499140000000000',
         'CARD_EXPIRATION_DATE' => '2511',
         'CARD_PASSWORD' => '12'
     ];
