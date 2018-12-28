@@ -1,11 +1,11 @@
 [![Build Status](https://travis-ci.com/ridi/pay-backend.svg?token=xPAQFHxECFy2kMpwAYno&branch=master)](https://travis-ci.com/ridi/pay-backend)
 [![codecov](https://codecov.io/gh/ridi/pay-backend/branch/master/graph/badge.svg?token=g1l9Hrb9zH)](https://codecov.io/gh/ridi/pay-backend)
 
-## 보안 취약점 제보
+## Security bug report
 
-리디페이에 대한 보안 취약점은 security@ridi.com 을 통해 제보받고 있습니다.
+All security bugs in RIDI Pay should be reported by email to security@ridi.com.
 
-## 개발 환경 구성
+## Settings for development environment
 
 #### 0. Requirements
 - PHP 7.2
@@ -18,38 +18,38 @@ brew install php@7.2
 - mkcert
 ```
 brew install mkcert
-brew install nss # Firefox 사용 시
+brew install nss # If you use Firefox browser, please install.
 ```
 
 - [Docker](https://store.docker.com/editions/community/docker-ce-desktop-mac)
   
 - [aws-vault](https://github.com/99designs/aws-vault)
   - `brew cask install aws-vault`
-  - AWS Profile 설정: [Usage](https://github.com/99designs/aws-vault#usage) 참고
+  - For setting your AWS profile, please refer to [Usage](https://github.com/99designs/aws-vault#usage).
 
 #### 1. Make
 ```
 make dev
 ```
 
-#### 2. Docker 컨테이너 생성
+#### 2. Build docker containers
 ```
 aws-vault exec <profile_name> -- docker-compose up [--build] 
 ```
 
-#### 3. 로컬 `/etc/hosts`에 아래 내용 추가
+#### 3. Add the following line into your `/etc/hosts`
 ```
 127.0.0.1 api.pay.local.ridi.io
 ```
 
-#### 4. https://api.pay.local.ridi.io 접속
+#### 4. Try to connect to https://api.pay.local.ridi.io
 
 ## Overriding environment variables
-- 개발 환경의 편의를 위해 AWS Parameter Store 내 Environment Variables가 정의되어 있습니다.
-- 프로젝트 root 경로에 `.env` 파일을 추가하여 이 Environment Variables를 Overriding 할 수 있습니다. 
+- In AWS Parameter Store, environment variables are already pre-defined for your convenience.
+- You can override the pre-defined environment variables if you add a `.env` file in the project root directory. 
 
-## API 문서
-[링크](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)
+## API document
+[Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)
 
 ## Deploy
 #### 0. Requirements
