@@ -82,6 +82,8 @@ jobs:
       name: api
       if: branch = master
       install:
+        - docker run -itd -v $(pwd):/app --name test ridibooks/store-php-test:7.2 /bin/bash
+        - docker exec -it -w /app test /bin/bash -c "composer validate && composer install"
         - docker run -itd -v $(pwd)/docs/api:/app --name node node:alpine /bin/sh
         - docker exec -it node sh -c "apk --update add git py3-pip && pip3 install awscli && yarn global add redoc-cli styled-components"
       script: php $(pwd)/docs/api/api_scanner.php > $(pwd)/docs/api/api.json
