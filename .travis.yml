@@ -26,6 +26,7 @@ jobs:
   include:
     - stage: test
       name: test
+      if: tag IS NOT present
       install:
         - docker run -d --name mariadb -e "MYSQL_DATABASE=ridi_pay" -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" mariadb:10.3
         - docker run -d --name redis redis:latest
