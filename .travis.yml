@@ -57,6 +57,10 @@ jobs:
           FLUENTD_TARGET_GROUP_ARN=$PROD_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$PROD_API_TARGET_GROUP_ARN \
           FLUENTD_ADDRESS=$PROD_FLUENTD_ADDRESS make deploy
+      after_success:
+        - sh ./bin/slack_notification.sh success
+      after_failure:
+        - sh ./bin/slack_notification.sh fail
     - stage: deploy
       name: test-deploy
       if: branch = test
@@ -68,6 +72,10 @@ jobs:
           FLUENTD_TARGET_GROUP_ARN=$TEST_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$TEST_API_TARGET_GROUP_ARN \
           FLUENTD_ADDRESS=$TEST_FLUENTD_ADDRESS make deploy
+      after_success:
+        - sh ./bin/slack_notification.sh success
+      after_failure:
+        - sh ./bin/slack_notification.sh fail
     - stage: deploy
       name: staging-deploy
       if: branch = staging
@@ -79,6 +87,10 @@ jobs:
           FLUENTD_TARGET_GROUP_ARN=$STAGING_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$STAGING_API_TARGET_GROUP_ARN \
           FLUENTD_ADDRESS=$STAGING_FLUENTD_ADDRESS make deploy
+      after_success:
+        - sh ./bin/slack_notification.sh success
+      after_failure:
+        - sh ./bin/slack_notification.sh fail
     - stage: docs
       name: api
       if: branch = master
