@@ -52,39 +52,4 @@ aws-vault exec <profile_name> -- docker-compose up [--build]
 [Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)
 
 ## Deploy
-#### 0. Requirements
-- Install `awscli`
-```
-brew install awscli
-aws configure
-```
-
-- Install [ecs-cli](https://docs.aws.amazon.com/ko_kr/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
-
-- Clone a directory for deploy
-```
-git clone git@github.com:ridi/pay-backend.git pay-backend-deploy
-cd pay-backend-deploy
-```
-
-#### 1. Build
-```
-$(aws ecr get-login --no-include-email --region ap-northeast-2)
-make deploy-build
-```
-
-#### 2. Deploy
-- test
-```
-APP_ENV=test FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy
-```
-
-- staging
-```
-APP_ENV=staging FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy
-```
-
-- prod
-```
-APP_ENV=prod FLUENTD_TARGET_GROUP_ARN={FLUENTD_TARGET_GROUP_ARN} API_TARGET_GROUP_ARN={API_TARGET_GROUP_ARN} FLUENTD_ADDRESS={FLUENTD_NLB_DNS_NAME}:24224 make deploy"
-```
+- We are using travis ci and github releases for deploy. For details, please refer to `.travis.yml`.
