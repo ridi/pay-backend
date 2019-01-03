@@ -24,6 +24,7 @@ services:
       - "traefik.frontend.rule=Host:api.pay.local.ridi.io"
     networks:
       - traefik
+      - default
   fluentd:
     build: ./config/docker/fluentd
     ports:
@@ -39,20 +40,10 @@ services:
     environment:
       - MYSQL_DATABASE=ridi_pay
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-    labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:mariadb.docker.localhost"
-    networks:
-      - traefik
   redis:
     image: redis:latest
     volumes:
       - ./data/redis:/data
-    labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:redis.docker.localhost"
-    networks:
-      - traefik
 networks:
   traefik:
     external:
