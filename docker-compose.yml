@@ -21,6 +21,7 @@ services:
       - fluentd
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=${EXTERNAL_NETWORK:-ridi}"
       - "traefik.frontend.rule=Host:api.pay.local.ridi.io"
     networks:
       - traefik
@@ -47,4 +48,4 @@ services:
 networks:
   traefik:
     external:
-      name: traefik
+      name: ${EXTERNAL_NETWORK:-ridi}
