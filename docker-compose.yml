@@ -41,8 +41,18 @@ services:
   mariadb:
     image: mariadb:10.3
     container_name: mariadb
+    ports:
+      - 3306:3306
     volumes:
       - ./data/mariadb:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=ridi_pay
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+  mariadb_test:
+    image: mariadb:10.3
+    container_name: mariadb_test
+    volumes:
+      - ./data/mariadb_test:/var/lib/mysql
     environment:
       - MYSQL_DATABASE=ridi_pay
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes

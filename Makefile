@@ -12,6 +12,9 @@ mkcert:
 	&& mv api.pay.local.ridi.io.pem api.pay.local.ridi.io.crt \
 	&& mv api.pay.local.ridi.io-key.pem api.pay.local.ridi.io.key
 
+fixture:
+	docker exec -it api php bin/fixture.php
+
 phpunit:
 	docker exec -it api vendor/bin/phpunit
 

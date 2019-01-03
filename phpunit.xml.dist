@@ -13,7 +13,7 @@
         <env name="APP_SECRET" value="s$cretf0rt3st" />
         <env name="SHELL_VERBOSITY" value="-1" />
         <!-- define your env variables for the test env here -->
-        <env name="DATABASE_URL" value="mysql://root@mariadb/ridi_pay" />
+        <env name="DATABASE_URL" value="mysql://root@mariadb_test/ridi_pay" />
         <env name="RIDI_PAY_URL" value="https://pay.ridi.io" />
         <env name="REDIS_HOST" value="redis" />
         <env name="OAUTH2_CLIENT_ID" value="oauth2_client_id" />

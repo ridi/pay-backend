@@ -37,12 +37,17 @@ make dev
 aws-vault exec <profile_name> -- docker-compose up [--build] 
 ```
 
-#### 3. Add the following line into your `/etc/hosts`
+#### 3. Make database fixtures
+```
+make fixture
+```
+
+#### 4. Add the following line into your `/etc/hosts`
 ```
 127.0.0.1 api.pay.local.ridi.io
 ```
 
-#### 4. Try to connect to https://api.pay.local.ridi.io
+#### 5. Try to connect to https://api.pay.local.ridi.io
 
 ## Overriding environment variables
 - In AWS Parameter Store, environment variables are already pre-defined for your convenience.
