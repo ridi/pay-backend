@@ -24,8 +24,10 @@ services:
       - "traefik.docker.network=${EXTERNAL_NETWORK:-ridi}"
       - "traefik.frontend.rule=Host:api.pay.local.ridi.io"
     networks:
-      - traefik
-      - default
+      traefik:
+        aliases:
+          - pay-api
+      default:
   fluentd:
     build: ./config/docker/fluentd
     ports:
