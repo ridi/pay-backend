@@ -15,13 +15,10 @@ brew install php@7.2
 
 - [Composer](https://getcomposer.org/doc/00-intro.md#globally)
 
-- mkcert
-```
-brew install mkcert
-brew install nss # If you use Firefox browser, please install.
-```
-
 - [Docker](https://store.docker.com/editions/community/docker-ce-desktop-mac)
+
+- [traefik](https://github.com/ridi/traefik/blob/master/README.md)
+  - Before running docker-compose, you must also execute `cd ssl && mkcert local.ridi.io '*.local.ridi.io' api.pay.local.ridi.io`.
 
 #### 1. Make
 ```
@@ -38,12 +35,7 @@ docker-compose up [--build]
 make fixture
 ```
 
-#### 4. Add the following line into your `/etc/hosts`
-```
-127.0.0.1 api.pay.local.ridi.io
-```
-
-#### 5. Try to connect to https://api.pay.local.ridi.io 
+#### 4. Try to connect to https://api.pay.local.ridi.io 
 
 ## API document
 [Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)

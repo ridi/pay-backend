@@ -1,22 +1,11 @@
 version: "3"
 
 services:
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    container_name: nginx-proxy
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
-      - ./config/certs:/etc/nginx/certs:ro
-      - ./config/docker/nginx-proxy/vhost.d:/etc/nginx/vhost.d
-    ports:
-      - 443:443
   api:
-    container_name: api
     build: .
     ports:
       - 80
     environment:
-      - VIRTUAL_HOST=api.pay.local.ridi.io
       - APP_ENV=dev
     volumes:
       - .:/app
@@ -27,9 +16,17 @@ services:
         tag: dev.ridi-pay.backend.api
     depends_on:
       - fluentd
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=${EXTERNAL_NETWORK:-ridi}"
+      - "traefik.frontend.rule=Host:api.pay.local.ridi.io"
+    networks:
+      traefik:
+        aliases:
+          - pay-api
+      default:
   fluentd:
     build: ./config/docker/fluentd
-    container_name: fluentd
     ports:
       - 24224:24224
     volumes:
@@ -38,7 +35,6 @@ services:
       - FLUENTD_CONF=fluent.local.conf
   mariadb:
     image: mariadb:10.3
-    container_name: mariadb
     ports:
       - 3306:3306
     volumes:
@@ -48,7 +44,6 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
   mariadb_test:
     image: mariadb:10.3
-    container_name: mariadb_test
     volumes:
       - ./data/mariadb_test:/var/lib/mysql
     environment:
@@ -56,6 +51,9 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
   redis:
     image: redis:latest
-    container_name: redis
     volumes:
       - ./data/redis:/data
+networks:
+  traefik:
+    external:
+      name: ${EXTERNAL_NETWORK:-ridi}
