@@ -19,14 +19,10 @@ if ($env === false) {
 
 if (Kernel::isLocal()) {
     $dotenv_file_path = __DIR__ . '/../.env';
-    if (file_exists($dotenv_file_path)) {
-        if (!class_exists(Dotenv::class)) {
-            throw new \RuntimeException(
-                'Add "symfony/dotenv" as a Composer dependency to load variables from a .env file.'
-            );
-        }
-        (new Dotenv())->load($dotenv_file_path);
+    if (!file_exists($dotenv_file_path)) {
+        throw new \RuntimeException("A .env file doesn't exist.");
     }
+    (new Dotenv())->load($dotenv_file_path);
 
     umask(0000);
     Debug::enable();
