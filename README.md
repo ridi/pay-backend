@@ -15,12 +15,6 @@ brew install php@7.2
 
 - [Composer](https://getcomposer.org/doc/00-intro.md#globally)
 
-- mkcert
-```
-brew install mkcert
-brew install nss # If you use Firefox browser, please install.
-```
-
 - [Docker](https://store.docker.com/editions/community/docker-ce-desktop-mac)
 
 #### 1. Make

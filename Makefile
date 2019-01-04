@@ -1,17 +1,9 @@
 dev:
 	$(MAKE) composer
-	$(MAKE) mkcert
 	$(MAKE) env
 
 composer:
 	composer install
-
-mkcert:
-	mkcert -install
-	[ -d config/certs ] || mkdir -p config/certs
-	cd config/certs/ && mkcert api.pay.local.ridi.io \
-	&& mv api.pay.local.ridi.io.pem api.pay.local.ridi.io.crt \
-	&& mv api.pay.local.ridi.io-key.pem api.pay.local.ridi.io.key
 
 env:
 	cp .env.example .env
