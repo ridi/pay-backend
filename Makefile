@@ -1,6 +1,7 @@
 dev:
 	$(MAKE) composer
 	$(MAKE) mkcert
+	$(MAKE) env
 
 composer:
 	composer install
@@ -11,6 +12,12 @@ mkcert:
 	cd config/certs/ && mkcert api.pay.local.ridi.io \
 	&& mv api.pay.local.ridi.io.pem api.pay.local.ridi.io.crt \
 	&& mv api.pay.local.ridi.io-key.pem api.pay.local.ridi.io.key
+
+env:
+	cp .env.example .env
+
+fixture:
+	docker exec -it api php bin/fixture.php
 
 phpunit:
 	docker exec -it api vendor/bin/phpunit

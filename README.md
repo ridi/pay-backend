@@ -22,10 +22,6 @@ brew install nss # If you use Firefox browser, please install.
 ```
 
 - [Docker](https://store.docker.com/editions/community/docker-ce-desktop-mac)
-  
-- [aws-vault](https://github.com/99designs/aws-vault)
-  - `brew cask install aws-vault`
-  - For setting your AWS profile, please refer to [Usage](https://github.com/99designs/aws-vault#usage).
 
 #### 1. Make
 ```
@@ -34,19 +30,20 @@ make dev
 
 #### 2. Build docker containers
 ```
-aws-vault exec <profile_name> -- docker-compose up [--build] 
+docker-compose up [--build] 
 ```
 
-#### 3. Add the following line into your `/etc/hosts`
+#### 3. Make database fixtures
+```
+make fixture
+```
+
+#### 4. Add the following line into your `/etc/hosts`
 ```
 127.0.0.1 api.pay.local.ridi.io
 ```
 
-#### 4. Try to connect to https://api.pay.local.ridi.io
-
-## Overriding environment variables
-- In AWS Parameter Store, environment variables are already pre-defined for your convenience.
-- You can override the pre-defined environment variables if you add a `.env` file in the project root directory. 
+#### 5. Try to connect to https://api.pay.local.ridi.io 
 
 ## API document
 [Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)

@@ -28,9 +28,9 @@ jobs:
       name: test
       if: tag IS NOT present
       install:
-        - docker run -d --name mariadb -e "MYSQL_DATABASE=ridi_pay" -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" mariadb:10.3
+        - docker run -d --name mariadb_test -e "MYSQL_DATABASE=ridi_pay" -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" mariadb:10.3
         - docker run -d --name redis redis:latest
-        - docker run -itd -v $(pwd):/app --name test --link redis:redis --link mariadb:mariadb ridibooks/store-php-test:7.2 /bin/bash
+        - docker run -itd -v $(pwd):/app --name test --link redis:redis --link mariadb_test:mariadb_test ridibooks/store-php-test:7.2 /bin/bash
         - docker exec -it -w /app test /bin/bash -c "composer validate && composer install"
       script:
         - docker exec -it -w /app test bash -c "vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml"

@@ -6,13 +6,10 @@ services:
     ports:
       - 80
     environment:
-      - VIRTUAL_HOST=api.pay.local.ridi.io
       - APP_ENV=dev
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
       - .:/app
+    entrypoint: apachectl -D FOREGROUND
     logging:
       driver: fluentd
       options:
@@ -29,8 +26,17 @@ services:
       - FLUENTD_CONF=fluent.local.conf
   mariadb:
     image: mariadb:10.3
+    ports:
+      - 3306:3306
     volumes:
       - ./data/mariadb:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=ridi_pay
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+  mariadb_test:
+    image: mariadb:10.3
+    volumes:
+      - ./data/mariadb_test:/var/lib/mysql
     environment:
       - MYSQL_DATABASE=ridi_pay
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
