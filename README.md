@@ -32,12 +32,7 @@ docker-compose up [--build]
 make fixture
 ```
 
-#### 4. Add the following line into your `/etc/hosts`
-```
-127.0.0.1 api.pay.local.ridi.io
-```
-
-#### 5. Try to connect to https://api.pay.local.ridi.io 
+#### 4. Try to connect to https://api.pay.local.ridi.io 
 
 ## API document
 [Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)
