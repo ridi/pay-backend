@@ -4,4 +4,3 @@ vendor/
 data/
 .env
 *.cache
-docker-compose.override.yml
