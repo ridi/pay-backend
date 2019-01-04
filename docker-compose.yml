@@ -19,15 +19,6 @@ services:
         tag: dev.ridi-pay.backend.api
     depends_on:
       - fluentd
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=${EXTERNAL_NETWORK:-ridi}"
-      - "traefik.frontend.rule=Host:api.pay.local.ridi.io"
-    networks:
-      traefik:
-        aliases:
-          - pay-api
-      default:
   fluentd:
     build: ./config/docker/fluentd
     ports:
@@ -47,7 +38,3 @@ services:
     image: redis:latest
     volumes:
       - ./data/redis:/data
-networks:
-  traefik:
-    external:
-      name: ${EXTERNAL_NETWORK:-ridi}
