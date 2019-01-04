@@ -17,6 +17,9 @@ brew install php@7.2
 
 - [Docker](https://store.docker.com/editions/community/docker-ce-desktop-mac)
 
+- [traefik](https://github.com/ridi/traefik/blob/master/README.md)
+  - Before running docker-compose, you must also execute `cd ssl && mkcert local.ridi.io '*.local.ridi.io' api.pay.local.ridi.io`.
+
 #### 1. Make
 ```
 make dev
