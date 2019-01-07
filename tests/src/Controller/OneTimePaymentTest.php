@@ -162,6 +162,91 @@ class OneTimePaymentTest extends ControllerTestCase
         TestUtil::tearDownOAuth2Doubles();
     }
 
+    public function testExceptionHandlingInCaseOfUnauthorizedPartner()
+    {
+        $unauthorized_client = self::createClient(
+            [],
+            [
+                'HTTP_Api-Key' => self::$partner->api_key,
+                'HTTP_Secret-Key' => 'invalid_secret_key',
+                'CONTENT_TYPE' => 'application/json'
+            ]
+        );
+
+        self::$u_idx = TestUtil::getRandomUidx();
+        self::$payment_method_id = TestUtil::registerCard(
+            self::$u_idx,
+            '123456',
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
+
+        $partner_transaction_id = Uuid::uuid4()->toString();
+        $product_name = 'mock';
+        $amount = 10000;
+        $return_url = 'https://mock.net';
+
+        // Unauthorized payment reservation
+        $body = json_encode([
+            'payment_method_id' => self::$payment_method_id,
+            'partner_transaction_id' => $partner_transaction_id,
+            'product_name' => $product_name,
+            'amount' => $amount,
+            'return_url' => $return_url
+        ]);
+        $unauthorized_client->request(Request::METHOD_POST, '/payments/reserve', [], [], [], $body);
+        $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
+
+        // Authorized payment reservation
+        $this->assertReservePaymentSuccessfully(
+            self::$payment_method_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount,
+            $return_url
+        );
+
+        // 결제 비밀번호 인증
+        UserAppService::validatePin(self::$u_idx, '123456');
+        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
+
+        // 결제 생성
+        $this->assertCreatePaymentSuccessfully(
+            $validation_token,
+            self::$reservation_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
+
+        // Unauthorized payment approval
+        $body = json_encode([
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com'
+        ]);
+        $unauthorized_client->request(Request::METHOD_POST, '/payments/' . self::$transaction_id . '/approve', [], [], [], $body);
+        $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
+
+        // Authorized payment approval
+        $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
+
+        // Unauthorized getting payment status
+        $unauthorized_client->request(Request::METHOD_GET, '/payments/' . self::$transaction_id . '/status');
+        $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
+
+        // Unauthorized payment cancellation
+        $unauthorized_client->request(Request::METHOD_POST, '/payments/' . self::$transaction_id . '/cancel');
+        $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
+
+        // Authorized payment cancellation
+        $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
+    }
+
     private function assertGetPaymentMethodsSuccessfully()
     {
         // 결제 수단 조회
