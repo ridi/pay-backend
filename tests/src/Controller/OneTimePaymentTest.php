@@ -55,13 +55,36 @@ class OneTimePaymentTest extends ControllerTestCase
         TestUtil::tearDownJwtDoubles();
     }
 
-    public function testOneTimePaymentLifeCycleInCaseOfOnetouchPay()
-    {
+    /**
+     * @dataProvider enableOnetouchPayAndAmountProvider
+     *
+     * @param bool $enable_onetouch_pay
+     * @param int $amount
+     * @param bool $is_pin_validation_required
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \RidiPay\Pg\Domain\Exception\CardRegistrationException
+     * @throws \RidiPay\Pg\Domain\Exception\UnsupportedPgException
+     * @throws \RidiPay\User\Domain\Exception\CardAlreadyExistsException
+     * @throws \RidiPay\User\Domain\Exception\LeavedUserException
+     * @throws \RidiPay\User\Domain\Exception\NotFoundUserException
+     * @throws \RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException
+     * @throws \RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException
+     * @throws \RidiPay\User\Domain\Exception\WrongFormattedPinException
+     * @throws \Ridibooks\OAuth2\Authorization\Exception\AuthorizationException
+     * @throws \Throwable
+     */
+    public function testOneTimePaymentLifeCycle(
+        bool $enable_onetouch_pay,
+        int $amount,
+        bool $is_pin_validation_required
+    ) {
+        $pin = '123456';
         self::$u_idx = TestUtil::getRandomUidx();
         self::$payment_method_id = TestUtil::registerCard(
             self::$u_idx,
-            '123456',
-            true,
+            $pin,
+            $enable_onetouch_pay,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],
@@ -74,7 +97,6 @@ class OneTimePaymentTest extends ControllerTestCase
 
         $partner_transaction_id = Uuid::uuid4()->toString();
         $product_name = 'mock';
-        $amount = 10000;
         $return_url = 'https://mock.net';
 
         // 결제 예약
@@ -86,9 +108,39 @@ class OneTimePaymentTest extends ControllerTestCase
             $return_url
         );
 
-        // 원터치 결제 인증
-        $this->assertTrue(UserAppService::isUsingOnetouchPay(self::$u_idx));
-        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
+        // 결제 예약 정보 조회
+        $client = self::createClientWithOAuth2AccessToken(
+            [],
+            [
+                'HTTP_Api-Key' => self::$partner->api_key,
+                'HTTP_Secret-Key' => self::$partner->secret_key,
+                'CONTENT_TYPE' => 'application/json'
+            ]
+        );
+        $client->request(Request::METHOD_GET, '/payments/' . self::$reservation_id);
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $getting_reserved_payment_response = json_decode($client->getResponse()->getContent());
+
+        $this->assertSame($is_pin_validation_required, $getting_reserved_payment_response->is_pin_validation_required);
+        if ($getting_reserved_payment_response->is_pin_validation_required) {
+            $this->assertObjectNotHasAttribute('validation_token', $getting_reserved_payment_response);
+
+            // 결제 비밀번호 인증
+            $pin_validation_body = json_encode([
+                'pin' => $pin,
+                'reservation_id' => self::$reservation_id
+            ]);
+            $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
+            $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+            $pin_validation_response = json_decode($client->getResponse()->getContent());
+
+            $validation_token = $pin_validation_response->validation_token;
+        } else {
+            $this->assertObjectHasAttribute('validation_token', $getting_reserved_payment_response);
+            $this->assertNotEmpty($getting_reserved_payment_response->validation_token);
+
+            $validation_token = $getting_reserved_payment_response->validation_token;
+        }
 
         // 결제 생성
         $this->assertCreatePaymentSuccessfully(
@@ -108,58 +160,17 @@ class OneTimePaymentTest extends ControllerTestCase
         TestUtil::tearDownOAuth2Doubles();
     }
 
-    public function testOneTimePaymentLifeCycleCaseInCaseOfPinValidation()
+    /**
+     * @return array
+     */
+    public function enableOnetouchPayAndAmountProvider(): array
     {
-        $pin = '123456';
-        self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(
-            self::$u_idx,
-            $pin,
-            false,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-
-        // 결제 수단 조회
-        $this->assertGetPaymentMethodsSuccessfully();
-
-        $partner_transaction_id = Uuid::uuid4()->toString();
-        $product_name = 'mock';
-        $amount = 10000;
-        $return_url = 'https://mock.net';
-
-        // 결제 예약
-        $this->assertReservePaymentSuccessfully(
-            self::$payment_method_id,
-            $partner_transaction_id,
-            $product_name,
-            $amount,
-            $return_url
-        );
-
-        // 결제 비밀번호 인증
-        UserAppService::validatePin(self::$u_idx, $pin);
-        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
-
-        // 결제 생성
-        $this->assertCreatePaymentSuccessfully(
-            $validation_token,
-            self::$reservation_id,
-            $partner_transaction_id,
-            $product_name,
-            $amount
-        );
-
-        // 결제 승인
-        $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
-
-        // 결제 취소
-        $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
-
-        TestUtil::tearDownOAuth2Doubles();
+        return [
+            [true, 10000, false], // 원터치 결제 ON, 10,000원 결제 => is_pin_validation_required = false
+            [true, 100000, true], // 원터치 결제 ON, 100,000원 결제 => is_pin_validation_required = true
+            [false, 10000, true], // 원터치 결제 OFF, 10,000원 결제 => is_pin_validation_required = true
+            [false, 100000, true] // 원터치 결제 OFF, 100,000원 결제 => is_pin_validation_required = true
+        ];
     }
 
     public function testExceptionHandlingInCaseOfUnauthorizedPartner()
@@ -173,10 +184,11 @@ class OneTimePaymentTest extends ControllerTestCase
             ]
         );
 
+        $pin = '123456';
         self::$u_idx = TestUtil::getRandomUidx();
         self::$payment_method_id = TestUtil::registerCard(
             self::$u_idx,
-            '123456',
+            $pin,
             true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
@@ -210,11 +222,8 @@ class OneTimePaymentTest extends ControllerTestCase
             $return_url
         );
 
-        // 결제 비밀번호 인증
-        UserAppService::validatePin(self::$u_idx, '123456');
-        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
-
         // 결제 생성
+        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
         $this->assertCreatePaymentSuccessfully(
             $validation_token,
             self::$reservation_id,
