@@ -6,7 +6,7 @@ namespace RidiPay\Tests\Controller;
 use Ramsey\Uuid\Uuid;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
-use  RidiPay\Partner\Application\Service\PartnerAppService;
+use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Domain\PaymentMethodConstant;
