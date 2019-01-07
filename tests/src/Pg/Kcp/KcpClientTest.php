@@ -93,6 +93,31 @@ class KcpClientTest extends TestCase
         );
     }
 
+    public function testMinimumOrderPricePolicy()
+    {
+        $this->expectException(UnderMinimumPaymentAmountException::class);
+        new Order(
+            Uuid::uuid4()->toString(),
+            self::DUMMY_ORDER_GOOD_NAME,
+            Order::GOOD_PRICE_KRW_MIN - 1,
+            self::DUMMY_ORDER_BUYER_NAME,
+            self::DUMMY_ORDER_BUYER_EMAIL,
+            self::DUMMY_ORDER_BUYER_TEL1,
+            self::DUMMY_ORDER_BUYER_TEL2
+        );
+
+        $this->expectNotToPerformAssertions();
+        new Order(
+            Uuid::uuid4()->toString(),
+            self::DUMMY_ORDER_GOOD_NAME,
+            Order::GOOD_PRICE_KRW_MIN,
+            self::DUMMY_ORDER_BUYER_NAME,
+            self::DUMMY_ORDER_BUYER_EMAIL,
+            self::DUMMY_ORDER_BUYER_TEL1,
+            self::DUMMY_ORDER_BUYER_TEL2
+        );
+    }
+
     /**
      * @return array
      * @throws UnderMinimumPaymentAmountException
