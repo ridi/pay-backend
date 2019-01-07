@@ -7,9 +7,14 @@ use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
+use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Tests\TestUtil;
+use RidiPay\Transaction\Application\Service\SubscriptionAppService;
+use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
+use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
+use RidiPay\Transaction\Domain\SubscriptionConstant;
 use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
@@ -140,6 +145,9 @@ class ManageCardTest extends ControllerTestCase
         int $http_status_code,
         ?string $error_code
     ) {
+        Test::double(RidiCashAutoChargeSubscriptionOptoutManager::class, ['optout' => null]);
+        Test::double(RidiSelectSubscriptionOptoutManager::class, ['optout' => null]);
+
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
@@ -157,6 +165,9 @@ class ManageCardTest extends ControllerTestCase
         }
 
         TestUtil::tearDownOAuth2Doubles();
+
+        Test::clean(RidiSelectSubscriptionOptoutManager::class);
+        Test::clean(RidiCashAutoChargeSubscriptionOptoutManager::class);
     }
 
     /**
@@ -223,7 +234,7 @@ class ManageCardTest extends ControllerTestCase
     public function userAndPaymentMethodIdProvider(): array
     {
         $user_indices = [];
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
@@ -237,7 +248,9 @@ class ManageCardTest extends ControllerTestCase
             self::TAX_ID
         );
 
-        $payment_method_id_of_leaved_user = TestUtil::registerCard(
+        $partner = PartnerAppService::registerPartner('manage-card', 'test@12345', true);
+
+        $payment_method_id_of_normal_user_with_ridi_cash_auto_charge = TestUtil::registerCard(
             $user_indices[1],
             '123456',
             true,
@@ -246,7 +259,39 @@ class ManageCardTest extends ControllerTestCase
             self::CARD_A['CARD_PASSWORD'],
             self::TAX_ID
         );
-        UserAppService::deleteUser($user_indices[1]);
+        SubscriptionAppService::subscribe(
+            $partner->api_key,
+            $partner->secret_key,
+            $payment_method_id_of_normal_user_with_ridi_cash_auto_charge,
+            SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE
+        );
+
+        $payment_method_id_of_normal_user_with_ridiselect = TestUtil::registerCard(
+            $user_indices[2],
+            '123456',
+            true,
+            self::CARD_A['CARD_NUMBER'],
+            self::CARD_A['CARD_EXPIRATION_DATE'],
+            self::CARD_A['CARD_PASSWORD'],
+            self::TAX_ID
+        );
+        SubscriptionAppService::subscribe(
+            $partner->api_key,
+            $partner->secret_key,
+            $payment_method_id_of_normal_user_with_ridiselect,
+            SubscriptionConstant::PRODUCT_RIDISELECT
+        );
+
+        $payment_method_id_of_leaved_user = TestUtil::registerCard(
+            $user_indices[3],
+            '123456',
+            true,
+            self::CARD_A['CARD_NUMBER'],
+            self::CARD_A['CARD_EXPIRATION_DATE'],
+            self::CARD_A['CARD_PASSWORD'],
+            self::TAX_ID
+        );
+        UserAppService::deleteUser($user_indices[3]);
 
         return [
             [
@@ -257,12 +302,24 @@ class ManageCardTest extends ControllerTestCase
             ],
             [
                 $user_indices[1],
+                $payment_method_id_of_normal_user_with_ridi_cash_auto_charge,
+                Response::HTTP_OK,
+                null
+            ],
+            [
+                $user_indices[2],
+                $payment_method_id_of_normal_user_with_ridiselect,
+                Response::HTTP_OK,
+                null
+            ],
+            [
+                $user_indices[3],
                 $payment_method_id_of_leaved_user,
                 Response::HTTP_FORBIDDEN,
                 UserErrorCodeConstant::LEAVED_USER
             ],
             [
-                $user_indices[2],
+                $user_indices[4],
                 Uuid::uuid4()->toString(),
                 Response::HTTP_NOT_FOUND,
                 UserErrorCodeConstant::NOT_FOUND_USER
