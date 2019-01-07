@@ -4,10 +4,8 @@ declare(strict_types=1);
 namespace RidiPay\Partner\Application\Service;
 
 use Ramsey\Uuid\Uuid;
-use RidiPay\Partner\Application\Dto\PartnerDto;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Partner\Domain\Entity\PartnerEntity;
-use RidiPay\Partner\Domain\Exception\NotFoundPartnerException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Partner\Domain\Repository\PartnerRepository;
 use RidiPay\Transaction\Domain\Exception\AlreadyRegisteredPartnerException;
@@ -54,23 +52,5 @@ class PartnerAppService
         }
 
         return $partner->getId();
-    }
-
-
-    /**
-     * @param int $partner_id
-     * @return PartnerDto
-     * @throws NotFoundPartnerException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function getPartner(int $partner_id): PartnerDto
-    {
-        $partner = PartnerRepository::getRepository()->findOneById($partner_id);
-        if (is_null($partner)) {
-            throw new NotFoundPartnerException();
-        }
-
-        return new PartnerDto($partner);
     }
 }
