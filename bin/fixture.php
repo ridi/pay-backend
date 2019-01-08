@@ -42,7 +42,7 @@ $partner = $em->getConnection()->executeQuery(
     [
         password_hash('local', PASSWORD_DEFAULT),
         hex2bin('2154A6EBA9A0480DAE8C166281D7D90F'),
-        'klRT2szZo2SYx3dfPP29cFJcLDfSL63wDsHSXlIAJ5Sq33djuQekrhCiOiXqrs9sBt1N0IKJ+NwgRBfT7eqJIBj+svdo2aEe'
+        'jY2DpJJyQqi3eAnODcKJnfM6Go6TpIOzD4BGvuDx/R2FuUODq0cGJNrn8smNsFcumtrge4RFYT9cZ52nJTlV3z/i6WIfYT99'
     ]
 );
 
