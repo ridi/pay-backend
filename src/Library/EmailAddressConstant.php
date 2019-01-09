@@ -5,5 +5,5 @@ namespace RidiPay\Library;
 
 class EmailAddressConstant
 {
-    public const NOREPLY_ADDRESS = 'RIDI Pay <noreply@ridibooks.com>';
+    public const NOREPLY_ADDRESS = '리디 <noreply@ridibooks.com>';
 }
