@@ -114,7 +114,7 @@ class CardAppService
         $email_body = (new TemplateRenderer())->render('card_deletion_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
-            "[RIDI Pay] {$oauth2_user->getUid()}님, 카드 삭제 안내드립니다.",
+            "{$oauth2_user->getUid()}님, 카드 삭제 안내드립니다.",
             $email_body
         );
     }
@@ -167,7 +167,7 @@ class CardAppService
         $email_body = (new TemplateRenderer())->render('card_registration_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
-            "[RIDI Pay] {$oauth2_user->getUid()}님, 카드 등록 안내드립니다.",
+            "{$oauth2_user->getUid()}님, 카드 등록 안내드립니다.",
             $email_body
         );
 

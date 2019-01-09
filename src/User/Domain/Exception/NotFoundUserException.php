@@ -8,7 +8,7 @@ class NotFoundUserException extends \Exception
     /**
      * @param string $message
      */
-    public function __construct(string $message = 'RIDI Pay 이용자가 아닙니다.')
+    public function __construct(string $message = '이용자가 아닙니다.')
     {
         parent::__construct($message);
     }
