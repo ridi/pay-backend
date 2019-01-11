@@ -24,7 +24,10 @@ class TemplateRenderer
 
     private function addGlobalVariables(): void
     {
-        $this->twig->addGlobal('RIDI_PAY_SETTINGS_URL', getenv('RIDI_PAY_URL') . '/settings');
+        $ridi_pay_url = getenv('RIDI_PAY_URL');
+
+        $this->twig->addGlobal('RIDI_PAY_URL', $ridi_pay_url);
+        $this->twig->addGlobal('RIDI_PAY_SETTINGS_URL', $ridi_pay_url . '/settings');
     }
 
     /**
