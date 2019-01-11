@@ -33,7 +33,7 @@ use Symfony\Component\HttpFoundation\Response;
  *   type="object",
  *   required={"code", "message"},
  *   @OA\Property(property="code", type="string", example="NOT_FOUND_USER"),
- *   @OA\Property(property="message", type="string", example="RIDI Pay 이용자가 아닙니다.")
+ *   @OA\Property(property="message", type="string", example="이용자가 아닙니다.")
  * )
  * @OA\Schema(
  *   schema="OnetouchPaySettingChangeDeclined",
