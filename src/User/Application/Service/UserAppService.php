@@ -55,8 +55,11 @@ class UserAppService
      */
     public static function createPin(int $u_idx, string $pin): void
     {
+        $user_key = self::getUserKey($u_idx);
+
         $redis = self::getRedisClient();
-        $redis->hset(self::getUserKey($u_idx), 'pin', UserEntity::createPin($pin));
+        $redis->hset($user_key, 'pin', UserEntity::createPin($pin));
+        $redis->expire($user_key, TimeUnitConstant::SEC_IN_HOUR);
     }
 
     /**
@@ -69,12 +72,17 @@ class UserAppService
      */
     public static function useCreatedPin(int $u_idx): void
     {
+        $user_key = self::getUserKey($u_idx);
+        $field_name = 'pin';
+
         $redis = self::getRedisClient();
-        $pin = $redis->hget(self::getUserKey($u_idx), 'pin');
+        $pin = $redis->hget($user_key, $field_name);
 
         $user = self::getUser($u_idx);
         $user->setPin($pin);
         UserRepository::getRepository()->save($user);
+
+        $redis->hdel($user_key, [$field_name]);
     }
 
     /**
@@ -198,8 +206,11 @@ class UserAppService
      */
     public static function setOnetouchPay(int $u_idx, bool $enable_onetouch_pay): void
     {
+        $user_key = self::getUserKey($u_idx);
+
         $redis = self::getRedisClient();
-        $redis->hset(self::getUserKey($u_idx), 'enable_onetouch_pay', $enable_onetouch_pay);
+        $redis->hset($user_key, 'enable_onetouch_pay', $enable_onetouch_pay);
+        $redis->expire($user_key, TimeUnitConstant::SEC_IN_HOUR);
     }
 
     /**
@@ -212,8 +223,11 @@ class UserAppService
      */
     public static function useSavedOnetouchPaySetting(int $u_idx): void
     {
+        $user_key = self::getUserKey($u_idx);
+        $field_name = 'enable_onetouch_pay';
+
         $redis = self::getRedisClient();
-        $enable_onetouch_pay = boolval($redis->hget(self::getUserKey($u_idx), 'enable_onetouch_pay'));
+        $enable_onetouch_pay = boolval($redis->hget($user_key, $field_name));
 
         $user = self::getUser($u_idx);
         if ($enable_onetouch_pay) {
@@ -222,6 +236,8 @@ class UserAppService
             $user->disableOnetouchPay();
         }
         UserRepository::getRepository()->save($user);
+
+        $redis->hdel($user_key, [$field_name]);
     }
 
     /**
