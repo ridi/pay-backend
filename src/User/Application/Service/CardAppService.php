@@ -5,7 +5,7 @@ namespace RidiPay\User\Application\Service;
 
 use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Library\TemplateRenderer;
+use RidiPay\Library\MailRenderer;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
@@ -111,7 +111,7 @@ class CardAppService
             'card_issuer_name' => $card->issuer_name,
             'iin' => $card->iin
         ];
-        $email_body = (new TemplateRenderer())->render('card_deletion_alert.twig', $data);
+        $email_body = (new MailRenderer())->render('card_deletion_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
             "{$oauth2_user->getUid()}님, 카드 삭제 안내드립니다.",
@@ -164,7 +164,7 @@ class CardAppService
             'card_issuer_name' => $card->issuer_name,
             'iin' => $card->iin
         ];
-        $email_body = (new TemplateRenderer())->render('card_registration_alert.twig', $data);
+        $email_body = (new MailRenderer())->render('card_registration_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
             "{$oauth2_user->getUid()}님, 카드 등록 안내드립니다.",

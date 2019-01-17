@@ -6,7 +6,7 @@ namespace RidiPay\User\Application\Service;
 use Predis\Client;
 use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\Library\TemplateRenderer;
+use RidiPay\Library\MailRenderer;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\User\Application\Dto\OnetouchPaySettingUpdateHistoryItemDto;
@@ -119,7 +119,7 @@ class UserAppService
         }
 
         $data = ['u_id' => $oauth2_user->getUid()];
-        $email_body = (new TemplateRenderer())->render('pin_change_alert.twig', $data);
+        $email_body = (new MailRenderer())->render('pin_change_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
             "{$oauth2_user->getUid()}님, 결제 비밀번호 변경 안내드립니다.",
@@ -272,7 +272,7 @@ class UserAppService
         }
 
         $data = ['u_id' => $oauth2_user->getUid()];
-        $email_body = (new TemplateRenderer())->render('onetouch_pay_change_alert.twig', $data);
+        $email_body = (new MailRenderer())->render('onetouch_pay_change_alert.twig', $data);
         EmailSender::send(
             $oauth2_user->getEmail(),
             "{$oauth2_user->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",

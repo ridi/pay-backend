@@ -5,16 +5,16 @@ namespace RidiPay\Library;
 
 use RidiPay\Kernel;
 
-class TemplateRenderer
+class MailRenderer
 {
-    private const TEMPLATE_DIR = __DIR__ . '/../../templates';
+    private const MAIL_TEMPLATE_DIR = __DIR__ . '/../../resources/mail_templates';
 
     /** @var */
     private $twig;
 
     public function __construct()
     {
-        $loader = new \Twig_Loader_Filesystem([self::TEMPLATE_DIR]);
+        $loader = new \Twig_Loader_Filesystem([self::MAIL_TEMPLATE_DIR]);
         $this->twig = new \Twig_Environment($loader, [
             'debug' => Kernel::isLocal()
         ]);
