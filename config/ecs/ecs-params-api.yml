@@ -7,6 +7,49 @@ task_definition:
     api:
       mem_limit: 384m
       mem_reservation: 192m
+      secrets:
+        - value_from: "/ridi-pay/${APP_ENV}/APP_SECRET"
+          name: APP_SECRET
+        - value_from: "/ridi-pay/${APP_ENV}/DATABASE_URL"
+          name: DATABASE_URL
+        - value_from: "/ridi-pay/${APP_ENV}/KCP_GROUP_ID"
+          name: KCP_GROUP_ID
+        - value_from: "/ridi-pay/${APP_ENV}/KCP_SITE_CODE"
+          name: KCP_SITE_CODE
+        - value_from: "/ridi-pay/${APP_ENV}/KCP_SITE_KEY"
+          name: KCP_SITE_KEY
+        - value_from: "/ridi-pay/${APP_ENV}/KCP_TAX_DEDUCTION_GROUP_ID"
+          name: KCP_TAX_DEDUCTION_GROUP_ID
+        - value_from: "/ridi-pay/${APP_ENV}/KCP_TAX_DEDUCTION_SITE_CODE"
+          name: KCP_TAX_DEDUCTION_SITE_CODE
+        - value_from: "/ridi-pay/${APP_ENV}/KCP_TAX_DEDUCTION_SITE_KEY"
+          name: KCP_TAX_DEDUCTION_SITE_KEY
+        - value_from: "/ridi-pay/${APP_ENV}/OAUTH2_CLIENT_ID"
+          name: OAUTH2_CLIENT_ID
+        - value_from: "/ridi-pay/${APP_ENV}/OAUTH2_CLIENT_SECRET"
+          name: OAUTH2_CLIENT_SECRET
+        - value_from: "/ridi-pay/${APP_ENV}/OAUTH2_JWT_SECRET"
+          name: OAUTH2_JWT_SECRET
+        - value_from: "/ridi-pay/${APP_ENV}/PARTNER_SECRET_KEY_SECRET"
+          name: PARTNER_SECRET_KEY_SECRET
+        - value_from: "/ridi-pay/${APP_ENV}/PG_BILL_KEY_SECRET"
+          name: PG_BILL_KEY_SECRET
+        - value_from: "/ridi-pay/${APP_ENV}/REDIS_HOST"
+          name: REDIS_HOST
+        - value_from: "/ridi-pay/${APP_ENV}/RIDIBOOKS_SERVER_HOST"
+          name: RIDIBOOKS_SERVER_HOST
+        - value_from: "/ridi-pay/${APP_ENV}/RIDISELECT_TO_RIDI_PAY_PUBLIC_KEY"
+          name: RIDISELECT_TO_RIDI_PAY_PUBLIC_KEY
+        - value_from: "/ridi-pay/${APP_ENV}/RIDI_PAY_TO_RIDISELECT_PRIVATE_KEY"
+          name: RIDI_PAY_TO_RIDISELECT_PRIVATE_KEY
+        - value_from: "/ridi-pay/${APP_ENV}/RIDI_PAY_TO_STORE_PRIVATE_KEY"
+          name: RIDI_PAY_TO_STORE_PRIVATE_KEY
+        - value_from: "/ridi-pay/${APP_ENV}/RIDI_PAY_URL"
+          name: RIDI_PAY_URL
+        - value_from: "/ridi-pay/${APP_ENV}/SENTRY_DSN"
+          name: SENTRY_DSN
+        - value_from: "/ridi-pay/${APP_ENV}/STORE_TO_RIDI_PAY_PUBLIC_KEY"
+          name: STORE_TO_RIDI_PAY_PUBLIC_KEY
 
 run_params:
   task_placement:

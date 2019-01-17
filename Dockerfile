@@ -9,10 +9,6 @@ ENV LC_ALL=C.UTF-8
 
 RUN apt-get update --fix-missing && apt-get install --no-install-recommends -y \
     software-properties-common \
-    python3-pip \
-    python3-setuptools \
-    python3-wheel \
-    jq \
     php7.2 \
     php7.2-cli \
     php7.2-curl \
@@ -26,8 +22,6 @@ RUN apt-get update --fix-missing && apt-get install --no-install-recommends -y \
     libapache2-mod-php7.2
 RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache2/php.ini && \
     sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/cli/php.ini
-
-RUN pip3 install awscli
 
 RUN a2enmod rewrite
 RUN a2dissite 000-default && rm /etc/apache2/sites-available/000-default.conf
@@ -44,10 +38,7 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" &&
 COPY . /app
 RUN mkdir -p /app/var && chmod -R 777 /app/var
 
-COPY ./docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
 WORKDIR /app
 RUN composer install --no-dev --optimize-autoloader
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD apachectl -D FOREGROUND
