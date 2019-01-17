@@ -4,7 +4,7 @@ services:
   fluentd:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend-fluentd:${GIT_REVISION}
     container_name: logger
-    build: ../docker/fluentd
+    build: ../fluentd
     ports:
       - 24224
     environment:

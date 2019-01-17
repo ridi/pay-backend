@@ -25,11 +25,11 @@ services:
           - pay-api
       default:
   fluentd:
-    build: ./config/docker/fluentd
+    build: ./config/fluentd
     ports:
       - 24224:24224
     volumes:
-      - ./config/docker/fluentd:/fluentd/etc
+      - ./config/fluentd:/fluentd/etc
     environment:
       - FLUENTD_CONF=fluent.local.conf
   mariadb:
