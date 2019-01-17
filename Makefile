@@ -15,7 +15,7 @@ phpunit:
 	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpunit
 
 phpcs:
-	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpcs --standard=docs/lint/php/ruleset.xml
+	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpcs --standard=config/phpcs/ruleset.xml
 
 deploy-build:
 	GIT_REVISION=${GIT_REVISION} docker-compose -f ./config/ecs/api.yml build
