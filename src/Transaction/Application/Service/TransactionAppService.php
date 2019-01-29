@@ -100,16 +100,18 @@ class TransactionAppService
      * @param string $reservation_id
      * @param int $u_idx
      * @return bool
+     * @throws DeletedPaymentMethodException
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws NotReservedTransactionException
+     * @throws UnregisteredPaymentMethodException
      * @throws UnsupportedPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     public static function isPinValidationRequired(string $reservation_id, int $u_idx): bool
     {
-        $reserved_transaction = self::getReservedTransaction($reservation_id);
+        $reserved_transaction = self::getReservedTransaction($reservation_id, $u_idx);
 
         $amount = intval($reserved_transaction['amount']);
         $user = UserAppService::getUserInformation($u_idx);
@@ -136,14 +138,15 @@ class TransactionAppService
      * @param int $u_idx
      * @param string $reservation_id
      * @return CreateTransactionDto
+     * @throws DeletedPaymentMethodException
      * @throws NotReservedTransactionException
+     * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
      */
     public static function createTransaction(int $u_idx, string $reservation_id): CreateTransactionDto
     {
-        $reserved_transaction = self::getReservedTransaction($reservation_id);
+        $reserved_transaction = self::getReservedTransaction($reservation_id, $u_idx);
         $pg = PgAppService::getActivePg();
 
         $transaction = new TransactionEntity(
@@ -484,16 +487,23 @@ class TransactionAppService
 
     /**
      * @param string $reservation_id
+     * @param int $u_idx
      * @return array
+     * @throws DeletedPaymentMethodException
      * @throws NotReservedTransactionException
+     * @throws UnregisteredPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      */
-    private static function getReservedTransaction(string $reservation_id): array
+    private static function getReservedTransaction(string $reservation_id, int $u_idx): array
     {
         $reservation_key = self::getReservationKey($reservation_id);
 
         $redis = self::getRedisClient();
         $reserved_transaction = $redis->hgetall($reservation_key);
-        if (empty($reserved_transaction)) {
+        if (empty($reserved_transaction)
+            || (PaymentMethodAppService::getUidxById(intval($reserved_transaction['payment_method_id'])) !== $u_idx)
+        ) {
             throw new NotReservedTransactionException();
         }
 

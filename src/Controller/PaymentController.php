@@ -259,7 +259,12 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/LeavedUser")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod"),
+     *         @OA\Schema(ref="#/components/schemas/LeavedUser")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
@@ -312,6 +317,12 @@ class PaymentController extends BaseController
             $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::NOT_FOUND_USER,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            $response = self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (NotReservedTransactionException $e) {
@@ -418,6 +429,11 @@ class PaymentController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(ref="#/components/schemas/NotReservedTransaction")
@@ -465,6 +481,12 @@ class PaymentController extends BaseController
             $response = self::createSuccessResponse([
                 'return_url' => $result->return_url . '?' . http_build_query(['transaction_id' => $result->transaction_id])
             ]);
+        } catch (DeletedPaymentMethodException $e) {
+            $response = self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
         } catch (NotReservedTransactionException $e) {
             $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
