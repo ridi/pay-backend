@@ -8,7 +8,6 @@ use Doctrine\ORM\Query\Expr;
 use Ramsey\Uuid\Doctrine\UuidBinaryType;
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
-use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Pg\Application\Dto\PgDto;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
@@ -92,8 +91,8 @@ class PaymentMethodRepository extends BaseEntityRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getRepository()
+    public static function getRepository(): self
     {
-        return EntityManagerProvider::getEntityManager()->getRepository(PaymentMethodEntity::class);
+        return new self(PaymentMethodEntity::class);
     }
 }

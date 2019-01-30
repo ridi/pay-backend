@@ -55,14 +55,14 @@ class JwtAuthorizationHelper
     /**
      * @param string $jwt
      * @param string $aud
-     * @return \stdClass
+     * @return object
      * @throws \Exception
      */
-    public static function decodeJwt(string $jwt, string $aud): \stdClass
+    public static function decodeJwt(string $jwt, string $aud)
     {
         $payload = JWT::jsonDecode(JWT::urlsafeB64Decode(explode('.', $jwt)[1]));
 
-        if ($payload->aud !== $aud) {
+        if (!isset($payload->aud) || ($payload->aud !== $aud)) {
             throw new \Exception('Invalid aud');
         }
 

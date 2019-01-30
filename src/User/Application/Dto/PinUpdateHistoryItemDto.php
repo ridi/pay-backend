@@ -14,7 +14,7 @@ class PinUpdateHistoryItemDto implements \JsonSerializable
     /**
      * @OA\Property(example="2018-11-06T10:14:09+09:00")
      *
-     * @var string 결제 비밀번호 변경 일시
+     * @var \DateTime 결제 비밀번호 변경 일시
      */
     public $updated_at;
 

@@ -14,6 +14,9 @@ fixture:
 phpunit:
 	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpunit
 
+phpstan:
+	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpstan analyse -l 6 -c config/phpstan/phpstan.neon src
+
 phpcs:
 	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpcs --standard=config/phpcs/ruleset.xml
 

@@ -7,7 +7,6 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use RidiPay\Library\BaseEntityRepository;
-use RidiPay\Library\EntityManagerProvider;
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
 
 class UserActionHistoryRepository extends BaseEntityRepository
@@ -35,8 +34,8 @@ class UserActionHistoryRepository extends BaseEntityRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getRepository()
+    public static function getRepository(): self
     {
-        return EntityManagerProvider::getEntityManager()->getRepository(UserActionHistoryEntity::class);
+        return new self(UserActionHistoryEntity::class);
     }
 }

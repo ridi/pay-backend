@@ -93,7 +93,7 @@ class CorsMiddleware implements EventSubscriberInterface
     }
 
     /**
-     * @param $controller
+     * @param mixed $controller
      * @param string $method_name
      * @return null|Cors
      * @throws \ReflectionException

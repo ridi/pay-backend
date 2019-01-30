@@ -5,7 +5,6 @@ namespace RidiPay\User\Domain\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\PersistentCollection;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\User\Domain\PaymentMethodConstant;
@@ -191,7 +190,7 @@ class PaymentMethodEntity
     }
 
     /**
-     * @return array|Collection
+     * @return CardEntity[]
      */
     public function getCards()
     {
@@ -199,7 +198,7 @@ class PaymentMethodEntity
             return [];
         }
 
-        return $this->cards;
+        return $this->cards->toArray();
     }
 
     /**
@@ -235,6 +234,6 @@ class PaymentMethodEntity
      */
     public function setCards(array $cards): void
     {
-        $this->cards = $cards;
+        $this->cards = new ArrayCollection($cards);
     }
 }

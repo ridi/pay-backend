@@ -135,12 +135,11 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
             $body = json_decode($request->getContent());
             $reservation_id = TransactionAppService::reserveTransaction(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
+                $partner_api_secret,
                 $body->payment_method_id,
                 $body->partner_transaction_id,
                 $body->product_name,
@@ -636,12 +635,11 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
             $body = json_decode($request->getContent());
             $result = TransactionAppService::approveTransaction(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
+                $partner_api_secret,
                 $transaction_id,
                 $body->buyer_id,
                 $body->buyer_name,
@@ -822,13 +820,9 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
-            $result = TransactionAppService::cancelTransaction(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
-                $transaction_id
-            );
+            $result = TransactionAppService::cancelTransaction($partner_api_secret, $transaction_id);
 
             $response = self::createSuccessResponse([
                 'transaction_id' => $result->transaction_id,
@@ -985,13 +979,9 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
-            $result = TransactionAppService::getTransactionStatus(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
-                $transaction_id
-            );
+            $result = TransactionAppService::getTransactionStatus($partner_api_secret, $transaction_id);
 
             $data = [
                 'transaction_id' => $result->transaction_id,
@@ -1129,12 +1119,11 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
             $body = json_decode($request->getContent());
             $result = SubscriptionAppService::subscribe(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
+                $partner_api_secret,
                 $body->payment_method_id,
                 $body->product_name
             );
@@ -1268,13 +1257,9 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
-            $result = SubscriptionAppService::unsubscribe(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
-                $subscription_id
-            );
+            $result = SubscriptionAppService::unsubscribe($partner_api_secret, $subscription_id);
 
             $response = self::createSuccessResponse([
                 'subscription_id' => $result->subscription_id,
@@ -1409,13 +1394,9 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
-            $result = SubscriptionAppService::resumeSubscription(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
-                $subscription_id
-            );
+            $result = SubscriptionAppService::resumeSubscription($partner_api_secret, $subscription_id);
 
             $response = self::createSuccessResponse([
                 'subscription_id' => $result->subscription_id,
@@ -1604,12 +1585,11 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request);
 
         try {
-            ApiSecretValidator::validate($request);
+            $partner_api_secret = ApiSecretValidator::validate($request);
 
             $body = json_decode($request->getContent());
             $result = SubscriptionAppService::paySubscription(
-                ApiSecretValidator::getApiKey($request),
-                ApiSecretValidator::getSecretKey($request),
+                $partner_api_secret,
                 $subscription_id,
                 $body->partner_transaction_id,
                 intval($body->amount),

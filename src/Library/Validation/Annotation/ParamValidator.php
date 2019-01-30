@@ -52,10 +52,10 @@ class ParamValidator
                                 $constraint_class = self::SYMFONY_VALIDATOR_CONSTRAINTS_NAMESPACE . '\\' . $name;
                                 return new $constraint_class($option);
                             }
-                        } else {
-                            $constraint_class = self::SYMFONY_VALIDATOR_CONSTRAINTS_NAMESPACE . '\\' . $constraint;
-                            return new $constraint_class();
                         }
+
+                        $constraint_class = self::SYMFONY_VALIDATOR_CONSTRAINTS_NAMESPACE . '\\' . $constraint;
+                        return new $constraint_class();
                     },
                     $rule['constraints']
                 );
@@ -67,11 +67,11 @@ class ParamValidator
     }
 
     /**
-     * @param $arr
+     * @param mixed $constraint
      * @return bool
      */
-    private static function isKeyValue($arr): bool
+    private static function isKeyValue($constraint): bool
     {
-        return is_array($arr) && (array_values($arr) !== $arr) && (count($arr) === 1);
+        return is_array($constraint) && (array_values($constraint) !== $constraint) && (count($constraint) === 1);
     }
 }

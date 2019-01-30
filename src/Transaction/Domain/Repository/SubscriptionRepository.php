@@ -5,7 +5,6 @@ namespace RidiPay\Transaction\Domain\Repository;
 
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
-use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 
 class SubscriptionRepository extends BaseEntityRepository
@@ -36,8 +35,8 @@ class SubscriptionRepository extends BaseEntityRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getRepository()
+    public static function getRepository(): self
     {
-        return EntityManagerProvider::getEntityManager()->getRepository(SubscriptionEntity::class);
+        return new self(SubscriptionEntity::class);
     }
 }

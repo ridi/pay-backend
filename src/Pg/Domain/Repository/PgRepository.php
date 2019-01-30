@@ -5,7 +5,6 @@ namespace RidiPay\Pg\Domain\Repository;
 
 use Doctrine\Common\Collections\Criteria;
 use RidiPay\Library\BaseEntityRepository;
-use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Pg\Domain\PgConstant;
 use RidiPay\Pg\Domain\Entity\PgEntity;
 
@@ -44,8 +43,8 @@ class PgRepository extends BaseEntityRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getRepository()
+    public static function getRepository(): self
     {
-        return EntityManagerProvider::getEntityManager()->getRepository(PgEntity::class);
+        return new self(PgEntity::class);
     }
 }

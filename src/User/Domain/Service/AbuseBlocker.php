@@ -21,7 +21,7 @@ class AbuseBlocker
 
     /**
      * @param BaseAbuseBlockPolicy $policy
-     * @param $u_idx
+     * @param int $u_idx
      */
     public function __construct(BaseAbuseBlockPolicy $policy, int $u_idx)
     {

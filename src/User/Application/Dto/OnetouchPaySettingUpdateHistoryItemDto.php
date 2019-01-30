@@ -21,7 +21,7 @@ class OnetouchPaySettingUpdateHistoryItemDto implements \JsonSerializable
     /**
      * @OA\Property(example="2018-11-06T10:14:09+09:00")
      *
-     * @var string 원터치 결제 설정 변경 일시
+     * @var \DateTime 원터치 결제 설정 변경 일시
      */
     public $updated_at;
 

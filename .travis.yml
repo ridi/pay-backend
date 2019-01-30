@@ -34,6 +34,7 @@ jobs:
         - docker exec -it -w /app test /bin/bash -c "composer validate && composer install"
       script:
         - docker exec -it -w /app test bash -c "vendor/bin/phpcs --standard=config/phpcs/ruleset.xml"
+        - docker exec -it -w /app test bash -c "vendor/bin/phpstan analyse -l 6 -c config/phpstan/phpstan.neon src"
         - docker exec -it -w /app test bash -c "vendor/bin/phpunit --colors=never --coverage-clover=coverage.xml"
       after_success: bash <(curl -s https://codecov.io/bash)
     - stage: build

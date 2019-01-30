@@ -9,7 +9,7 @@ class MailRenderer
 {
     private const MAIL_TEMPLATE_DIR = __DIR__ . '/../../resources/mail_templates';
 
-    /** @var */
+    /** @var \Twig_Environment */
     private $twig;
 
     public function __construct()

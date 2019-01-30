@@ -25,7 +25,7 @@ abstract class PaymentMethodHistoryItemDto implements \JsonSerializable
     /**
      * @OA\Property(example="2018-11-06T10:14:09+09:00")
      *
-     * @var string 등록/삭제 일시
+     * @var \DateTime 등록/삭제 일시
      */
     public $processed_at;
 

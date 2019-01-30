@@ -11,6 +11,7 @@ use RidiPay\Library\Pg\Kcp\Order;
 use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\TimeUnitConstant;
+use RidiPay\Library\Validation\ApiSecret;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
@@ -43,8 +44,7 @@ use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 class TransactionAppService
 {
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $payment_method_uuid
      * @param string $partner_transaction_id
      * @param string $product_name
@@ -56,20 +56,21 @@ class TransactionAppService
      * @throws UnderMinimumPaymentAmountException
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
     public static function reserveTransaction(
-        string $partner_api_key,
-        string $partner_secret_key,
+        ApiSecret $partner_api_secret,
         string $payment_method_uuid,
         string $partner_transaction_id,
         string $product_name,
         int $amount,
         string $return_url
     ): string {
-        $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        $partner_id = PartnerAppService::validatePartner(
+            $partner_api_secret->getApiKey(),
+            $partner_api_secret->getSecretKey()
+        );
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
         if ($amount < Order::GOOD_PRICE_KRW_MIN) {
             throw new UnderMinimumPaymentAmountException();
@@ -168,8 +169,7 @@ class TransactionAppService
     }
 
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $transaction_id
      * @param string $buyer_id
      * @param string $buyer_name
@@ -188,14 +188,13 @@ class TransactionAppService
      * @throws \Throwable
      */
     public static function approveTransaction(
-        string $partner_api_key,
-        string $partner_secret_key,
+        ApiSecret $partner_api_secret,
         string $transaction_id,
         string $buyer_id,
         string $buyer_name,
         string $buyer_email
     ): ApproveTransactionDto {
-        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        PartnerAppService::validatePartner($partner_api_secret->getApiKey(), $partner_api_secret->getSecretKey());
 
         $transaction = self::getTransaction($transaction_id);
         if ($transaction->isApproved()) {
@@ -386,8 +385,7 @@ class TransactionAppService
     }
 
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $transaction_id
      * @return CancelTransactionDto
      * @throws AlreadyCancelledTransactionException
@@ -400,11 +398,10 @@ class TransactionAppService
      * @throws \Throwable
      */
     public static function cancelTransaction(
-        string $partner_api_key,
-        string $partner_secret_key,
+        ApiSecret $partner_api_secret,
         string $transaction_id
     ): CancelTransactionDto {
-        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        PartnerAppService::validatePartner($partner_api_secret->getApiKey(), $partner_api_secret->getSecretKey());
 
         $transaction = self::getTransaction($transaction_id);
         if ($transaction->isCanceled()) {
@@ -463,8 +460,7 @@ class TransactionAppService
     }
 
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $transaction_id
      * @return TransactionStatusDto
      * @throws NotFoundTransactionException
@@ -476,11 +472,10 @@ class TransactionAppService
      * @throws \Doctrine\ORM\ORMException
      */
     public static function getTransactionStatus(
-        string $partner_api_key,
-        string $partner_secret_key,
+        ApiSecret $partner_api_secret,
         string $transaction_id
     ): TransactionStatusDto {
-        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        PartnerAppService::validatePartner($partner_api_secret->getApiKey(), $partner_api_secret->getSecretKey());
 
         return new TransactionStatusDto(self::getTransaction($transaction_id));
     }

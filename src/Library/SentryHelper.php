@@ -14,7 +14,7 @@ class SentryHelper
      */
     public static function registerClient(string $dsn, array $options = []): void
     {
-        if (is_null(self::$client)) {
+        if (!isset(self::$client)) {
             \Raven_Autoloader::register();
 
             self::$client = new \Raven_Client($dsn, $options);
@@ -36,7 +36,7 @@ class SentryHelper
      */
     public static function captureException(\Exception $e, array $data = [], $logger = null, $vars = null)
     {
-        if (is_null(self::$client)) {
+        if (!isset(self::$client)) {
             return;
         }
 
@@ -57,7 +57,7 @@ class SentryHelper
         bool $stack = false,
         $vars = null
     ) {
-        if (is_null(self::$client)) {
+        if (!isset(self::$client)) {
             return;
         }
 

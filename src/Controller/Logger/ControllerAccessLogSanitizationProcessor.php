@@ -29,7 +29,7 @@ class ControllerAccessLogSanitizationProcessor implements ProcessorInterface
 
     /**
      * @param string $key
-     * @param $value
+     * @param mixed $value
      * @return string
      */
     private static function sanitize(string $key, $value)

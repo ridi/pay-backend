@@ -7,6 +7,7 @@ use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
+use RidiPay\Library\Validation\ApiSecret;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
@@ -260,8 +261,7 @@ class ManageCardTest extends ControllerTestCase
             self::TAX_ID
         );
         SubscriptionAppService::subscribe(
-            $partner->api_key,
-            $partner->secret_key,
+            new ApiSecret($partner->api_key, $partner->secret_key),
             $payment_method_id_of_normal_user_with_ridi_cash_auto_charge,
             SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE
         );
@@ -276,8 +276,7 @@ class ManageCardTest extends ControllerTestCase
             self::TAX_ID
         );
         SubscriptionAppService::subscribe(
-            $partner->api_key,
-            $partner->secret_key,
+            new ApiSecret($partner->api_key, $partner->secret_key),
             $payment_method_id_of_normal_user_with_ridiselect,
             SubscriptionConstant::PRODUCT_RIDISELECT
         );

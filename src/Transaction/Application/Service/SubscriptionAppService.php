@@ -8,6 +8,7 @@ use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\SentryHelper;
+use RidiPay\Library\Validation\ApiSecret;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
@@ -31,8 +32,7 @@ use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 class SubscriptionAppService
 {
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $payment_method_uuid
      * @param string $product_name
      * @return SubscriptionDto
@@ -44,12 +44,14 @@ class SubscriptionAppService
      * @throws \Exception
      */
     public static function subscribe(
-        string $partner_api_key,
-        string $partner_secret_key,
+        ApiSecret $partner_api_secret,
         string $payment_method_uuid,
         string $product_name
     ): SubscriptionDto {
-        $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        $partner_id = PartnerAppService::validatePartner(
+            $partner_api_secret->getApiKey(),
+            $partner_api_secret->getSecretKey()
+        );
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
 
         $subscription = new SubscriptionEntity($payment_method_id, $partner_id, $product_name);
@@ -59,8 +61,7 @@ class SubscriptionAppService
     }
 
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $subscription_uuid
      * @return UnsubscriptionDto
      * @throws AlreadyCancelledSubscriptionException
@@ -70,12 +71,9 @@ class SubscriptionAppService
      * @throws \Doctrine\ORM\ORMException
      * @throws \Exception
      */
-    public static function unsubscribe(
-        string $partner_api_key,
-        string $partner_secret_key,
-        string $subscription_uuid
-    ) {
-        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+    public static function unsubscribe(ApiSecret $partner_api_secret, string $subscription_uuid)
+    {
+        PartnerAppService::validatePartner($partner_api_secret->getApiKey(), $partner_api_secret->getSecretKey());
 
         $subscription_repo = SubscriptionRepository::getRepository();
         $subscription = $subscription_repo->findOneByUuid(Uuid::fromString($subscription_uuid));
@@ -90,8 +88,7 @@ class SubscriptionAppService
     }
 
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $subscription_uuid
      * @return SubscriptionResumptionDto
      * @throws AlreadyResumedSubscriptionException
@@ -103,11 +100,10 @@ class SubscriptionAppService
      * @throws \Doctrine\ORM\ORMException
      */
     public static function resumeSubscription(
-        string $partner_api_key,
-        string $partner_secret_key,
+        ApiSecret $partner_api_secret,
         string $subscription_uuid
     ): SubscriptionResumptionDto {
-        PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        PartnerAppService::validatePartner($partner_api_secret->getApiKey(), $partner_api_secret->getSecretKey());
 
         $subscription_repo = SubscriptionRepository::getRepository();
         $subscription = $subscription_repo->findOneByUuid(Uuid::fromString($subscription_uuid));
@@ -124,8 +120,7 @@ class SubscriptionAppService
     }
 
     /**
-     * @param string $partner_api_key
-     * @param string $partner_secret_key
+     * @param ApiSecret $partner_api_secret
      * @param string $subscription_uuid
      * @param string $partner_transaction_id
      * @param int $amount
@@ -145,8 +140,7 @@ class SubscriptionAppService
      * @throws \Throwable
      */
     public static function paySubscription(
-        string $partner_api_key,
-        string $partner_secret_key,
+        ApiSecret $partner_api_secret,
         string $subscription_uuid,
         string $partner_transaction_id,
         int $amount,
@@ -154,7 +148,10 @@ class SubscriptionAppService
         string $buyer_name,
         string $buyer_email
     ) {
-        $partner_id = PartnerAppService::validatePartner($partner_api_key, $partner_secret_key);
+        $partner_id = PartnerAppService::validatePartner(
+            $partner_api_secret->getApiKey(),
+            $partner_api_secret->getSecretKey()
+        );
 
         $subscription = SubscriptionRepository::getRepository()->findOneByUuid(Uuid::fromString($subscription_uuid));
         if (is_null($subscription) || $subscription->isUnsubscribed()) {

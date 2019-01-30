@@ -1,0 +1,8 @@
+includes:
+    - ../../vendor/phpstan/phpstan-doctrine/extension.neon
+
+services:
+    -
+        class: RidiPay\Tests\PHPStan\AnnotationReaderDynamicReturnTypeExtension
+        tags:
+            - phpstan.broker.dynamicMethodReturnTypeExtension

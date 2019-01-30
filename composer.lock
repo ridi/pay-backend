@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "976876daf5024dcf42769f26be18c744",
+    "content-hash": "db4b5bc460d59c986c6d85c377aa4774",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -4430,6 +4430,53 @@
             ],
             "description": "PHPStan - PHP Static Analysis Tool",
             "time": "2018-01-28T13:22:19+00:00"
+        },
+        {
+            "name": "phpstan/phpstan-doctrine",
+            "version": "0.9.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpstan/phpstan-doctrine.git",
+                "reference": "c1f3523c37047b6843c31422dcb5273c8e6004c2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan-doctrine/zipball/c1f3523c37047b6843c31422dcb5273c8e6004c2",
+                "reference": "c1f3523c37047b6843c31422dcb5273c8e6004c2",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/common": "^2.7",
+                "doctrine/orm": "^2.5",
+                "php": "~7.0",
+                "phpstan/phpstan": "^0.9"
+            },
+            "require-dev": {
+                "consistence/coding-standard": "~0.13.0",
+                "jakub-onderka/php-parallel-lint": "^0.9.2",
+                "phing/phing": "^2.16.0",
+                "phpstan/phpstan-phpunit": "^0.9",
+                "phpstan/phpstan-strict-rules": "^0.9",
+                "phpunit/phpunit": "^6.4",
+                "slevomat/coding-standard": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "0.9-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PHPStan\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Doctrine extensions for PHPStan",
+            "time": "2017-12-04T15:19:02+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

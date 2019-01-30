@@ -5,7 +5,6 @@ namespace RidiPay\Partner\Domain\Repository;
 
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
-use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Partner\Domain\Entity\PartnerEntity;
 
 class PartnerRepository extends BaseEntityRepository
@@ -51,8 +50,8 @@ class PartnerRepository extends BaseEntityRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getRepository()
+    public static function getRepository(): self
     {
-        return EntityManagerProvider::getEntityManager()->getRepository(PartnerEntity::class);
+        return new self(PartnerEntity::class);
     }
 }

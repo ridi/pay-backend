@@ -4,9 +4,20 @@ declare(strict_types=1);
 namespace RidiPay\Library;
 
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Mapping;
 
 class BaseEntityRepository extends EntityRepository
 {
+    /**
+     * @param string $entity_class
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    protected function __construct(string $entity_class)
+    {
+        parent::__construct(EntityManagerProvider::getEntityManager(), new Mapping\ClassMetadata($entity_class));
+    }
+
     /**
      * @return \Doctrine\DBAL\Connection
      */
@@ -16,9 +27,9 @@ class BaseEntityRepository extends EntityRepository
     }
 
     /**
-     * @param $entity
+     * @param object $entity
      * @param bool $is_flush_single_entity 단일 엔터티만 flush 할지 여부. flush 함수의 상황별 주석 참고.
-     * @throws \Exception
+     * @throws \Doctrine\ORM\ORMException
      */
     public function save($entity, bool $is_flush_single_entity = false)
     {
@@ -29,9 +40,9 @@ class BaseEntityRepository extends EntityRepository
     }
 
     /**
-     * @param $entity
+     * @param object $entity
      * @param bool $is_flush_single_entity 단일 엔터티만 flush 할지 여부. 아래 상황별 주석 참고.
-     * @throws \Exception
+     * @throws \Doctrine\ORM\ORMException
      */
     public function remove($entity, bool $is_flush_single_entity = false)
     {
@@ -42,8 +53,10 @@ class BaseEntityRepository extends EntityRepository
     }
 
     /**
-     * @param $entity
+     * @param object $entity
      * @param bool $is_flush_single_entity 아래 주석 참고
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Doctrine\ORM\OptimisticLockException
      */
     private function flush($entity, bool $is_flush_single_entity)
     {

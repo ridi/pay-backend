@@ -67,16 +67,16 @@ abstract class BaseController extends Controller
         } catch (\ReflectionException $e) {
             $http_status_code = Response::HTTP_INTERNAL_SERVER_ERROR;
             $error_message = Response::$statusTexts[$http_status_code];
-        } finally {
-            return new JsonResponse(
-                array_merge(
-                    ['code' => $error_code, 'message' => $error_message],
-                    $data
-                ),
-                $http_status_code,
-                $headers
-            );
         }
+
+        return new JsonResponse(
+            array_merge(
+                ['code' => $error_code, 'message' => $error_message],
+                $data
+            ),
+            $http_status_code,
+            $headers
+        );
     }
 
     /**

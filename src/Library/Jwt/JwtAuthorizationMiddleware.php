@@ -88,7 +88,7 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
     }
 
     /**
-     * @param $controller
+     * @param mixed $controller
      * @param string $method_name
      * @return bool
      * @throws \ReflectionException
@@ -100,7 +100,7 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
     }
 
     /**
-     * @param $controller
+     * @param mixed $controller
      * @return bool
      * @throws \ReflectionException
      */
@@ -112,7 +112,7 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
     }
 
     /**
-     * @param $controller
+     * @param mixed $controller
      * @param string $method_name
      * @return bool
      * @throws \ReflectionException
