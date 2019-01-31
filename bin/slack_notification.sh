@@ -18,7 +18,8 @@ curl -X POST \
       "text": "'"${TRAVIS_COMMIT_MESSAGE}"'",
       "color": "'"${SLACK_MESSAGE_COLOR}"'",
       "fields": [
-        { "title": "Revision", "value": "'"${TRAVIS_COMMIT}"'" }
+        { "title": "Repository", "value": "Backend" },
+        { "title": "Revision", "value": "'"${TRAVIS_COMMIT}"'" },
       ]
     }]
   }' \
