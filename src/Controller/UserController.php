@@ -327,8 +327,14 @@ class UserController extends BaseController
      *   @OA\RequestBody(
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"pin"},
-     *       @OA\Property(property="pin", type="string", description="결제 비밀번호", example="123456")
+     *       required={"pin", "validation_token"},
+     *       @OA\Property(property="pin", type="string", description="결제 비밀번호", example="123456"),
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="카드 등록, 결제 비밀번호 등록, 원터치 결제 설정까지 필요한 인증 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
      *     )
      *   ),
      *   @OA\Response(
