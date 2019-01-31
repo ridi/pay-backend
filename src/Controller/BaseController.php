@@ -13,6 +13,13 @@ abstract class BaseController extends Controller
 {
     protected const REQUEST_CONTENT_TYPE = 'json'; // Symfony\Component\HttpFoundation\Request::initializeFormats() 참고
 
+    private const SECURITY_HEADERS = [
+        'Strict-Transport-Security' => 'max-age=63072000;',
+        'X-Frame-Options' => 'DENY',
+        'X-XSS-Protection' => '1; mode=block',
+        'X-Content-Type-Options' => 'nosniff'
+    ];
+
     /** @var OAuth2ServiceProvider */
     protected $oauth2_service_provider;
 
@@ -31,7 +38,7 @@ abstract class BaseController extends Controller
      */
     protected static function createSuccessResponse(array $data = [], array $headers = []): JsonResponse
     {
-        return new JsonResponse($data, Response::HTTP_OK, $headers);
+        return new JsonResponse($data, Response::HTTP_OK, array_merge($headers, self::SECURITY_HEADERS));
     }
 
     /**
@@ -75,7 +82,7 @@ abstract class BaseController extends Controller
                 $data
             ),
             $http_status_code,
-            $headers
+            array_merge($headers, self::SECURITY_HEADERS)
         );
     }
 

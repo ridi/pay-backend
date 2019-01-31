@@ -4,10 +4,10 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use Predis\Client;
+use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\SentryHelper;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class HomeController extends BaseController
@@ -32,10 +32,13 @@ class HomeController extends BaseController
         } catch (\Throwable $t) {
             SentryHelper::captureMessage($t->getMessage(), [], [], true);
 
-            return new JsonResponse(null, Response::HTTP_INTERNAL_SERVER_ERROR);
+            return self::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
         }
 
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 
     /**
@@ -46,6 +49,6 @@ class HomeController extends BaseController
      */
     public function favicon(): JsonResponse
     {
-        return new JsonResponse();
+        return self::createSuccessResponse();
     }
 }
