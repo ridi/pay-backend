@@ -25,6 +25,8 @@ RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache
 
 RUN a2enmod rewrite
 RUN a2dissite 000-default && rm /etc/apache2/sites-available/000-default.conf
+COPY config/apache/override.conf /etc/apache2/conf-available/override.conf
+RUN a2enconf override
 COPY config/apache/ridi-pay.conf /etc/apache2/sites-available/ridi-pay.conf
 RUN a2ensite ridi-pay
 
