@@ -19,9 +19,9 @@ use RidiPay\Library\Validation\ApiSecretValidator;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
+use RidiPay\Transaction\Application\Exception\AlreadyRunningTransactionException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
-use RidiPay\Transaction\Domain\Exception\AlreadyApprovedTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
@@ -596,8 +596,8 @@ class PaymentController extends BaseController
      *     description="Forbidden",
      *     @OA\JsonContent(
      *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/AlreadyApprovedTransaction"),
      *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledTransaction"),
+     *         @OA\Schema(ref="#/components/schemas/AlreadyRunningTransaction"),
      *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
      *       }
      *     )
@@ -666,16 +666,16 @@ class PaymentController extends BaseController
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
                 $e->getMessage()
             );
-        } catch (AlreadyApprovedTransactionException $e) {
-            $response = self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::ALREADY_APPROVED_TRANSACTION,
-                $e->getMessage()
-            );
         } catch (AlreadyCancelledTransactionException $e) {
             $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
+                $e->getMessage()
+            );
+        } catch (AlreadyRunningTransactionException $e) {
+            $response = self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_RUNNING_TRANSACTION,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
@@ -1461,7 +1461,8 @@ class PaymentController extends BaseController
      *     {"param"="amount", "constraints"={{"Regex"="/^\d+$/"}}},
      *     {"param"="buyer_id", "constraints"={"NotBlank", {"Type"="string"}}},
      *     {"param"="buyer_name", "constraints"={"NotBlank", {"Type"="string"}}},
-     *     {"param"="buyer_email", "constraints"={"Email"}}
+     *     {"param"="buyer_email", "constraints"={"Email"}},
+     *     {"param"="invoice_id", "constraints"={"NotBlank", {"Type"="string"}}},
      *   }
      * )
      *
@@ -1482,11 +1483,16 @@ class PaymentController extends BaseController
      *   @OA\RequestBody(
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"partner_transaction_id", "buyer_id", "buyer_name", "buyer_email"},
+     *       required={"partner_transaction_id", "buyer_id", "buyer_name", "buyer_email", "invoice_id"},
      *       @OA\Property(property="partner_transaction_id", type="string", description="가맹점 주문 번호"),
      *       @OA\Property(property="buyer_id", type="string", description="구매자 ID(가맹점)"),
      *       @OA\Property(property="buyer_name", type="string", description="구매자 이름"),
-     *       @OA\Property(property="buyer_email", type="string", description="구매자 Email")
+     *       @OA\Property(property="buyer_email", type="string", description="구매자 Email"),
+     *       @OA\Property(
+     *         property="invoice_id",
+     *         type="string",
+     *         description="가맹점에서 중복 정기 결제를 방지하기 위해서 입력하는 Identifier"
+     *       )
      *     )
      *   ),
      *   @OA\Response(
@@ -1545,7 +1551,12 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/AlreadyRunningTransaction"),
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
@@ -1595,7 +1606,8 @@ class PaymentController extends BaseController
                 intval($body->amount),
                 $body->buyer_id,
                 $body->buyer_name,
-                $body->buyer_email
+                $body->buyer_email,
+                $body->invoice_id
             );
 
             $response = self::createSuccessResponse([
@@ -1617,6 +1629,12 @@ class PaymentController extends BaseController
             $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_SUBSCRIPTION,
+                $e->getMessage()
+            );
+        } catch (AlreadyRunningTransactionException $e) {
+            $response = self::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::ALREADY_RUNNING_TRANSACTION,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {

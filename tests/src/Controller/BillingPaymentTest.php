@@ -71,7 +71,8 @@ class BillingPaymentTest extends ControllerTestCase
             'amount' => $amount,
             'buyer_id' => TestUtil::U_ID,
             'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com'
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
         ]);
         self::$client->request(
             Request::METHOD_POST,
@@ -97,7 +98,8 @@ class BillingPaymentTest extends ControllerTestCase
             'amount' => $amount,
             'buyer_id' => TestUtil::U_ID,
             'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com'
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
         ]);
         self::$client->request(
             Request::METHOD_POST,
@@ -145,7 +147,8 @@ class BillingPaymentTest extends ControllerTestCase
             'amount' => $amount,
             'buyer_id' => TestUtil::U_ID,
             'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com'
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
         ]);
 
         // Unauthorized subscription payment

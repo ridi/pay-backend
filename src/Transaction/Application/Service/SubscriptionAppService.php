@@ -13,10 +13,12 @@ use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
+use RidiPay\Pg\Domain\Service\Buyer;
 use RidiPay\Transaction\Application\Dto\SubscriptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionResumptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
 use RidiPay\Transaction\Application\Dto\UnsubscriptionDto;
+use RidiPay\Transaction\Application\Exception\AlreadyRunningTransactionException;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
@@ -127,7 +129,9 @@ class SubscriptionAppService
      * @param string $buyer_id
      * @param string $buyer_name
      * @param string $buyer_email
+     * @param string $invoice_id
      * @return SubscriptionPaymentDto
+     * @throws AlreadyRunningTransactionException
      * @throws DeletedPaymentMethodException
      * @throws NotFoundSubscriptionException
      * @throws TransactionApprovalException
@@ -146,8 +150,9 @@ class SubscriptionAppService
         int $amount,
         string $buyer_id,
         string $buyer_name,
-        string $buyer_email
-    ) {
+        string $buyer_email,
+        string $invoice_id
+    ): SubscriptionPaymentDto {
         $partner_id = PartnerAppService::validatePartner(
             $partner_api_secret->getApiKey(),
             $partner_api_secret->getSecretKey()
@@ -158,22 +163,15 @@ class SubscriptionAppService
             throw new NotFoundSubscriptionException();
         }
 
-        $payment_method_id = $subscription->getPaymentMethodId();
-        $u_idx = PaymentMethodAppService::getUidxById($payment_method_id);
-
-        $approve_transaction_dto = TransactionAppService::approveTransactionBySubscription(
-            $u_idx,
-            $payment_method_id,
+        $billing_payment_processor = new BillingPaymentProcessor(
+            $subscription,
             $partner_id,
             $partner_transaction_id,
-            $subscription->getId(),
-            $subscription->getProductName(),
             $amount,
-            $subscription->getSubscribedAt(),
-            $buyer_id,
-            $buyer_name,
-            $buyer_email
+            new Buyer($buyer_id, $buyer_name, $buyer_email),
+            $invoice_id
         );
+        $approve_transaction_dto = $billing_payment_processor->process();
 
         return new SubscriptionPaymentDto($approve_transaction_dto, $subscription);
     }
