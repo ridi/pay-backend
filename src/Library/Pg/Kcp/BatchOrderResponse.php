@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 namespace RidiPay\Library\Pg\Kcp;
-//TODO kcp api schema 맞출것
+
 class BatchOrderResponse extends Response
 {
     /**
@@ -10,7 +10,7 @@ class BatchOrderResponse extends Response
      */
     public function getResEnMsg(): string
     {
-        return $this->response['res_en_msg'];
+        return $this->response['en_message'];
     }
 
     /**
@@ -42,7 +42,7 @@ class BatchOrderResponse extends Response
      */
     public function getCardCd(): string
     {
-        return $this->response['card_cd'];
+        return $this->response['card_code'];
     }
 
     /**
@@ -58,7 +58,7 @@ class BatchOrderResponse extends Response
      */
     public function getAcquCd(): string
     {
-        return $this->response['acqu_cd'];
+        return $this->response['acquirer_code'];
     }
 
     /**
@@ -66,7 +66,7 @@ class BatchOrderResponse extends Response
      */
     public function getAcquName(): string
     {
-        return $this->response['acqu_name'];
+        return $this->response['acquirer_name'];
     }
 
     /**
@@ -82,7 +82,7 @@ class BatchOrderResponse extends Response
      */
     public function getMchtTaxno(): string
     {
-        return $this->response['mcht_taxno'];
+        return $this->response['merchant_tax_no'];
     }
 
     /**
@@ -90,7 +90,7 @@ class BatchOrderResponse extends Response
      */
     public function getMallTaxno(): string
     {
-        return $this->response['mall_taxno'];
+        return $this->response['mall_tax_no'];
     }
 
     /**
@@ -122,7 +122,7 @@ class BatchOrderResponse extends Response
      */
     public function getCardMny(): int
     {
-        return intval($this->response['card_mny']);
+        return intval($this->response['card_amount']);
     }
 
     /**
@@ -130,7 +130,7 @@ class BatchOrderResponse extends Response
      */
     public function getCouponMny(): int
     {
-        return intval($this->response['coupon_mny']);
+        return intval($this->response['coupon_amount']);
     }
 
     /**
@@ -138,7 +138,7 @@ class BatchOrderResponse extends Response
      */
     public function isEscwYn(): bool
     {
-        return $this->response['escw_yn'] === 'Y';
+        return $this->response['is_escrow'];
     }
 
     /**
@@ -146,7 +146,7 @@ class BatchOrderResponse extends Response
      */
     public function getVanCd(): string
     {
-        return $this->response['van_cd'];
+        return $this->response['van_code'];
     }
 
     /**
@@ -154,7 +154,7 @@ class BatchOrderResponse extends Response
      */
     public function getAppTime(): \DateTime
     {
-        return \DateTime::createFromFormat('YmdHis', $this->response['app_time']);
+        return \DateTime::createFromFormat('YmdHis', $this->response['approval_time']);
     }
 
     /**
@@ -162,7 +162,7 @@ class BatchOrderResponse extends Response
      */
     public function getVanApptime(): \DateTime
     {
-        return \DateTime::createFromFormat('YmdHis', $this->response['van_apptime']);
+        return \DateTime::createFromFormat('YmdHis', $this->response['van_approval_time']);
     }
 
     /**
@@ -170,7 +170,7 @@ class BatchOrderResponse extends Response
      */
     public function getAppNo(): string
     {
-        return $this->response['app_no'];
+        return $this->response['approval_no'];
     }
 
     /**
@@ -178,7 +178,7 @@ class BatchOrderResponse extends Response
      */
     public function getBizxNumb(): string
     {
-        return $this->response['bizx_numb'];
+        return $this->response['business_no'];
     }
 
     /**
@@ -186,7 +186,7 @@ class BatchOrderResponse extends Response
      */
     public function getQuota(): int
     {
-        return intval($this->response['quota']);
+        return $this->response['quota'] ?: 0;
     }
 
     /**
@@ -194,7 +194,7 @@ class BatchOrderResponse extends Response
      */
     public function isNoinf(): bool
     {
-        return $this->response['noinf'] === 'Y';
+        return $this->response['is_interest_free'] ?: false;
     }
 
     /**
@@ -202,7 +202,7 @@ class BatchOrderResponse extends Response
      */
     public function getPgTxid(): string
     {
-        return $this->response['pg_txid'];
+        return $this->response['pg_tx_id'];
     }
 
     /**
@@ -210,7 +210,7 @@ class BatchOrderResponse extends Response
      */
     public function getResTaxFlag(): string
     {
-        return $this->response['res_tax_flag'];
+        return $this->response['tax_flag'];
     }
 
     /**
@@ -218,7 +218,7 @@ class BatchOrderResponse extends Response
      */
     public function getResTaxMny(): int
     {
-        return intval($this->response['res_tax_mny']);
+        return $this->response['tax_amount'] ?: 0;
     }
 
     /**
@@ -226,7 +226,7 @@ class BatchOrderResponse extends Response
      */
     public function getResFreeMny(): int
     {
-        return intval($this->response['res_free_mny']);
+        return $this->response['tax_free_amount'] ?: 0;
     }
 
     /**
@@ -234,7 +234,7 @@ class BatchOrderResponse extends Response
      */
     public function getResVatMny(): int
     {
-        return intval($this->response['res_vat_mny']);
+        return $this->response['vat_amount'] ?: 0;
     }
 
     /**
@@ -242,7 +242,7 @@ class BatchOrderResponse extends Response
      */
     public function isPartcancYn(): bool
     {
-        return $this->response['partcanc_yn'] === 'Y';
+        return $this->response['is_partial_cancel'] ?: false;
     }
 
     /**
@@ -266,7 +266,7 @@ class BatchOrderResponse extends Response
      */
     public function getCardBinBankCd(): string
     {
-        return $this->response['card_bin_bank_cd'];
+        return $this->response['card_bin_bank_code'];
     }
 
     /**
@@ -274,6 +274,6 @@ class BatchOrderResponse extends Response
      */
     public function getJoinCd(): string
     {
-        return $this->response['join_cd'];
+        return $this->response['join_code'];
     }
 }

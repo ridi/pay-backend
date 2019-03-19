@@ -100,22 +100,4 @@ class Order
     {
         return $this->buyer_email;
     }
-
-    /**
-     * KCP 결제 모듈의 호출 파라미터로 사용 가능한 형태의 문자열로 인코딩.
-     *
-     * @return string
-     */
-    public function __toString()
-    {
-        return Util::flattenAssocArray([
-            'ordr_data' => "ordr_idxx=$this->id",
-            'good_name' => "'$this->good_name'",
-            'good_mny' => $this->good_price,
-            'buyr_name' => "'$this->buyer_name'",
-            'buyr_tel1' => "'$this->buyer_tel1'",
-            'buyr_tel2' => "'$this->buyer_tel2'",
-            'buyr_mail' => "'$this->buyer_email'",
-        ], "\x1f", true);
-    }
 }

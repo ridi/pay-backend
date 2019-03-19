@@ -91,19 +91,4 @@ class Card
     {
         return $this->tax_id;
     }
-
-    /**
-     * KCP 결제 모듈의 호출 파라미터로 사용 가능한 형태의 문자열로 인코딩.
-     *
-     * @return string
-     */
-    public function __toString(): string
-    {
-        return Util::flattenAssocArray([
-            'card_no' => $this->number,
-            'card_expiry' => $this->expiry,
-            'card_taxno' => $this->tax_id,
-            'card_pwd' => $this->password,
-        ], "\x1f", true);
-    }
 }

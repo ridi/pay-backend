@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 namespace RidiPay\Library\Pg\Kcp;
-//TODO kcp api schema 맞출것
+
 class CancelTransactionResponse extends Response
 {
     /** @var string 기취소된 신용카드 거래 취소요청 */
@@ -21,7 +21,7 @@ class CancelTransactionResponse extends Response
      */
     public function getResEnMsg(): string
     {
-        return $this->response['res_en_msg'];
+        return $this->response['en_message'];
     }
 
     /**
@@ -53,7 +53,7 @@ class CancelTransactionResponse extends Response
      */
     public function getCardCd(): string
     {
-        return $this->response['card_cd'];
+        return $this->response['card_code'];
     }
 
     /**
@@ -69,7 +69,7 @@ class CancelTransactionResponse extends Response
      */
     public function getAcquCd(): string
     {
-        return $this->response['acqu_cd'];
+        return $this->response['acquirer_code'];
     }
 
     /**
@@ -77,7 +77,7 @@ class CancelTransactionResponse extends Response
      */
     public function getAcquName(): string
     {
-        return $this->response['acqu_name'];
+        return $this->response['acquirer_name'];
     }
 
     /**
@@ -85,7 +85,7 @@ class CancelTransactionResponse extends Response
      */
     public function getMchtTaxno(): string
     {
-        return $this->response['mcht_taxno'];
+        return $this->response['merchant_tax_no'];
     }
 
     /**
@@ -93,7 +93,7 @@ class CancelTransactionResponse extends Response
      */
     public function getMallTaxno(): string
     {
-        return $this->response['mall_taxno'];
+        return $this->response['mall_tax_no'];
     }
 
     /**
@@ -125,7 +125,7 @@ class CancelTransactionResponse extends Response
      */
     public function getCardMny(): int
     {
-        return intval($this->response['card_mny']);
+        return intval($this->response['card_amount']);
     }
 
     /**
@@ -133,7 +133,7 @@ class CancelTransactionResponse extends Response
      */
     public function getCouponMny(): int
     {
-        return intval($this->response['coupon_mny']);
+        return intval($this->response['coupon_amount']);
     }
 
     /**
@@ -141,7 +141,7 @@ class CancelTransactionResponse extends Response
      */
     public function isEscwYn(): bool
     {
-        return $this->response['escw_yn'] === 'Y';
+        return $this->response['is_escrow'] ?: false;
     }
 
     /**
@@ -149,7 +149,7 @@ class CancelTransactionResponse extends Response
      */
     public function getCancGubn(): string
     {
-        return $this->response['canc_gubn'];
+        return $this->response['cancel_gubun'];
     }
 
     /**
@@ -157,7 +157,7 @@ class CancelTransactionResponse extends Response
      */
     public function getVanCd(): string
     {
-        return $this->response['van_cd'];
+        return $this->response['van_code'];
     }
 
     /**
@@ -165,7 +165,7 @@ class CancelTransactionResponse extends Response
      */
     public function getAppTime(): \DateTime
     {
-        return \DateTime::createFromFormat('YmdHis', $this->response['app_time']);
+        return \DateTime::createFromFormat('YmdHis', $this->response['approval_time']);
     }
 
     /**
@@ -173,7 +173,7 @@ class CancelTransactionResponse extends Response
      */
     public function getVanApptime(): \DateTime
     {
-        return \DateTime::createFromFormat('YmdHis', $this->response['van_apptime']);
+        return \DateTime::createFromFormat('YmdHis', $this->response['van_approval_time']);
     }
 
     /**
@@ -181,7 +181,7 @@ class CancelTransactionResponse extends Response
      */
     public function getCancTime(): \DateTime
     {
-        return \DateTime::createFromFormat('YmdHis', $this->response['canc_time']);
+        return \DateTime::createFromFormat('YmdHis', $this->response['cancel_time']);
     }
 
     /**
@@ -189,7 +189,7 @@ class CancelTransactionResponse extends Response
      */
     public function getAppNo(): string
     {
-        return $this->response['app_no'];
+        return $this->response['approval_no'];
     }
 
     /**
@@ -197,7 +197,7 @@ class CancelTransactionResponse extends Response
      */
     public function getBizxNumb(): string
     {
-        return $this->response['bizx_numb'];
+        return $this->response['business_no'];
     }
 
     /**
@@ -213,7 +213,7 @@ class CancelTransactionResponse extends Response
      */
     public function isNoinf(): bool
     {
-        return $this->response['noinf'] === 'Y';
+        return $this->response['is_interest_free'] ?: false;
     }
 
     /**
@@ -221,6 +221,6 @@ class CancelTransactionResponse extends Response
      */
     public function getPgTxid(): string
     {
-        return $this->response['pg_txid'];
+        return $this->response['pg_tx_id'];
     }
 }

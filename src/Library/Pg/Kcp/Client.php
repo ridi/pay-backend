@@ -16,9 +16,9 @@ use \Symfony\Component\HttpFoundation\Response;
 class Client
 {
 
-    const MODE_PRODUCTION = "prd";
-    const MODE_PRODUCTION_TAX_DEDUCTION = "ptx";
-    const MODE_DEVELOPMENT = "dev";
+    const MODE_PRODUCTION = 'prd';
+    const MODE_PRODUCTION_TAX_DEDUCTION = 'ptx';
+    const MODE_DEVELOPMENT = 'dev';
 
     /** @var HttpClient */
     private $http_client;
