@@ -32,7 +32,7 @@ class Client
      */
     public function __construct(string $mode = self::MODE_DEVELOPMENT) {
         $this->http_client = new HttpClient([
-            'base_uri' => getenv('KCP_HOST'),
+            'base_uri' => getenv('KCP_HTTP_PROXY_HOST'),
             'connect_timeout' => 10,
             'timeout' => 10,
             'headers' => [ 'Content-Type' => 'application/json' ]

@@ -77,10 +77,9 @@ class KcpClientTest extends TestCase
         $this->assertSame(Company::getKoreanName($cancel_res->getCardCd()), $cancel_res->getCardName());
         $this->assertSame(Company::getAcquirerFromIssuer($card_company), $cancel_res->getAcquCd());
         $this->assertSame(Company::getKoreanName($cancel_res->getAcquCd()), $cancel_res->getAcquName());
-
+        // KCP Http Proxy에서 취소에 대한 멱등성을 보장하기 때문에 정상적인 결과를 반환하므로 정상 취소 처리 됨
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
-        $this->assertFalse($cancel_res->isSuccess());
-        $this->assertTrue($cancel_res->isAlreadyCancelled());
+        $this->assertTrue($cancel_res->isSuccess());
     }
 
     public function testBuildReceiptUrl()
@@ -154,7 +153,7 @@ class KcpClientTest extends TestCase
                     '리디북스 전자책; echo $(pwd)',
                     Order::GOOD_PRICE_KRW_MIN,
                     'echo $(whoami)',
-                    'kcp-test@ridi.',
+                    'kcp-test@ridi.com',
                     self::DUMMY_ORDER_BUYER_TEL1,
                     self::DUMMY_ORDER_BUYER_TEL2
                 )

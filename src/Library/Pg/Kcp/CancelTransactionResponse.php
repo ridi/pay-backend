@@ -5,17 +5,6 @@ namespace RidiPay\Library\Pg\Kcp;
 
 class CancelTransactionResponse extends Response
 {
-    /** @var string 기취소된 신용카드 거래 취소요청 */
-    private const ALREADY_CANCELLED = '8133';
-
-    /**
-     * @return bool
-     */
-    public function isAlreadyCancelled(): bool
-    {
-        return $this->getResCd() === self::ALREADY_CANCELLED;
-    }
-
     /**
      * @return string
      */

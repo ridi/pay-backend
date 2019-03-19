@@ -6,7 +6,8 @@ services:
     ports:
       - 80
     environment:
-      - APP_ENV=dev
+      APP_ENV: "dev"
+      KCP_HTTP_PROXY_HOST: "http://host.docker.internal:3000"
     volumes:
       - .:/app
     logging:
