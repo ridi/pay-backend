@@ -61,6 +61,38 @@ class Card
     }
 
     /**
+     * @return string
+     */
+    public function getNumber(): string
+    {
+        return $this->number;
+    }
+
+    /**
+     * @return string
+     */
+    public function getExpiry(): string
+    {
+        return $this->expiry;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    /**
+     * @return string
+     */
+    public function getTaxId(): string
+    {
+        return $this->tax_id;
+    }
+
+    /**
      * KCP 결제 모듈의 호출 파라미터로 사용 가능한 형태의 문자열로 인코딩.
      *
      * @return string

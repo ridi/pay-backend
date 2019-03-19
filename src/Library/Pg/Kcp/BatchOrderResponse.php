@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 namespace RidiPay\Library\Pg\Kcp;
-
+//TODO kcp api schema 맞출것
 class BatchOrderResponse extends Response
 {
     /**

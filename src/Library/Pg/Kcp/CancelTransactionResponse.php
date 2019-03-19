@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 namespace RidiPay\Library\Pg\Kcp;
-
+//TODO kcp api schema 맞출것
 class CancelTransactionResponse extends Response
 {
     /** @var string 기취소된 신용카드 거래 취소요청 */

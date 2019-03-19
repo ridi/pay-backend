@@ -70,11 +70,35 @@ class Order
     }
 
     /**
+     * @return string
+     */
+    public function getGoodName(): string
+    {
+        return $this->good_name;
+    }
+
+    /**
      * @return int
      */
     public function getGoodPrice(): int
     {
         return $this->good_price;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBuyerName(): string
+    {
+        return $this->buyer_name;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBuyerEmail(): string
+    {
+        return $this->buyer_email;
     }
 
     /**
