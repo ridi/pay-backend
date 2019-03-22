@@ -18,7 +18,7 @@ use RidiPay\Transaction\Application\Dto\SubscriptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionResumptionDto;
 use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
 use RidiPay\Transaction\Application\Dto\UnsubscriptionDto;
-use RidiPay\Transaction\Application\Exception\AlreadyRunningTransactionException;
+use RidiPay\Library\DuplicatedRequestException;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
@@ -131,7 +131,7 @@ class SubscriptionAppService
      * @param string $buyer_email
      * @param string $invoice_id
      * @return SubscriptionPaymentDto
-     * @throws AlreadyRunningTransactionException
+     * @throws DuplicatedRequestException
      * @throws DeletedPaymentMethodException
      * @throws NotFoundSubscriptionException
      * @throws TransactionApprovalException
@@ -163,7 +163,7 @@ class SubscriptionAppService
             throw new NotFoundSubscriptionException();
         }
 
-        $billing_payment_processor = new BillingPaymentProcessor(
+        $billing_payment_transaction_approval_processor = new BillingPaymentTransactionApprovalProcessor(
             $subscription,
             $partner_id,
             $partner_transaction_id,
@@ -171,7 +171,7 @@ class SubscriptionAppService
             new Buyer($buyer_id, $buyer_name, $buyer_email),
             $invoice_id
         );
-        $approve_transaction_dto = $billing_payment_processor->process();
+        $approve_transaction_dto = $billing_payment_transaction_approval_processor->process();
 
         return new SubscriptionPaymentDto($approve_transaction_dto, $subscription);
     }

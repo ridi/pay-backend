@@ -8,13 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Schema(
- *   schema="AlreadyRunningTransaction",
- *   type="object",
- *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="ALREADY_RUNNING_TRANSACTION"),
- *   @OA\Property(property="message", type="string", example="이미 진행 중인 결제입니다.")
- * )
- * @OA\Schema(
  *   schema="AlreadyCancelledTransaction",
  *   type="object",
  *   required={"code", "message"},
@@ -59,7 +52,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class TransactionErrorCodeConstant
 {
-    public const ALREADY_RUNNING_TRANSACTION = 'ALREADY_RUNNING_TRANSACTION';
     public const ALREADY_CANCELLED_TRANSACTION = 'ALREADY_CANCELLED_TRANSACTION';
     public const ALREADY_RESUMED_SUBSCRIPTION = 'ALREADY_RESUMED_SUBSCRIPTION';
     public const ALREADY_CANCELLED_SUBSCRIPTION = 'ALREADY_CANCELLED_SUBSCRIPTION';
@@ -68,7 +60,6 @@ class TransactionErrorCodeConstant
     public const NOT_RESERVED_TRANSACTION = 'NOT_RESERVED_TRANSACTION';
 
     public const HTTP_STATUS_CODES = [
-        self::ALREADY_RUNNING_TRANSACTION => Response::HTTP_FORBIDDEN,
         self::ALREADY_CANCELLED_TRANSACTION => Response::HTTP_FORBIDDEN,
         self::ALREADY_RESUMED_SUBSCRIPTION => Response::HTTP_FORBIDDEN,
         self::ALREADY_CANCELLED_SUBSCRIPTION => Response::HTTP_FORBIDDEN,

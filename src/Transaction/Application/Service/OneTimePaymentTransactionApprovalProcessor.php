@@ -5,6 +5,7 @@ namespace RidiPay\Transaction\Application\Service;
 
 use RidiPay\Kernel;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\IdempotentRequestProcessor;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
@@ -20,8 +21,10 @@ use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
-class OneTimePaymentProcessor extends PaymentProcessor
+class OneTimePaymentTransactionApprovalProcessor extends IdempotentRequestProcessor
 {
+    private const REQUEST_TYPE = 'ONE_TIME_PAYMENT_TRANSACTION_APPROVAL';
+
     /** @var TransactionEntity */
     private $transaction;
 
@@ -34,7 +37,10 @@ class OneTimePaymentProcessor extends PaymentProcessor
      */
     public function __construct(TransactionEntity $transaction, Buyer $buyer)
     {
-        parent::__construct($transaction->getUuid()->toString());
+        parent::__construct(
+            self::REQUEST_TYPE,
+            ['transaction_id' => $transaction->getUuid()->toString()]
+        );
 
         $this->transaction = $transaction;
         $this->buyer = $buyer;
@@ -125,6 +131,23 @@ class OneTimePaymentProcessor extends PaymentProcessor
             $this->transaction->getAmount(),
             $this->transaction->getReservedAt(),
             $this->transaction->getApprovedAt()
+        );
+    }
+
+    /**
+     * @return ApproveTransactionDto
+     */
+    protected function getResult(): ApproveTransactionDto
+    {
+        $content = json_decode($this->getSerializedResult());
+
+        return new ApproveTransactionDto(
+            $content->transaction_id,
+            $content->partner_transaction_id,
+            $content->product_name,
+            (int) $content->amount,
+            \DateTime::createFromFormat(DATE_ATOM, $content->reserved_at),
+            \DateTime::createFromFormat(DATE_ATOM, $content->approved_at)
         );
     }
 }

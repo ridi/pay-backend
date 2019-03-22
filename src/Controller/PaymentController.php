@@ -19,7 +19,7 @@ use RidiPay\Library\Validation\ApiSecretValidator;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
-use RidiPay\Transaction\Application\Exception\AlreadyRunningTransactionException;
+use RidiPay\Library\DuplicatedRequestException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
@@ -597,7 +597,7 @@ class PaymentController extends BaseController
      *     @OA\JsonContent(
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledTransaction"),
-     *         @OA\Schema(ref="#/components/schemas/AlreadyRunningTransaction"),
+     *         @OA\Schema(ref="#/components/schemas/DuplicatedRequest"),
      *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
      *       }
      *     )
@@ -672,10 +672,10 @@ class PaymentController extends BaseController
                 TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
                 $e->getMessage()
             );
-        } catch (AlreadyRunningTransactionException $e) {
+        } catch (DuplicatedRequestException $e) {
             $response = self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::ALREADY_RUNNING_TRANSACTION,
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::DUPLICATED_REQUEST,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {
@@ -1553,7 +1553,7 @@ class PaymentController extends BaseController
      *     description="Forbidden",
      *     @OA\JsonContent(
      *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/AlreadyRunningTransaction"),
+     *         @OA\Schema(ref="#/components/schemas/DuplicatedRequest"),
      *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
      *       }
      *     )
@@ -1631,10 +1631,10 @@ class PaymentController extends BaseController
                 TransactionErrorCodeConstant::NOT_FOUND_SUBSCRIPTION,
                 $e->getMessage()
             );
-        } catch (AlreadyRunningTransactionException $e) {
+        } catch (DuplicatedRequestException $e) {
             $response = self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::ALREADY_RUNNING_TRANSACTION,
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::DUPLICATED_REQUEST,
                 $e->getMessage()
             );
         } catch (DeletedPaymentMethodException $e) {

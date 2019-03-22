@@ -38,7 +38,7 @@ class ApproveTransactionDto implements \JsonSerializable
         int $amount,
         \DateTime $reserved_at,
         \DateTime $approved_at
-    ){
+    ) {
         $this->transaction_id = $transaction_id;
         $this->partner_transaction_id = $partner_transaction_id;
         $this->product_name = $product_name;

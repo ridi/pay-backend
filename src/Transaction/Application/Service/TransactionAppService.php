@@ -25,7 +25,7 @@ use RidiPay\Transaction\Application\Dto\ApproveTransactionDto;
 use RidiPay\Transaction\Application\Dto\CancelTransactionDto;
 use RidiPay\Transaction\Application\Dto\CreateTransactionDto;
 use RidiPay\Transaction\Application\Dto\TransactionStatusDto;
-use RidiPay\Transaction\Application\Exception\AlreadyRunningTransactionException;
+use RidiPay\Library\DuplicatedRequestException;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
@@ -176,7 +176,7 @@ class TransactionAppService
      * @param string $buyer_email
      * @return ApproveTransactionDto
      * @throws AlreadyCancelledTransactionException
-     * @throws AlreadyRunningTransactionException
+     * @throws DuplicatedRequestException
      * @throws DeletedPaymentMethodException
      * @throws NotFoundTransactionException
      * @throws TransactionApprovalException
@@ -201,11 +201,11 @@ class TransactionAppService
             throw new AlreadyCancelledTransactionException();
         }
 
-        $one_time_payment_processor = new OneTimePaymentProcessor(
+        $one_time_payment_transaction_approval_processor = new OneTimePaymentTransactionApprovalProcessor(
             $transaction,
             new Buyer($buyer_id, $buyer_name, $buyer_email)
         );
-        return $one_time_payment_processor->process();
+        return $one_time_payment_transaction_approval_processor->process();
     }
 
     /**

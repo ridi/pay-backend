@@ -5,6 +5,7 @@ namespace RidiPay\Transaction\Application\Service;
 
 use RidiPay\Kernel;
 use RidiPay\Library\EntityManagerProvider;
+use RidiPay\Library\IdempotentRequestProcessor;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
@@ -21,8 +22,10 @@ use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
-class BillingPaymentProcessor extends PaymentProcessor
+class BillingPaymentTransactionApprovalProcessor extends IdempotentRequestProcessor
 {
+    private const REQUEST_TYPE = 'BILLING_PAYMENT_TRANSACTION_APPROVAL';
+
     /** @var SubscriptionEntity */
     private $subscription;
 
@@ -61,12 +64,14 @@ class BillingPaymentProcessor extends PaymentProcessor
         Buyer $buyer,
         string $invoice_id
     ) {
-        // 복수의 가맹점이 연동될 수 있는 상황에서 서로 다른 subscription 간 동일한 invoice id가 입력될 수 있다.
-        // 따라서 invoice id와 subscription id를 serialize한 값을 중복 정기 결제 방지의 identifier로 이용
-        parent::__construct(serialize([
-            'invoice_id' => $invoice_id,
-            'subscription_id' => $subscription->getUuid()->toString()
-        ]));
+        // 서로 다른 subscription 간 동일한 invoice id가 입력될 수 있기 때문에 invoice id와 subscription id를 병행 이용
+        parent::__construct(
+            self::REQUEST_TYPE,
+            [
+                'invoice_id' => $invoice_id,
+                'subscription_id' => $subscription->getUuid()->toString()
+            ]
+        );
 
         $this->subscription = $subscription;
         $this->u_idx = PaymentMethodAppService::getUidxById($subscription->getPaymentMethodId());
@@ -173,6 +178,23 @@ class BillingPaymentProcessor extends PaymentProcessor
             $transaction->getAmount(),
             $transaction->getReservedAt(),
             $transaction->getApprovedAt()
+        );
+    }
+
+    /**
+     * @return ApproveTransactionDto
+     */
+    protected function getResult(): ApproveTransactionDto
+    {
+        $content = json_decode($this->getSerializedResult());
+
+        return new ApproveTransactionDto(
+            $content->transaction_id,
+            $content->partner_transaction_id,
+            $content->product_name,
+            (int) $content->amount,
+            \DateTime::createFromFormat(DATE_ATOM, $content->reserved_at),
+            \DateTime::createFromFormat(DATE_ATOM, $content->approved_at)
         );
     }
 }
