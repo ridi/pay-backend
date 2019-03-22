@@ -189,4 +189,83 @@ class BillingPaymentTest extends ControllerTestCase
         self::$client->request(Request::METHOD_PUT, "/payments/subscriptions/{$subscription_id}/resume");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
     }
+
+    /**
+     * 동일한 invoice_id에 대해서 중복 결제가 발생하지 않는지 확인
+     * @throws \Exception
+     */
+    public function testPaymentIdempotency()
+    {
+        $product_name = 'mock';
+        $amount = 10000;
+
+        // 정기 결제 등록
+        $body = json_encode([
+            'payment_method_id' => self::$payment_method_id,
+            'product_name' => $product_name
+        ]);
+        self::$client->request(Request::METHOD_POST, '/payments/subscriptions', [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+
+        $subscription_id = json_decode(self::$client->getResponse()->getContent())->subscription_id;
+        $subscription_payment_url = "/payments/subscriptions/{$subscription_id}/pay";
+        $invoice_id = Uuid::uuid4()->toString();
+
+        // 결제 승인(1회차)
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => $invoice_id
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $transaction_id = $response_content->transaction_id;
+
+        // 결제 승인 retry(2회차)
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => $invoice_id
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($transaction_id, $response_content->transaction_id);
+
+        // 결제 승인 retry(3회차)
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => $invoice_id
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($transaction_id, $response_content->transaction_id);
+
+        // 다른 invoice id로 결제 승인
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $this->assertNotSame($transaction_id, $response_content->transaction_id);
+    }
 }
