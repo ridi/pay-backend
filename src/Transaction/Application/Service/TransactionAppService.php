@@ -21,7 +21,7 @@ use RidiPay\Pg\Domain\Exception\TransactionCancellationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\Buyer;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
-use RidiPay\Transaction\Application\Dto\ApproveTransactionDto;
+use RidiPay\Transaction\Application\Dto\TransactionApprovalDto;
 use RidiPay\Transaction\Application\Dto\CancelTransactionDto;
 use RidiPay\Transaction\Application\Dto\CreateTransactionDto;
 use RidiPay\Transaction\Application\Dto\TransactionStatusDto;
@@ -33,6 +33,7 @@ use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
+use RidiPay\Transaction\Domain\Service\OneTimePaymentTransactionApprovalProcessor;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
@@ -170,11 +171,11 @@ class TransactionAppService
 
     /**
      * @param ApiSecret $partner_api_secret
-     * @param string $transaction_id
+     * @param string $transaction_uuid
      * @param string $buyer_id
      * @param string $buyer_name
      * @param string $buyer_email
-     * @return ApproveTransactionDto
+     * @return TransactionApprovalDto
      * @throws AlreadyCancelledTransactionException
      * @throws DuplicatedRequestException
      * @throws DeletedPaymentMethodException
@@ -189,23 +190,20 @@ class TransactionAppService
      */
     public static function approveTransaction(
         ApiSecret $partner_api_secret,
-        string $transaction_id,
+        string $transaction_uuid,
         string $buyer_id,
         string $buyer_name,
         string $buyer_email
-    ): ApproveTransactionDto {
+    ): TransactionApprovalDto {
         PartnerAppService::validatePartner($partner_api_secret->getApiKey(), $partner_api_secret->getSecretKey());
 
-        $transaction = self::getTransaction($transaction_id);
-        if ($transaction->isCanceled()) {
-            throw new AlreadyCancelledTransactionException();
-        }
-
         $one_time_payment_transaction_approval_processor = new OneTimePaymentTransactionApprovalProcessor(
-            $transaction,
+            $transaction_uuid,
             new Buyer($buyer_id, $buyer_name, $buyer_email)
         );
-        return $one_time_payment_transaction_approval_processor->process();
+        $one_time_payment_transaction_approval_result = $one_time_payment_transaction_approval_processor->process();
+
+        return new TransactionApprovalDto($one_time_payment_transaction_approval_result);
     }
 
     /**

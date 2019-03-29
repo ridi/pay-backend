@@ -24,6 +24,7 @@ use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
+use RidiPay\Transaction\Domain\Service\BillingPaymentTransactionApprovalProcessor;
 use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\SubscriptionConstant;
@@ -158,22 +159,17 @@ class SubscriptionAppService
             $partner_api_secret->getSecretKey()
         );
 
-        $subscription = SubscriptionRepository::getRepository()->findOneByUuid(Uuid::fromString($subscription_uuid));
-        if (is_null($subscription) || $subscription->isUnsubscribed()) {
-            throw new NotFoundSubscriptionException();
-        }
-
         $billing_payment_transaction_approval_processor = new BillingPaymentTransactionApprovalProcessor(
-            $subscription,
+            $subscription_uuid,
             $partner_id,
             $partner_transaction_id,
             $amount,
             new Buyer($buyer_id, $buyer_name, $buyer_email),
             $invoice_id
         );
-        $approve_transaction_dto = $billing_payment_transaction_approval_processor->process();
+        $billing_payment_transaction_approval_result = $billing_payment_transaction_approval_processor->process();
 
-        return new SubscriptionPaymentDto($approve_transaction_dto, $subscription);
+        return new SubscriptionPaymentDto($billing_payment_transaction_approval_result);
     }
 
     /**
