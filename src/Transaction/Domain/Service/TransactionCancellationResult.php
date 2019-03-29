@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Transaction\Application\Dto;
+namespace RidiPay\Transaction\Domain\Service;
 
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 
-class CancelTransactionDto
+class TransactionCancellationResult
 {
     /** @var string */
     public $transaction_id;
