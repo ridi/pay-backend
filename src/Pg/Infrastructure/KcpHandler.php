@@ -28,7 +28,7 @@ class KcpHandler implements PgHandlerInterface
      */
     public static function create(): KcpHandler
     {
-        $client = new Client(Client::MODE_PRODUCTION);
+        $client = Client::create();
 
         return new KcpHandler($client, true);
     }
@@ -38,7 +38,7 @@ class KcpHandler implements PgHandlerInterface
      */
     public static function createWithTaxDeduction(): KcpHandler
     {
-        $client = new Client(Client::MODE_PRODUCTION_TAX_DEDUCTION);
+        $client = Client::createWithTaxDeduction();
 
         return new KcpHandler($client, true);
     }
@@ -48,7 +48,7 @@ class KcpHandler implements PgHandlerInterface
      */
     public static function createWithTest(): KcpHandler
     {
-        $client = new Client(Client::MODE_DEVELOPMENT);
+        $client = Client::create();
 
         return new KcpHandler($client, false);
     }

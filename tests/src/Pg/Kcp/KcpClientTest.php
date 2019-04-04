@@ -33,7 +33,8 @@ class KcpClientTest extends TestCase
      */
     public function testPaymentLifecycle(Card $card, Order $order)
     {
-        $client = new Client(Client::MODE_DEVELOPMENT);
+        // TODO KCP_HTTP_PROXY_HOST 가 개발/테스트인지 확인
+        $client = Client::create();
 
         $card_company = Company::SHINHAN;
 
@@ -77,9 +78,10 @@ class KcpClientTest extends TestCase
         $this->assertSame(Company::getKoreanName($cancel_res->getCardCd()), $cancel_res->getCardName());
         $this->assertSame(Company::getAcquirerFromIssuer($card_company), $cancel_res->getAcquCd());
         $this->assertSame(Company::getKoreanName($cancel_res->getAcquCd()), $cancel_res->getAcquName());
-        // KCP Http Proxy에서 취소에 대한 멱등성을 보장하기 때문에 정상적인 결과를 반환하므로 정상 취소 처리 됨
+
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
-        $this->assertTrue($cancel_res->isSuccess());
+        $this->assertFalse($cancel_res->isSuccess());
+        $this->assertTrue($cancel_res->isAlreadyCancelled());
     }
 
     public function testBuildReceiptUrl()

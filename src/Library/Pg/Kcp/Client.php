@@ -15,49 +15,60 @@ use \Symfony\Component\HttpFoundation\Response;
  */
 class Client
 {
-
-    const MODE_PRODUCTION = 'prd';
-    const MODE_PRODUCTION_TAX_DEDUCTION = 'ptx';
-    const MODE_DEVELOPMENT = 'dev';
+    /** @var int  */
+    private const TEN_SECONDS = 10;
 
     /** @var HttpClient */
     private $http_client;
 
-    /** @var string */
-    private $mode;
+    /** @var bool */
+    private $is_tax_deductible;
+
+    /**
+     * @return Client
+     */
+    public static function create(): Client {
+        return new Client(false);
+    }
+
+    /**
+     * @return Client
+     */
+    public static function createWithTaxDeduction(): Client {
+        return new Client(true);
+    }
 
     /**
      * Client constructor.
-     * @param string $mode
+     * @param bool $is_tax_deductible
      */
-    public function __construct(string $mode = self::MODE_DEVELOPMENT) {
+    private function __construct(bool $is_tax_deductible = false) {
         $this->http_client = new HttpClient([
             'base_uri' => getenv('KCP_HTTP_PROXY_HOST'),
-            'connect_timeout' => 10,
-            'timeout' => 10,
+            'connect_timeout' => self::TEN_SECONDS,
+            'timeout' => self::TEN_SECONDS,
             'headers' => [ 'Content-Type' => 'application/json' ]
         ]);
-        $this->mode = $mode;
+        $this->is_tax_deductible = $is_tax_deductible;
     }
 
     /**
      * @param Card $card
+     * @param bool $is_tax_deductible
      * @return BatchKeyResponse
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function requestBatchKey(Card $card): BatchKeyResponse
     {
         $data = [
-            'mode' => $this->mode,
+            'is_tax_deductible' => $this->is_tax_deductible,
             'card_no' => $card->getNumber(),
             'card_expiry_date' => $card->getExpiry(),
             'card_tax_no' => $card->getTaxId(),
             'card_password' => $card->getPassword()
         ];
 
-        $response = $this->http_client->request('POST','/kcp/payments/auth-key', [ 'body' => json_encode($data) ]);
+        $response = $this->http_client->request('POST','/payments/batch-key', [ 'body' => json_encode($data) ]);
         $response->getStatusCode();
-        // TODO timeout 일 때 요청에 대한 재시도를 시도할 수 있도록 RETRY 관리할 것
 
         if ($response->getStatusCode() !== Response::HTTP_CREATED)  {
             // TODO handle error
@@ -72,13 +83,12 @@ class Client
      * @param Order $order
      * @param int $installment_months
      * @return BatchOrderResponse
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function batchOrder(string $batch_key, Order $order, int $installment_months = 0): BatchOrderResponse
     {
         $data = [
-            'mode' => $this->mode,
-            'bill_key' => $batch_key,
+            'is_tax_deductible' => $this->is_tax_deductible,
+            'batch_key' => $batch_key,
             'order_no' => $order->getId(),
             'product_name' => $order->getGoodName(),
             'product_amount'=> $order->getGoodPrice(),
@@ -87,7 +97,7 @@ class Client
             'installment_months' => $installment_months
         ];
 
-        $response = $this->http_client->request('POST','/kcp/payments', [ 'body' => json_encode($data) ]);
+        $response = $this->http_client->request('POST','/payments', [ 'body' => json_encode($data) ]);
         $response->getStatusCode();
 
         if ($response->getStatusCode() !== Response::HTTP_OK)  {
@@ -102,16 +112,15 @@ class Client
      * @param string $kcp_tno
      * @param string $reason
      * @return CancelTransactionResponse
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function cancelTransaction(string $kcp_tno, string $reason): CancelTransactionResponse
     {
         $data = [
-            'mode' => $this->mode,
+            'is_tax_deductible' => $this->is_tax_deductible,
             'reason' => $reason
         ];
 
-        $response = $this->http_client->request('DELETE',"/kcp/payments/${kcp_tno}", [ 'body' => json_encode($data) ]);
+        $response = $this->http_client->request('DELETE',"/payments/${kcp_tno}", [ 'body' => json_encode($data) ]);
         $response->getStatusCode();
 
         if ($response->getStatusCode() !== Response::HTTP_OK)  {
