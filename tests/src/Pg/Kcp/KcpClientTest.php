@@ -33,7 +33,6 @@ class KcpClientTest extends TestCase
      */
     public function testPaymentLifecycle(Card $card, Order $order)
     {
-        // TODO KCP_HTTP_PROXY_HOST 가 개발/테스트인지 확인
         $client = Client::create();
 
         $card_company = Company::SHINHAN;

@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace RidiPay\Library\Pg\Kcp;
 
-use \GuzzleHttp\Client as HttpClient;
-use \Symfony\Component\HttpFoundation\Response;
+use GuzzleHttp\Client as HttpClient;
+use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * NHN KCP 결제 모듈을 래핑한 클라이언트입니다.
@@ -54,8 +57,8 @@ class Client
 
     /**
      * @param Card $card
-     * @param bool $is_tax_deductible
      * @return BatchKeyResponse
+     * @throws GuzzleException
      */
     public function requestBatchKey(Card $card): BatchKeyResponse
     {
@@ -67,15 +70,17 @@ class Client
             'card_password' => $card->getPassword()
         ];
 
-        $response = $this->http_client->request('POST','/payments/batch-key', [ 'body' => json_encode($data) ]);
-        $response->getStatusCode();
-
-        if ($response->getStatusCode() !== Response::HTTP_CREATED)  {
-            // TODO handle error
+        try {
+            $response = $this->http_client->request(
+                Request::METHOD_POST,
+                '/payments/batch-key',
+                [ 'body' => \json_encode($data) ]
+            );
+            $decoded_response = \json_decode($response->getBody()->getContents(), true);
+            return new BatchKeyResponse($decoded_response);
+        } catch (\Exception $e) {
+            throw $e;
         }
-        $decoded_response = @json_decode($response->getBody()->getContents(), true);
-
-        return new BatchKeyResponse($decoded_response);
     }
 
     /**
@@ -83,6 +88,7 @@ class Client
      * @param Order $order
      * @param int $installment_months
      * @return BatchOrderResponse
+     * @throws GuzzleException
      */
     public function batchOrder(string $batch_key, Order $order, int $installment_months = 0): BatchOrderResponse
     {
@@ -97,21 +103,24 @@ class Client
             'installment_months' => $installment_months
         ];
 
-        $response = $this->http_client->request('POST','/payments', [ 'body' => json_encode($data) ]);
-        $response->getStatusCode();
-
-        if ($response->getStatusCode() !== Response::HTTP_OK)  {
-            // TODO handle error
+        try {
+            $response = $this->http_client->request(
+                Request::METHOD_POST,
+                '/payments',
+                [ 'body' => \json_encode($data) ]
+            );
+            $decoded_response = \json_decode($response->getBody()->getContents(), true);
+            return new BatchOrderResponse($decoded_response);
+        } catch (\Exception $e) {
+            throw $e;
         }
-        $decoded_response = @json_decode($response->getBody()->getContents(), true);
-
-        return new BatchOrderResponse($decoded_response);
     }
 
     /**
      * @param string $kcp_tno
      * @param string $reason
      * @return CancelTransactionResponse
+     * @throws GuzzleException
      */
     public function cancelTransaction(string $kcp_tno, string $reason): CancelTransactionResponse
     {
@@ -120,14 +129,20 @@ class Client
             'reason' => $reason
         ];
 
-        $response = $this->http_client->request('DELETE',"/payments/${kcp_tno}", [ 'body' => json_encode($data) ]);
-        $response->getStatusCode();
-
-        if ($response->getStatusCode() !== Response::HTTP_OK)  {
-            // TODO handle error
+        try {
+            $response = $this->http_client->request(
+                Request::METHOD_DELETE,
+                "/payments/${kcp_tno}",
+                [ 'body' => \json_encode($data) ]
+            );
+            $decoded_response = \json_decode($response->getBody()->getContents(), true);
+            return new CancelTransactionResponse($decoded_response);
+        } catch (\Exception $e) {
+            if ($e instanceof RequestException && $e->getCode() === Response::HTTP_CONFLICT) {
+                $decoded_response = \json_decode($e->getResponse()->getBody()->getContents(), true);
+                return new CancelTransactionResponse($decoded_response);
+            }
+            throw $e;
         }
-        $decoded_response = @json_decode($response->getBody()->getContents(), true);
-
-        return new CancelTransactionResponse($decoded_response);
     }
 }

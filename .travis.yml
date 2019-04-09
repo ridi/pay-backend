@@ -30,7 +30,7 @@ jobs:
       install:
         - docker run -d --name mariadb_test -e "MYSQL_DATABASE=ridi_pay" -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" mariadb:10.3
         - docker run -d --name redis redis:latest
-        - docker run -itd -v $(pwd):/app --name test --link redis:redis --link mariadb_test:mariadb_test ridibooks/store-php-test:7.2 /bin/bash
+        - docker run -itd -e KCP_HTTP_PROXY_HOST=$TEST_KCP_HTTP_PROXY_HOST -v $(pwd):/app --name test --link redis:redis --link mariadb_test:mariadb_test ridibooks/store-php-test:7.2 /bin/bash
         - docker exec -it -w /app test /bin/bash -c "composer validate && composer install"
       script:
         - docker exec -it -w /app test bash -c "vendor/bin/phpcs --standard=config/phpcs/ruleset.xml"
@@ -55,6 +55,7 @@ jobs:
         - |
           APP_ENV=prod \
           GIT_REVISION=$TRAVIS_COMMIT \
+          KCP_HTTP_PROXY_HOST=$PROD_KCP_HTTP_PROXY_HOST \
           FLUENTD_TARGET_GROUP_ARN=$PROD_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$PROD_API_TARGET_GROUP_ARN \
           FLUENTD_ADDRESS=$PROD_FLUENTD_ADDRESS make deploy
@@ -70,6 +71,7 @@ jobs:
         - |
           APP_ENV=test \
           GIT_REVISION=$TRAVIS_COMMIT \
+          KCP_HTTP_PROXY_HOST=$TEST_KCP_HTTP_PROXY_HOST \
           FLUENTD_TARGET_GROUP_ARN=$TEST_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$TEST_API_TARGET_GROUP_ARN \
           FLUENTD_ADDRESS=$TEST_FLUENTD_ADDRESS make deploy
@@ -81,6 +83,7 @@ jobs:
         - |
           APP_ENV=staging \
           GIT_REVISION=$TRAVIS_COMMIT \
+          KCP_HTTP_PROXY_HOST=$STAGING_KCP_HTTP_PROXY_HOST \
           FLUENTD_TARGET_GROUP_ARN=$STAGING_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$STAGING_API_TARGET_GROUP_ARN \
           FLUENTD_ADDRESS=$STAGING_FLUENTD_ADDRESS make deploy
