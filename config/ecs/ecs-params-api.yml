@@ -12,18 +12,8 @@ task_definition:
           name: APP_SECRET
         - value_from: "/ridi-pay/${APP_ENV}/DATABASE_URL"
           name: DATABASE_URL
-        - value_from: "/ridi-pay/${APP_ENV}/KCP_GROUP_ID"
-          name: KCP_GROUP_ID
-        - value_from: "/ridi-pay/${APP_ENV}/KCP_SITE_CODE"
-          name: KCP_SITE_CODE
-        - value_from: "/ridi-pay/${APP_ENV}/KCP_SITE_KEY"
-          name: KCP_SITE_KEY
-        - value_from: "/ridi-pay/${APP_ENV}/KCP_TAX_DEDUCTION_GROUP_ID"
-          name: KCP_TAX_DEDUCTION_GROUP_ID
-        - value_from: "/ridi-pay/${APP_ENV}/KCP_TAX_DEDUCTION_SITE_CODE"
-          name: KCP_TAX_DEDUCTION_SITE_CODE
-        - value_from: "/ridi-pay/${APP_ENV}/KCP_TAX_DEDUCTION_SITE_KEY"
-          name: KCP_TAX_DEDUCTION_SITE_KEY
+        - value_from: "/ridi-pay/${APP_ENV}/KCP_HTTP_PROXY_HOST"
+          name: KCP_HTTP_PROXY_HOST
         - value_from: "/ridi-pay/${APP_ENV}/OAUTH2_CLIENT_ID"
           name: OAUTH2_CLIENT_ID
         - value_from: "/ridi-pay/${APP_ENV}/OAUTH2_CLIENT_SECRET"
