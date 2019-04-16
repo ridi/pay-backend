@@ -29,8 +29,6 @@ use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class BillingPaymentTransactionApprovalProcessor extends IdempotentRequestProcessor
 {
-    private const REQUEST_TYPE = 'BILLING_PAYMENT_TRANSACTION_APPROVAL';
-
     /** @var SubscriptionEntity */
     private $subscription;
 
@@ -89,13 +87,7 @@ class BillingPaymentTransactionApprovalProcessor extends IdempotentRequestProces
         $this->buyer = $buyer;
 
         // 서로 다른 subscription 간 동일한 invoice id가 입력될 수 있기 때문에 invoice id와 subscription uuid를 병행 이용
-        parent::__construct(
-            self::REQUEST_TYPE,
-            [
-                'invoice_id' => $invoice_id,
-                'subscription_id' => $subscription_uuid
-            ]
-        );
+        parent::__construct("BILLING_PAYMENT_TRANSACTION_APPROVAL:{$subscription_uuid}:{$invoice_id}");
     }
 
     /**

@@ -28,8 +28,6 @@ use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
 class OneTimePaymentTransactionApprovalProcessor extends IdempotentRequestProcessor
 {
-    private const REQUEST_TYPE = 'ONE_TIME_PAYMENT_TRANSACTION_APPROVAL';
-
     /** @var TransactionEntity */
     private $transaction;
 
@@ -60,10 +58,7 @@ class OneTimePaymentTransactionApprovalProcessor extends IdempotentRequestProces
             : PgHandlerFactory::create($this->pg->name);
         $this->buyer = $buyer;
 
-        parent::__construct(
-            self::REQUEST_TYPE,
-            ['transaction_id' => $transaction_uuid]
-        );
+        parent::__construct("ONE_TIME_PAYMENT_TRANSACTION_APPROVAL:{$transaction_uuid}");
     }
 
     /**

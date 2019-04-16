@@ -17,15 +17,11 @@ abstract class IdempotentRequestProcessor
     private $redis;
 
     /**
-     * @param string $request_type
-     * @param array $request_id_elements
+     * @param string $request_id
      */
-    public function __construct(string $request_type, array $request_id_elements)
+    public function __construct(string $request_id)
     {
-        $this->request_id = hash(
-            'sha256',
-            serialize(array_merge(['request_type' => $request_type], $request_id_elements))
-        );
+        $this->request_id = hash('sha256', $request_id);
         $this->redis = new Client(['host' => getenv('REDIS_HOST')]);
     }
 
