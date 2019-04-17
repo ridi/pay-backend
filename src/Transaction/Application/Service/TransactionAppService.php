@@ -205,7 +205,7 @@ class TransactionAppService
         }
 
         $pg = PgAppService::getPgById($transaction->getPgId());
-        $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
         $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($transaction->getPaymentMethodId());
 
         $buyer = new Buyer($buyer_id, $buyer_name, $buyer_email);
@@ -305,7 +305,7 @@ class TransactionAppService
         string $buyer_email
     ): ApproveTransactionDto {
         $pg = PgAppService::getActivePg();
-        $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
 
         $transaction = new TransactionEntity(
             $u_idx,
@@ -409,7 +409,7 @@ class TransactionAppService
         }
 
         $pg = PgAppService::getPgById($transaction->getPgId());
-        $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+        $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
         $cancel_reason = '고객 결제 취소';
         $response = $pg_handler->cancelTransaction($transaction->getPgTransactionId(), $cancel_reason);
         if (!$response->isSuccess()) {
