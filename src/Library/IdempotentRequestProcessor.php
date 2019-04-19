@@ -27,16 +27,23 @@ abstract class IdempotentRequestProcessor
      * lock를 획득한 경우에만 request를 처리할 수 있다.
      *
      * @throws DuplicatedRequestException
+     * @throws \Throwable
      */
     public function process()
     {
         if ($this->lock()) {
             $this->setTtl();
 
-            $result = $this->run();
-            $this->setResult($result);
+            try {
+                $result = $this->run();
+                $this->setResult($result);
 
-            return $result;
+                return $result;
+            } catch (\Throwable $t) {
+                $this->unlock();
+
+                throw $t;
+            }
         } elseif ($this->isCompleted()) {
             return $this->getResult();
         } else {
@@ -54,6 +61,14 @@ abstract class IdempotentRequestProcessor
     private function lock(): bool
     {
         return $this->redis->hsetnx($this->request_id, 'lock', 1) === 1;
+    }
+
+    /**
+     * @return bool
+     */
+    private function unlock(): bool
+    {
+        return $this->redis->hdel($this->request_id, ['lock']) === 1;
     }
 
     private function setTtl(): void
