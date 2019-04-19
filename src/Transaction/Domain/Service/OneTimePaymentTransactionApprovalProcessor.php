@@ -53,7 +53,7 @@ class OneTimePaymentTransactionApprovalProcessor extends IdempotentRequestProces
     {
         $this->transaction = self::getTransaction($transaction_uuid);
         $this->pg = PgAppService::getPgById($this->transaction->getPgId());
-        $this->pg_handler = Kernel::isLocal()
+        $this->pg_handler = Kernel::isDev()
             ? PgHandlerFactory::createWithTest($this->pg->name)
             : PgHandlerFactory::create($this->pg->name);
         $this->buyer = $buyer;

@@ -77,7 +77,7 @@ class BillingPaymentTransactionApprovalProcessor extends IdempotentRequestProces
     ) {
         $this->subscription = self::getSubscription($subscription_uuid);
         $this->pg = PgAppService::getActivePg();
-        $this->pg_handler = $pg_handler = Kernel::isLocal()
+        $this->pg_handler = $pg_handler = Kernel::isDev()
             ? PgHandlerFactory::createWithTest($this->pg->name)
             : PgHandlerFactory::create($this->pg->name);
         $this->u_idx = PaymentMethodAppService::getUidxById($this->subscription->getPaymentMethodId());

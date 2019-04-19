@@ -40,15 +40,4 @@ class HomeController extends BaseController
 
         return self::createSuccessResponse();
     }
-
-    /**
-     * Ignore requests for favicon.ico
-     * @Route("/favicon.ico", methods={"GET"})
-     *
-     * @return JsonResponse
-     */
-    public function favicon(): JsonResponse
-    {
-        return self::createSuccessResponse();
-    }
 }

@@ -74,7 +74,7 @@ class TransactionStatusDto
 
         if ($payment_method->isCard() && !$transaction->isReserved()) {
             $pg = PgAppService::getPgById($transaction->getPgId());
-            $pg_handler = Kernel::isLocal() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
+            $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
             $this->card_receipt_url = $pg_handler->getCardReceiptUrl($transaction);
         }
     }
