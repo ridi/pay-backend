@@ -7,9 +7,6 @@ use Predis\Client;
 
 abstract class IdempotentRequestProcessor
 {
-    private const STATUS_RUNNING = 'RUNNING';
-    private const STATUS_COMPLETED = 'COMPLETED';
-
     /** @var string 중복 Request 방지를 위한 identifier */
     private $request_id;
 
@@ -26,11 +23,14 @@ abstract class IdempotentRequestProcessor
     }
 
     /**
+     * pessimistic lock 방식 이용
+     * lock를 획득한 경우에만 request를 처리할 수 있다.
+     *
      * @throws DuplicatedRequestException
      */
     public function process()
     {
-        if ($this->isRunnable()) {
+        if ($this->lock()) {
             $this->setTtl();
 
             $result = $this->run();
@@ -51,9 +51,9 @@ abstract class IdempotentRequestProcessor
     /**
      * @return bool
      */
-    private function isRunnable(): bool
+    private function lock(): bool
     {
-        return $this->redis->hsetnx($this->request_id, 'status', self::STATUS_RUNNING) === 1;
+        return $this->redis->hsetnx($this->request_id, 'lock', 1) === 1;
     }
 
     private function setTtl(): void
@@ -67,7 +67,7 @@ abstract class IdempotentRequestProcessor
      */
     private function isCompleted(): bool
     {
-        return $this->redis->hget($this->request_id, 'status') === self::STATUS_COMPLETED;
+        return $this->redis->hexists($this->request_id, 'result') === 1;
     }
 
     /**
@@ -75,13 +75,7 @@ abstract class IdempotentRequestProcessor
      */
     private function setResult(\JsonSerializable $result): void
     {
-        $this->redis->hmset(
-            $this->request_id,
-            [
-                'status' => self::STATUS_COMPLETED,
-                'result' => json_encode($result)
-            ]
-        );
+        $this->redis->hset($this->request_id, 'result', json_encode($result));
     }
 
     /**
