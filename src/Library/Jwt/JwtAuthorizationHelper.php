@@ -95,7 +95,7 @@ class JwtAuthorizationHelper
          *   - 대문자 이용
          */
         $key_name = str_replace('-', '_', strtoupper("{$service_part}_{$key_type}"));
-        $key = str_replace("\\n", "\n", getenv($key_name));
+        $key = str_replace("\\n", "\n", getenv($key_name, true));
 
         return empty($key) ? null : $key;
     }

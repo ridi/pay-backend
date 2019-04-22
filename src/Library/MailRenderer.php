@@ -24,7 +24,7 @@ class MailRenderer
 
     private function addGlobalVariables(): void
     {
-        $ridi_pay_url = getenv('RIDI_PAY_URL');
+        $ridi_pay_url = getenv('RIDI_PAY_URL', true);
 
         $this->twig->addGlobal('RIDI_PAY_URL', $ridi_pay_url);
         $this->twig->addGlobal('RIDI_PAY_SETTINGS_URL', $ridi_pay_url . '/settings');

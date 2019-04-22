@@ -54,7 +54,7 @@ class EntityManagerProvider
         if ($is_dev) {
             $config->setAutoGenerateProxyClasses(ProxyFactory::AUTOGENERATE_EVAL);
         } else {
-            $entity_version = getenv('GIT_REVISION');
+            $entity_version = getenv('GIT_REVISION', true);
 
             /** @var \Doctrine\Common\Cache\CacheProvider $metadata_cache */
             $metadata_cache = $config->getMetadataCacheImpl();

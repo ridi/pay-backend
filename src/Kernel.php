@@ -114,6 +114,6 @@ class Kernel extends BaseKernel
      */
     private static function getEnv(): string
     {
-        return getenv('APP_ENV');
+        return getenv('APP_ENV', true);
     }
 }

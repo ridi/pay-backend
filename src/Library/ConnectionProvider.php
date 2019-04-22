@@ -53,9 +53,9 @@ class ConnectionProvider
      */
     private static function getConnectionParams(string $connection_group): array
     {
-        $database_url = getenv('DATABASE_URL_' . $connection_group);
+        $database_url = getenv('DATABASE_URL_' . $connection_group, true);
         if (empty($database_url)) {
-            $database_url = getenv('DATABASE_URL');
+            $database_url = getenv('DATABASE_URL', true);
             if (empty($database_url)) {
                 throw new \Exception('DB connection parameters are missing!');
             }

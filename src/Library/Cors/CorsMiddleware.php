@@ -112,7 +112,7 @@ class CorsMiddleware implements EventSubscriberInterface
     private static function getAccessControlAllowOrigins(): array
     {
         return [
-            getenv('RIDI_PAY_URL')
+            getenv('RIDI_PAY_URL', true)
         ];
     }
 }

@@ -20,7 +20,7 @@ class JwtAuthorizationMiddlewareTest extends WebTestCase
      */
     protected static function createKernel(array $options = []): DummyKernel
     {
-        return new DummyKernel(getenv('APP_ENV'), true);
+        return new DummyKernel(getenv('APP_ENV', true), true);
     }
 
     /**

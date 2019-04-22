@@ -29,9 +29,9 @@ class KcpHandler implements PgHandlerInterface
     public static function create(): KcpHandler
     {
         $client = new Client(
-            getenv('KCP_SITE_CODE'),
-            getenv('KCP_SITE_KEY'),
-            getenv('KCP_GROUP_ID')
+            getenv('KCP_SITE_CODE', true),
+            getenv('KCP_SITE_KEY', true),
+            getenv('KCP_GROUP_ID', true)
         );
 
         return new KcpHandler($client, true);
@@ -43,9 +43,9 @@ class KcpHandler implements PgHandlerInterface
     public static function createWithTaxDeduction(): KcpHandler
     {
         $client = new Client(
-            getenv('KCP_TAX_DEDUCTION_SITE_CODE'),
-            getenv('KCP_TAX_DEDUCTION_SITE_KEY'),
-            getenv('KCP_TAX_DEDUCTION_GROUP_ID')
+            getenv('KCP_TAX_DEDUCTION_SITE_CODE', true),
+            getenv('KCP_TAX_DEDUCTION_SITE_KEY', true),
+            getenv('KCP_TAX_DEDUCTION_GROUP_ID', true)
         );
 
         return new KcpHandler($client, true);

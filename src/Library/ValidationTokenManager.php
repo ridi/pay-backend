@@ -51,6 +51,6 @@ class ValidationTokenManager
      */
     private static function getRedisClient(): Client
     {
-        return new Client(['host' => getenv('REDIS_HOST')]);
+        return new Client(['host' => getenv('REDIS_HOST', true)]);
     }
 }

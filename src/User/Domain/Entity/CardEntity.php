@@ -228,7 +228,7 @@ class CardEntity
      */
     private static function getPgBillKeySecret(): string
     {
-        return base64_decode(getenv('PG_BILL_KEY_SECRET'));
+        return base64_decode(getenv('PG_BILL_KEY_SECRET', true));
     }
 
     /**

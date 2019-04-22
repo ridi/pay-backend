@@ -180,7 +180,7 @@ class PartnerEntity
      */
     private static function getPartnerSecretKeySecret(): string
     {
-        return base64_decode(getenv('PARTNER_SECRET_KEY_SECRET'));
+        return base64_decode(getenv('PARTNER_SECRET_KEY_SECRET', true));
     }
 
     /**
