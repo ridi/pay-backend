@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db4b5bc460d59c986c6d85c377aa4774",
+    "content-hash": "9e5f1c1041077d9481e7c0f5c333accd",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1680,16 +1680,16 @@
         },
         {
             "name": "ridibooks/oauth2",
-            "version": "v0.1.7",
+            "version": "v0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ridi/php-oauth2.git",
-                "reference": "48beddae058f930f0555b2e4b76cb1789e89bb2a"
+                "reference": "5c476c168be95202b792af35c54ad73c2b77d457"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ridi/php-oauth2/zipball/48beddae058f930f0555b2e4b76cb1789e89bb2a",
-                "reference": "48beddae058f930f0555b2e4b76cb1789e89bb2a",
+                "url": "https://api.github.com/repos/ridi/php-oauth2/zipball/5c476c168be95202b792af35c54ad73c2b77d457",
+                "reference": "5c476c168be95202b792af35c54ad73c2b77d457",
                 "shasum": ""
             },
             "require": {
@@ -1714,7 +1714,7 @@
                 "MIT"
             ],
             "description": "Ridibooks OAuth2",
-            "time": "2018-11-02T09:23:38+00:00"
+            "time": "2019-04-23T00:21:42+00:00"
         },
         {
             "name": "sentry/sentry",

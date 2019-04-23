@@ -25,7 +25,7 @@
         "predis/predis": "^1.1",
         "ramsey/uuid-doctrine": "^1.4",
         "ridibooks/crm": "^1.0",
-        "ridibooks/oauth2": "^0.1.7",
+        "ridibooks/oauth2": "^0.2.0",
         "sentry/sentry": "^1.9",
         "symfony/console": "^4.1",
         "symfony/flex": "^1.1",
