@@ -18,7 +18,7 @@ class CmsController extends BaseController
 {
     /**
      * @Route("/users/{u_idx}/cards/history", methods={"GET"}, requirements={"u_idx"="^\d+$"})
-     * @JwtAuth()
+     * @JwtAuth(isses={"store"})
      *
      * @OA\Get(
      *   path="/users/{u_idx}/cards/history",
@@ -78,7 +78,7 @@ class CmsController extends BaseController
 
     /**
      * @Route("/users/{u_idx}/onetouch/history", methods={"GET"}, requirements={"u_idx"="^\d+$"})
-     * @JwtAuth()
+     * @JwtAuth(isses={"store"})
      *
      * @OA\Get(
      *   path="/users/{u_idx}/onetouch/history",
@@ -138,7 +138,7 @@ class CmsController extends BaseController
 
     /**
      * @Route("/users/{u_idx}/pin/history", methods={"GET"}, requirements={"u_idx"="^\d+$"})
-     * @JwtAuth()
+     * @JwtAuth(isses={"store"})
      *
      * @OA\Get(
      *   path="/users/{u_idx}/pin/history",

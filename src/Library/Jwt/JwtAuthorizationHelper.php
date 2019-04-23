@@ -54,20 +54,21 @@ class JwtAuthorizationHelper
 
     /**
      * @param string $jwt
+     * @param string[] $isses
      * @param string $aud
      * @return object
      * @throws \Exception
      */
-    public static function decodeJwt(string $jwt, string $aud)
+    public static function decodeJwt(string $jwt, array $isses, string $aud)
     {
         $payload = JWT::jsonDecode(JWT::urlsafeB64Decode(explode('.', $jwt)[1]));
 
-        if (!isset($payload->aud) || ($payload->aud !== $aud)) {
-            throw new \Exception('Invalid aud');
+        if (!isset($payload->iss) || !in_array($payload->iss, $isses)) {
+            throw new \Exception('Invalid iss');
         }
 
-        if (!isset($payload->iss)) {
-            throw new \Exception("Field 'iss' should be defined");
+        if (!isset($payload->aud) || ($payload->aud !== $aud)) {
+            throw new \Exception('Invalid aud');
         }
 
         $rsa_public_key = self::getKey($payload->iss, $aud, true);

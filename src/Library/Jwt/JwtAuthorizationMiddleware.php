@@ -47,12 +47,13 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
         }
 
         [$controller, $method_name] = $event->getController();
-        if (!$this->isJwtAuthAnnotated($controller, $method_name)) {
+        $annotation = $this->getAnnotation($controller, $method_name);
+        if (is_null($annotation)) {
             return;
         }
 
         try {
-            self::authorize($event->getRequest());
+            self::authorize($event->getRequest(), $annotation->getIsses());
         } catch (\Exception $e) {
             $event->setController(function () use ($e) {
                 return new JsonResponse(
@@ -70,9 +71,10 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
 
     /**
      * @param Request $request
+     * @param string[] $isses
      * @throws \Exception
      */
-    private static function authorize(Request $request)
+    private static function authorize(Request $request, array $isses)
     {
         $authorization_header = $request->headers->get('Authorization');
         if (is_null($authorization_header)) {
@@ -84,44 +86,20 @@ class JwtAuthorizationMiddleware implements EventSubscriberInterface
             throw new \Exception('Invalid authorization header');
         }
 
-        JwtAuthorizationHelper::decodeJwt($jwt, JwtAuthorizationServiceNameConstant::RIDI_PAY);
+        JwtAuthorizationHelper::decodeJwt($jwt, $isses, JwtAuthorizationServiceNameConstant::RIDI_PAY);
     }
 
     /**
      * @param mixed $controller
      * @param string $method_name
-     * @return bool
+     * @return null|JwtAuth
      * @throws \ReflectionException
      */
-    private function isJwtAuthAnnotated($controller, string $method_name): bool
-    {
-        return $this->isJwtAuthAnnotatedOnClass($controller)
-            || $this->isJwtAuthAnnotatedOnMethod($controller, $method_name);
-    }
-
-    /**
-     * @param mixed $controller
-     * @return bool
-     * @throws \ReflectionException
-     */
-    private function isJwtAuthAnnotatedOnClass($controller): bool
-    {
-        $reflection_class = new \ReflectionClass($controller);
-
-        return !is_null($this->annotation_reader->getClassAnnotation($reflection_class, JwtAuth::class));
-    }
-
-    /**
-     * @param mixed $controller
-     * @param string $method_name
-     * @return bool
-     * @throws \ReflectionException
-     */
-    private function isJwtAuthAnnotatedOnMethod($controller, string $method_name): bool
+    private function getAnnotation($controller, string $method_name): ?JwtAuth
     {
         $reflection_class = new \ReflectionClass($controller);
         $reflection_method = $reflection_class->getMethod($method_name);
 
-        return !is_null($this->annotation_reader->getMethodAnnotation($reflection_method, JwtAuth::class));
+        return $this->annotation_reader->getMethodAnnotation($reflection_method, JwtAuth::class);
     }
 }

@@ -33,7 +33,7 @@ class UserController extends BaseController
 {
     /**
      * @Route("/users/{u_idx}", methods={"DELETE"}, requirements={"u_idx"="^\d+$"})
-     * @JwtAuth()
+     * @JwtAuth(isses={"store"})
      *
      * @OA\Delete(
      *   path="/users/{u_idx}",
@@ -120,7 +120,7 @@ class UserController extends BaseController
 
     /**
      * @Route("/users/{u_idx}/payment-methods", methods={"GET"}, requirements={"u_idx"="^\d+$"})
-     * @JwtAuth()
+     * @JwtAuth(isses={"store", "ridiselect"})
      *
      * @OA\Get(
      *   path="/users/{u_idx}/payment-methods",
