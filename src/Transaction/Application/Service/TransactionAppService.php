@@ -30,10 +30,7 @@ use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Transaction\Domain\Service\OneTimePaymentTransactionApprovalProcessor;
 use RidiPay\Transaction\Domain\Service\TransactionCancellationProcessor;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
-use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
-use RidiPay\User\Domain\Exception\LeavedUserException;
-use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 
@@ -91,32 +88,6 @@ class TransactionAppService
         $redis->expire($reservation_key, TimeUnitConstant::SEC_IN_HOUR);
 
         return $reservation_id;
-    }
-
-    /**
-     * @param string $reservation_id
-     * @param int $u_idx
-     * @return bool
-     * @throws DeletedPaymentMethodException
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws NotReservedTransactionException
-     * @throws UnregisteredPaymentMethodException
-     * @throws UnsupportedPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function isPinValidationRequired(string $reservation_id, int $u_idx): bool
-    {
-        $reserved_transaction = self::getReservedTransaction($reservation_id, $u_idx);
-
-        $amount = intval($reserved_transaction['amount']);
-        $user = UserAppService::getUserInformation($u_idx);
-        if ($user->is_using_onetouch_pay && $amount < 100000) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -257,7 +228,7 @@ class TransactionAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    private static function getReservedTransaction(string $reservation_id, int $u_idx): array
+    public static function getReservedTransaction(string $reservation_id, int $u_idx): array
     {
         $reservation_key = self::getReservationKey($reservation_id);
 

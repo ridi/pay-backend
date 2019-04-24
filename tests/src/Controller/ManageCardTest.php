@@ -103,12 +103,6 @@ class ManageCardTest extends ControllerTestCase
             ]);
             $client->request(Request::METHOD_POST, '/me/pin', [], [], [], $body);
 
-            $body = json_encode([
-                'enable_onetouch_pay' => true,
-                'validation_token' => $response_content->validation_token
-            ]);
-            $client->request(Request::METHOD_POST, '/me/onetouch', [], [], [], $body);
-
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
             if (!empty($payment_methods->cards)) {
                 $card = $payment_methods->cards[0];
@@ -162,7 +156,6 @@ class ManageCardTest extends ControllerTestCase
             $user = UserAppService::getUserInformation($u_idx);
             $this->assertEmpty($user->payment_methods->cards);
             $this->assertFalse($user->has_pin);
-            $this->assertNull($user->is_using_onetouch_pay);
         }
 
         TestUtil::tearDownOAuth2Doubles();
@@ -192,7 +185,6 @@ class ManageCardTest extends ControllerTestCase
         TestUtil::registerCard(
             $user_indices[1],
             self::PIN,
-            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],
@@ -242,7 +234,6 @@ class ManageCardTest extends ControllerTestCase
         $payment_method_id_of_normal_user = TestUtil::registerCard(
             $user_indices[0],
             '123456',
-            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],
@@ -254,7 +245,6 @@ class ManageCardTest extends ControllerTestCase
         $payment_method_id_of_normal_user_with_ridi_cash_auto_charge = TestUtil::registerCard(
             $user_indices[1],
             '123456',
-            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],
@@ -269,7 +259,6 @@ class ManageCardTest extends ControllerTestCase
         $payment_method_id_of_normal_user_with_ridiselect = TestUtil::registerCard(
             $user_indices[2],
             '123456',
-            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],
@@ -284,7 +273,6 @@ class ManageCardTest extends ControllerTestCase
         $payment_method_id_of_leaved_user = TestUtil::registerCard(
             $user_indices[3],
             '123456',
-            true,
             self::CARD_A['CARD_NUMBER'],
             self::CARD_A['CARD_EXPIRATION_DATE'],
             self::CARD_A['CARD_PASSWORD'],

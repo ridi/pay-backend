@@ -83,7 +83,7 @@ class CardAppService
 
         try {
             $payment_method_repo = PaymentMethodRepository::getRepository();
-            $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+            $payment_method = $payment_method_repo->findOneById($payment_method_id);
             $payment_method->delete();
             $payment_method_repo->save($payment_method);
 
@@ -93,7 +93,6 @@ class CardAppService
             if (empty($available_payment_methods->cards)) {
                 UserAppService::initializePinEntryHistory($u_idx);
                 UserAppService::deletePin($u_idx);
-                UserAppService::deleteOnetouchPay($u_idx);
             }
 
             SubscriptionAppService::optoutSubscriptions($u_idx, $payment_method_id);
@@ -149,7 +148,6 @@ class CardAppService
 
             $payment_method = CardService::useRegisteredCard($u_idx);
             UserAppService::useCreatedPin($u_idx);
-            UserAppService::useSavedOnetouchPaySetting($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {

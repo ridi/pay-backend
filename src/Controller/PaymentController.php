@@ -31,8 +31,6 @@ use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
-use RidiPay\User\Domain\Exception\LeavedUserException;
-use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -227,22 +225,7 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       required={"is_pin_validation_required"},
-     *       @OA\Property(
-     *         property="is_pin_validation_required",
-     *         type="boolean",
-     *         description="결제 비밀번호 검증 필요 여부",
-     *         example=true
-     *       ),
-     *       @OA\Property(
-     *         property="validation_token",
-     *         type="string",
-     *         description="is_pin_validation_required = false인 경우, 발급된 인증 토큰",
-     *         example="550E8400-E29B-41D4-A716-446655440000"
-     *       )
-     *     )
+     *     @OA\JsonContent(type="object")
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -258,22 +241,12 @@ class PaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod"),
-     *         @OA\Schema(ref="#/components/schemas/LeavedUser")
-     *       }
-     *     )
+     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
      *   ),
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/NotFoundUser"),
-     *         @OA\Schema(ref="#/components/schemas/NotReservedTransaction")
-     *       }
-     *     )
+     *     @OA\JsonContent(ref="#/components/schemas/NotReservedTransaction")
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -292,32 +265,9 @@ class PaymentController extends BaseController
         ControllerAccessLogger::logRequest($request, $context);
 
         try {
-            $is_pin_validation_required = TransactionAppService::isPinValidationRequired(
-                $reservation_id,
-                $this->getUidx()
-            );
-            if (!$is_pin_validation_required) {
-                $validation_token = TransactionAppService::generateValidationToken($reservation_id);
-            }
-
-            $data = ['is_pin_validation_required' => $is_pin_validation_required];
-            if (isset($validation_token)) {
-                $data['validation_token'] = $validation_token;
-            }
-
-            $response = self::createSuccessResponse($data);
-        } catch (LeavedUserException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::LEAVED_USER,
-                $e->getMessage()
-            );
-        } catch (NotFoundUserException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
+            TransactionAppService::getReservedTransaction($reservation_id, $this->getUidx());
+            
+            $response = self::createSuccessResponse();
         } catch (DeletedPaymentMethodException $e) {
             $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,

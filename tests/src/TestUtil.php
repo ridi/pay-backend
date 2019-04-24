@@ -124,7 +124,6 @@ class TestUtil
     /**
      * @param int $u_idx
      * @param string $pin
-     * @param bool $enable_onetouch_pay
      * @param string $card_number
      * @param string $card_expiration_date
      * @param string $card_password
@@ -145,7 +144,6 @@ class TestUtil
     public static function registerCard(
         int $u_idx,
         string $pin,
-        bool $enable_onetouch_pay,
         string $card_number,
         string $card_expiration_date,
         string $card_password,
@@ -171,9 +169,7 @@ class TestUtil
         );
         // 2단계: 결제 비밀번호 정보 등록
         UserAppService::createPin($oauth2_user->getUidx(), $pin);
-        // 3단계: 원터치 결제 설정 정보 등록
-        UserAppService::setOnetouchPay($oauth2_user->getUidx(), $enable_onetouch_pay);
-        // 4단계: 1 ~ 3단계의 등록 정보 저장
+        // 3단계: 1 ~ 2단계의 등록 정보 저장
         CardAppService::finishCardRegistration($oauth2_user);
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);

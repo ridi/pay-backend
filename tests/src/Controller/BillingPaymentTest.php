@@ -33,7 +33,6 @@ class BillingPaymentTest extends ControllerTestCase
         self::$payment_method_id = TestUtil::registerCard(
             self::$u_idx,
             '123456',
-            true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],

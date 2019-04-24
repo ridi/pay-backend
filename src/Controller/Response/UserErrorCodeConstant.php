@@ -36,13 +36,6 @@ use Symfony\Component\HttpFoundation\Response;
  *   @OA\Property(property="message", type="string", example="이용자가 아닙니다.")
  * )
  * @OA\Schema(
- *   schema="OnetouchPaySettingChangeDeclined",
- *   type="object",
- *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="ONETOUCH_PAY_SETTING_CHANGE_DECLINED"),
- *   @OA\Property(property="message", type="string", example="결제 비밀번호를 설정해주세요.")
- * )
- * @OA\Schema(
  *   schema="PinEntryBlocked",
  *   type="object",
  *   required={"code", "message"},
@@ -91,7 +84,6 @@ class UserErrorCodeConstant
     public const DELETED_PAYMENT_METHOD = 'DELETED_PAYMENT_METHOD';
     public const LEAVED_USER = 'LEAVED_USER';
     public const NOT_FOUND_USER = 'NOT_FOUND_USER';
-    public const ONETOUCH_PAY_SETTING_CHANGE_DECLINED = 'ONETOUCH_PAY_SETTING_CHANGE_DECLINED';
     public const PIN_ENTRY_BLOCKED = 'PIN_ENTRY_BLOCKED';
     public const PIN_UNMATCHED = 'PIN_UNMATCHED';
     public const UNAUTHORIZED_CARD_REGISTRATION = 'UNAUTHORIZED_CARD_REGISTRATION';
@@ -104,7 +96,6 @@ class UserErrorCodeConstant
         self::DELETED_PAYMENT_METHOD => Response::HTTP_FORBIDDEN,
         self::LEAVED_USER => Response::HTTP_FORBIDDEN,
         self::NOT_FOUND_USER => Response::HTTP_NOT_FOUND,
-        self::ONETOUCH_PAY_SETTING_CHANGE_DECLINED => Response::HTTP_FORBIDDEN,
         self::PIN_ENTRY_BLOCKED => Response::HTTP_FORBIDDEN,
         self::PIN_UNMATCHED => Response::HTTP_BAD_REQUEST,
         self::UNAUTHORIZED_CARD_REGISTRATION => Response::HTTP_UNAUTHORIZED,

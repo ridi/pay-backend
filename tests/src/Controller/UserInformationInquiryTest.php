@@ -9,7 +9,6 @@ use RidiPay\Tests\TestUtil;
 use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
-use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -55,8 +54,7 @@ class UserInformationInquiryTest extends ControllerTestCase
                         ]
                     ]
                 ],
-                'has_pin' => true,
-                'is_using_onetouch_pay' => true
+                'has_pin' => true
             ]);
             $this->assertSame($expected_response, $response_content);
         }
@@ -73,7 +71,6 @@ class UserInformationInquiryTest extends ControllerTestCase
      * @return array
      * @throws LeavedUserException
      * @throws NotFoundUserException
-     * @throws OnetouchPaySettingChangeDeclinedException
      * @throws WrongFormattedPinException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -86,7 +83,6 @@ class UserInformationInquiryTest extends ControllerTestCase
         $payment_method_id = TestUtil::registerCard(
             $user_indices[0],
             '123456',
-            true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],

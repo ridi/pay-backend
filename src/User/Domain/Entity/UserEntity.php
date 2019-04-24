@@ -65,12 +65,13 @@ class UserEntity
 
     /**
      * @param int $u_idx
+     * @throws \Exception
      */
     public function __construct(int $u_idx)
     {
         $this->u_idx = $u_idx;
         $this->pin = null;
-        $this->is_using_onetouch_pay = null;
+        $this->is_using_onetouch_pay = false; // 신규 유저 생성 시 원터치 결제 비활성화
         $this->created_at = new \DateTime();
         $this->leaved_at = null;
     }
@@ -160,29 +161,6 @@ class UserEntity
     private static function hashPin(string $pin)
     {
         return password_hash($pin, PASSWORD_DEFAULT);
-    }
-
-    /**
-     * @return null|bool
-     */
-    public function isUsingOnetouchPay(): ?bool
-    {
-        return $this->is_using_onetouch_pay;
-    }
-
-    public function enableOnetouchPay(): void
-    {
-        $this->is_using_onetouch_pay = true;
-    }
-
-    public function disableOnetouchPay(): void
-    {
-        $this->is_using_onetouch_pay = false;
-    }
-
-    public function deleteOnetouchPay(): void
-    {
-        $this->is_using_onetouch_pay = null;
     }
 
     /**
