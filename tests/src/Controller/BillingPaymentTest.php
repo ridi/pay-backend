@@ -4,9 +4,11 @@ declare(strict_types=1);
 namespace RidiPay\Tests\Controller;
 
 use Ramsey\Uuid\Uuid;
+use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
+use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -71,7 +73,8 @@ class BillingPaymentTest extends ControllerTestCase
             'amount' => $amount,
             'buyer_id' => TestUtil::U_ID,
             'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com'
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
         ]);
         self::$client->request(
             Request::METHOD_POST,
@@ -97,7 +100,8 @@ class BillingPaymentTest extends ControllerTestCase
             'amount' => $amount,
             'buyer_id' => TestUtil::U_ID,
             'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com'
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
         ]);
         self::$client->request(
             Request::METHOD_POST,
@@ -145,7 +149,8 @@ class BillingPaymentTest extends ControllerTestCase
             'amount' => $amount,
             'buyer_id' => TestUtil::U_ID,
             'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com'
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
         ]);
 
         // Unauthorized subscription payment
@@ -185,5 +190,111 @@ class BillingPaymentTest extends ControllerTestCase
         // Authorized subscription resumption
         self::$client->request(Request::METHOD_PUT, "/payments/subscriptions/{$subscription_id}/resume");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * 동일한 invoice_id에 대해서 중복 결제 승인이 발생하지 않는지 확인
+     * @throws \Exception
+     */
+    public function testPaymentIdempotency()
+    {
+        $product_name = 'mock';
+        $amount = 10000;
+
+        // 정기 결제 등록
+        $body = json_encode([
+            'payment_method_id' => self::$payment_method_id,
+            'product_name' => $product_name
+        ]);
+        self::$client->request(Request::METHOD_POST, '/payments/subscriptions', [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+
+        $subscription_id = json_decode(self::$client->getResponse()->getContent())->subscription_id;
+        $subscription_payment_url = "/payments/subscriptions/{$subscription_id}/pay";
+        $invoice_id = Uuid::uuid4()->toString();
+
+        // 동일한 invoice_id로 결제 승인
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => $invoice_id
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $transaction_id = $response_content->transaction_id;
+        $partner_transaction_id = $response_content->partner_transaction_id;
+        $pg_transaction_id = TransactionRepository::getRepository()->findOneByUuid(
+            Uuid::fromString($transaction_id)
+        )->getPgTransactionId();
+
+        // 동일한 invoice_id로 결제 승인 retry
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => $invoice_id
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($transaction_id, $response_content->transaction_id);
+        $this->assertSame($partner_transaction_id, $response_content->partner_transaction_id);
+        $this->assertSame(
+            $pg_transaction_id,
+            TransactionRepository::getRepository()->findOneByUuid(
+                Uuid::fromString($transaction_id)
+            )->getPgTransactionId()
+        );
+
+        // 결제 취소
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($transaction_id, $response->transaction_id);
+        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+
+        // 결제 취소 retry
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
+        $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame(TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION, $response->code);
+
+        // 다른 invoice id로 결제 승인
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $this->assertNotSame($transaction_id, $response_content->transaction_id);
+        $this->assertNotSame($partner_transaction_id, $response_content->partner_transaction_id);
+
+        $transaction_id = $response_content->transaction_id;
+        $partner_transaction_id = $response_content->partner_transaction_id;
+
+        // 결제 취소
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($transaction_id, $response->transaction_id);
+        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+
+        // 결제 취소 retry
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
+        $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame(TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION, $response->code);
     }
 }
