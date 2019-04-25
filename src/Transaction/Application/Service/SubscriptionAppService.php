@@ -249,7 +249,8 @@ class SubscriptionAppService
             [
                 SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE,
                 SubscriptionConstant::PRODUCT_RIDISELECT
-            ]
+            ],
+            true
         );
     }
 

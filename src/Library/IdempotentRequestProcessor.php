@@ -19,7 +19,7 @@ abstract class IdempotentRequestProcessor
     public function __construct(string $request_id)
     {
         $this->request_id = hash('sha256', $request_id);
-        $this->redis = new Client(['host' => getenv('REDIS_HOST')]);
+        $this->redis = new Client(['host' => getenv('REDIS_HOST', true)]);
     }
 
     /**
