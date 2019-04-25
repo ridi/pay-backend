@@ -63,7 +63,7 @@ class JwtAuthorizationHelper
     {
         $payload = JWT::jsonDecode(JWT::urlsafeB64Decode(explode('.', $jwt)[1]));
 
-        if (!isset($payload->iss) || !in_array($payload->iss, $isses)) {
+        if (!isset($payload->iss) || !in_array($payload->iss, $isses, true)) {
             throw new \Exception('Invalid iss');
         }
 
