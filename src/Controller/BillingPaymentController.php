@@ -55,7 +55,7 @@ class BillingPaymentController extends BaseController
      *         description="RIDI Pay 결제 수단 ID",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       ),
-     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책")
+     *       @OA\Property(property="product_name", type="string", description="구독 상품", example="리디셀렉트 구독"),
      *     )
      *   ),
      *   @OA\Response(
@@ -71,14 +71,14 @@ class BillingPaymentController extends BaseController
      *       @OA\Property(
      *         property="subscription_id",
      *         type="string",
-     *         description="RIDI Pay 정기 결제 ID",
+     *         description="RIDI Pay 구독 ID",
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
      *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
      *       @OA\Property(
      *         property="subscribed_at",
      *         type="string",
-     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         description="구독 등록 일시(ISO 8601 Format)",
      *         example="2018-06-07T01:59:30+09:00"
      *       )
      *     )
@@ -176,7 +176,7 @@ class BillingPaymentController extends BaseController
      *
      * @OA\Delete(
      *   path="/payments/subscriptions/{subscription_id}",
-     *   summary="정기 결제 해지",
+     *   summary="구독 해지",
      *   tags={"public-api"},
      *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
      *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
@@ -184,7 +184,7 @@ class BillingPaymentController extends BaseController
      *     name="subscription_id",
      *     in="path",
      *     required=true,
-     *     description="RIDI Pay 정기 결제 ID",
+     *     description="RIDI Pay 구독 ID",
      *     example="550E8400-E29B-41D4-A716-446655440000",
      *     @OA\Schema(type="string")
      *   ),
@@ -202,20 +202,20 @@ class BillingPaymentController extends BaseController
      *       @OA\Property(
      *         property="subscription_id",
      *         type="string",
-     *         description="RIDI Pay 정기 결제 ID",
+     *         description="RIDI Pay 구독 ID",
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
      *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
      *       @OA\Property(
      *         property="subscribed_at",
      *         type="string",
-     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         description="구독 등록 일시(ISO 8601 Format)",
      *         example="2018-06-07T01:59:30+09:00"
      *       ),
      *       @OA\Property(
      *         property="unsubscribed_at",
      *         type="string",
-     *         description="정기 결제 해지 일시(ISO 8601 Format)",
+     *         description="구독 해지 일시(ISO 8601 Format)",
      *         example="2018-06-07T03:30:30+09:00"
      *       )
      *     )
@@ -310,7 +310,7 @@ class BillingPaymentController extends BaseController
      *
      * @OA\Put(
      *   path="/payments/subscriptions/{subscription_id}/resume",
-     *   summary="정기 결제 해지 취소",
+     *   summary="구독 해지 취소",
      *   tags={"public-api"},
      *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
      *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
@@ -318,7 +318,7 @@ class BillingPaymentController extends BaseController
      *     name="subscription_id",
      *     in="path",
      *     required=true,
-     *     description="RIDI Pay 정기 결제 ID",
+     *     description="RIDI Pay 구독 ID",
      *     example="550E8400-E29B-41D4-A716-446655440000",
      *     @OA\Schema(type="string")
      *   ),
@@ -335,14 +335,14 @@ class BillingPaymentController extends BaseController
      *       @OA\Property(
      *         property="subscription_id",
      *         type="string",
-     *         description="RIDI Pay 정기 결제 ID",
+     *         description="RIDI Pay 구독 ID",
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
-     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
+     *       @OA\Property(property="product_name", type="string", description="구독 상품", example="리디셀렉트 구독"),
      *       @OA\Property(
      *         property="subscribed_at",
      *         type="string",
-     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         description="구독 등록 일시(ISO 8601 Format)",
      *         example="2018-06-07T01:59:30+09:00"
      *       ),
      *     )
@@ -469,7 +469,7 @@ class BillingPaymentController extends BaseController
      *
      * @OA\Post(
      *   path="/payments/subscriptions/{subscription_id}/pay",
-     *   summary="정기 결제 승인",
+     *   summary="구독 결제 승인",
      *   tags={"public-api"},
      *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
      *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
@@ -477,7 +477,7 @@ class BillingPaymentController extends BaseController
      *     name="subscription_id",
      *     in="path",
      *     required=true,
-     *     description="RIDI Pay 정기 결제 ID",
+     *     description="RIDI Pay 구독 ID",
      *     example="550E8400-E29B-41D4-A716-446655440000",
      *     @OA\Schema(type="string")
      *   ),
@@ -492,7 +492,7 @@ class BillingPaymentController extends BaseController
      *       @OA\Property(
      *         property="invoice_id",
      *         type="string",
-     *         description="가맹점에서 중복 정기 결제를 방지하기 위해서 입력하는 Identifier"
+     *         description="가맹점에서 중복 결제를 방지하기 위해서 입력하는 Identifier"
      *       )
      *     )
      *   ),
@@ -520,21 +520,21 @@ class BillingPaymentController extends BaseController
      *       @OA\Property(
      *         property="subscription_id",
      *         type="string",
-     *         description="RIDI Pay 정기 결제 ID",
+     *         description="RIDI Pay 구독 ID",
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
-     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
-     *       @OA\Property(property="amount", type="integer", description="결제 금액", example="10000"),
+     *       @OA\Property(property="product_name", type="string", description="구독 결제 상품", example="리디셀렉트 구독"),
+     *       @OA\Property(property="amount", type="integer", description="구독 결제 금액", example="10000"),
      *       @OA\Property(
      *         property="subscribed_at",
      *         type="string",
-     *         description="정기 결제 등록 일시(ISO 8601 Format)",
+     *         description="구독 등록 일시(ISO 8601 Format)",
      *         example="2018-06-07T01:59:30+09:00"
      *       ),
      *       @OA\Property(
      *         property="approved_at",
      *         type="string",
-     *         description="정기 결제 승인 일시(ISO 8601 Format)",
+     *         description="구독 결제 승인 일시(ISO 8601 Format)",
      *         example="2018-06-07T03:30:30+09:00"
      *       )
      *     )

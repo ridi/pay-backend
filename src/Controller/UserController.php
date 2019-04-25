@@ -609,7 +609,7 @@ class UserController extends BaseController
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="결제 비밀번호 인증 후 발급된 토큰",
+     *         description="결제 비밀번호 확인 후 발급된 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )

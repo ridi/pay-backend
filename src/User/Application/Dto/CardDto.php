@@ -49,7 +49,7 @@ class CardDto extends PaymentMethodDto
      *   )
      * )
      *
-     * @var string[] 연결된 정기 결제 서비스명
+     * @var string[] 연결된 구독명
      */
     public $subscriptions;
 

@@ -67,7 +67,7 @@ class OneTimePaymentController extends BaseController
      *       @OA\Property(
      *         property="return_url",
      *         type="string",
-     *         description="RIDI Pay 결제 인증 성공/실패 후, Redirect 되는 가맹점 URL",
+     *         description="RIDI Pay 결제 비밀번호 확인 성공/실패 후, Redirect 되는 가맹점 URL",
      *         example="https://ridibooks.com/payment/callback/ridi-pay"
      *       )
      *     )
@@ -323,7 +323,7 @@ class OneTimePaymentController extends BaseController
      *
      * @OA\Post(
      *   path="/payments/{reservation_id}",
-     *   summary="결제 인증 성공 후, 결제 생성",
+     *   summary="결제 비밀번호 확인 성공 후, 결제 생성",
      *   tags={"private-api"},
      *   @OA\Parameter(
      *     name="reservation_id",
@@ -339,7 +339,7 @@ class OneTimePaymentController extends BaseController
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="결제 인증 후 발급된 토큰",
+     *         description="결제 비밀번호 확인 후 발급된 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )

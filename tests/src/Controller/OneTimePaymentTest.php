@@ -113,7 +113,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $client->request(Request::METHOD_GET, '/payments/' . self::$reservation_id);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
-        // 결제 비밀번호 인증
+        // 결제 비밀번호 확인
         $pin_validation_body = json_encode([
             'pin' => $pin,
             'reservation_id' => self::$reservation_id
@@ -184,7 +184,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $client->request(Request::METHOD_GET, '/payments/' . self::$reservation_id);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
-        // 결제 비밀번호 인증
+        // 결제 비밀번호 확인
         $pin_validation_body = json_encode([
             'pin' => $pin,
             'reservation_id' => self::$reservation_id

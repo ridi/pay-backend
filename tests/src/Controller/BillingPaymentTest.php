@@ -55,7 +55,7 @@ class BillingPaymentTest extends ControllerTestCase
         $product_name = 'mock';
         $amount = 10000;
 
-        // 정기 결제 등록
+        // 구독 등록
         $body = json_encode([
             'payment_method_id' => self::$payment_method_id,
             'product_name' => $product_name
@@ -66,7 +66,7 @@ class BillingPaymentTest extends ControllerTestCase
         $response_content = json_decode(self::$client->getResponse()->getContent());
         $subscription_id = $response_content->subscription_id;
 
-        // 정기 결제 승인
+        // 구독 결제 승인
         $body = json_encode([
             'partner_transaction_id' => Uuid::uuid4()->toString(),
             'amount' => $amount,
@@ -85,15 +85,15 @@ class BillingPaymentTest extends ControllerTestCase
         );
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
-        // 정기 결제 해지
+        // 구독 해지
         self::$client->request(Request::METHOD_DELETE, "/payments/subscriptions/{$subscription_id}");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
-        // 정기 결제 재개
+        // 구독 재개
         self::$client->request(Request::METHOD_PUT, "/payments/subscriptions/{$subscription_id}/resume");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
-        // 정기 결제 승인
+        // 구독 결제 승인
         $body = json_encode([
             'partner_transaction_id' => Uuid::uuid4()->toString(),
             'amount' => $amount,
@@ -200,7 +200,7 @@ class BillingPaymentTest extends ControllerTestCase
         $product_name = 'mock';
         $amount = 10000;
 
-        // 정기 결제 등록
+        // 구독 등록
         $body = json_encode([
             'payment_method_id' => self::$payment_method_id,
             'product_name' => $product_name

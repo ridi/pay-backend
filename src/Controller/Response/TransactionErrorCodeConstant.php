@@ -47,7 +47,7 @@ use Symfony\Component\HttpFoundation\Response;
  *   type="object",
  *   required={"code", "message"},
  *   @OA\Property(property="code", type="string", example="NOT_RESERVED_TRANSACTION"),
- *   @OA\Property(property="message", type="string", example="올바르지 않은 결제 요청입니다.")
+ *   @OA\Property(property="message", type="string", example="예약되지 않은 결제에 대한 요청입니다.")
  * )
  */
 class TransactionErrorCodeConstant
