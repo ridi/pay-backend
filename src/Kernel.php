@@ -98,7 +98,7 @@ class Kernel extends BaseKernel
      */
     public static function isDev(): bool
     {
-        return in_array(self::getEnv(), self::DEVELOPMENT_ENVIRONMENTS);
+        return in_array(self::getEnv(), self::DEVELOPMENT_ENVIRONMENTS, true);
     }
 
     /**
@@ -106,7 +106,7 @@ class Kernel extends BaseKernel
      */
     public static function isLocal(): bool
     {
-        return in_array(self::getEnv(), [self::ENV_LOCAL, self::ENV_PHPUNIT]);
+        return in_array(self::getEnv(), [self::ENV_LOCAL, self::ENV_PHPUNIT], true);
     }
 
     /**

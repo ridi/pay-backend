@@ -64,7 +64,8 @@ class CardRegistrationResponse extends PgResponse
                 self::KCP_RESPONSE_CODE_UNMATCHED_PASSWORD,
                 self::KCP_RESPONSE_CODE_UNMATCHED_BIRTH_DATE,
                 self::KCP_RESPONSE_CODE_FORBIDDEN_CARD
-            ]
+            ],
+            true
         );
     }
 }
