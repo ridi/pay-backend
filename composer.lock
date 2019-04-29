@@ -1680,16 +1680,16 @@
         },
         {
             "name": "ridibooks/oauth2",
-            "version": "v0.2.0",
+            "version": "v0.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ridi/php-oauth2.git",
-                "reference": "5c476c168be95202b792af35c54ad73c2b77d457"
+                "reference": "c00e5477f193aaad30dcf6618469fceb3421616b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ridi/php-oauth2/zipball/5c476c168be95202b792af35c54ad73c2b77d457",
-                "reference": "5c476c168be95202b792af35c54ad73c2b77d457",
+                "url": "https://api.github.com/repos/ridi/php-oauth2/zipball/c00e5477f193aaad30dcf6618469fceb3421616b",
+                "reference": "c00e5477f193aaad30dcf6618469fceb3421616b",
                 "shasum": ""
             },
             "require": {
@@ -1714,7 +1714,7 @@
                 "MIT"
             ],
             "description": "Ridibooks OAuth2",
-            "time": "2019-04-23T00:21:42+00:00"
+            "time": "2019-04-29T02:50:34+00:00"
         },
         {
             "name": "sentry/sentry",
