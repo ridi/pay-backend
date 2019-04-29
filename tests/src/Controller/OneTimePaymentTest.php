@@ -11,6 +11,7 @@ use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
+use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\PaymentMethodConstant;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
@@ -102,22 +103,12 @@ class OneTimePaymentTest extends ControllerTestCase
         );
 
         // 결제 예약 정보 조회
-        $client = self::createClientWithOAuth2AccessToken(
-            [],
-            [
-                'HTTP_Api-Key' => self::$partner->api_key,
-                'HTTP_Secret-Key' => self::$partner->secret_key,
-                'CONTENT_TYPE' => 'application/json'
-            ]
-        );
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_GET, '/payments/' . self::$reservation_id);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // 결제 비밀번호 확인
-        $pin_validation_body = json_encode([
-            'pin' => $pin,
-            'reservation_id' => self::$reservation_id
-        ]);
+        $pin_validation_body = json_encode(['pin' => $pin]);
         $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $pin_validation_response = json_decode($client->getResponse()->getContent());
@@ -173,22 +164,12 @@ class OneTimePaymentTest extends ControllerTestCase
         );
 
         // 결제 예약 정보 조회
-        $client = self::createClientWithOAuth2AccessToken(
-            [],
-            [
-                'HTTP_Api-Key' => self::$partner->api_key,
-                'HTTP_Secret-Key' => self::$partner->secret_key,
-                'CONTENT_TYPE' => 'application/json'
-            ]
-        );
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_GET, '/payments/' . self::$reservation_id);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // 결제 비밀번호 확인
-        $pin_validation_body = json_encode([
-            'pin' => $pin,
-            'reservation_id' => self::$reservation_id
-        ]);
+        $pin_validation_body = json_encode(['pin' => $pin]);
         $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $pin_validation_response = json_decode($client->getResponse()->getContent());
@@ -281,7 +262,7 @@ class OneTimePaymentTest extends ControllerTestCase
         );
 
         // 결제 생성
-        $validation_token = TransactionAppService::generateValidationToken(self::$reservation_id);
+        $validation_token = UserAppService::generateValidationToken(self::$u_idx);
         $this->assertCreatePaymentSuccessfully(
             $validation_token,
             self::$reservation_id,
@@ -377,14 +358,7 @@ class OneTimePaymentTest extends ControllerTestCase
         int $amount
     ): void {
         // 결제 생성
-        $client = self::createClientWithOAuth2AccessToken(
-            [],
-            [
-                'HTTP_Api-Key' => self::$partner->api_key,
-                'HTTP_Secret-Key' => self::$partner->secret_key,
-                'CONTENT_TYPE' => 'application/json'
-            ]
-        );
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $body = json_encode(['validation_token' => $validation_token]);
         $client->request(Request::METHOD_POST, "/payments/${reservation_id}", [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());

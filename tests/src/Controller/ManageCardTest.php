@@ -7,12 +7,13 @@ use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
-use RidiPay\Library\Validation\ApiSecret;
 use RidiPay\Partner\Application\Service\PartnerAppService;
+use RidiPay\Partner\Domain\Repository\PartnerRepository;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Tests\TestUtil;
-use RidiPay\Transaction\Application\Service\SubscriptionAppService;
+use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
+use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
 use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\SubscriptionConstant;
@@ -250,11 +251,12 @@ class ManageCardTest extends ControllerTestCase
             self::CARD_A['CARD_PASSWORD'],
             self::TAX_ID
         );
-        SubscriptionAppService::subscribe(
-            new ApiSecret($partner->api_key, $partner->secret_key),
-            $payment_method_id_of_normal_user_with_ridi_cash_auto_charge,
+        $subscription = new SubscriptionEntity(
+            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_of_normal_user_with_ridi_cash_auto_charge),
+            PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE
         );
+        SubscriptionRepository::getRepository()->save($subscription);
 
         $payment_method_id_of_normal_user_with_ridiselect = TestUtil::registerCard(
             $user_indices[2],
@@ -264,11 +266,12 @@ class ManageCardTest extends ControllerTestCase
             self::CARD_A['CARD_PASSWORD'],
             self::TAX_ID
         );
-        SubscriptionAppService::subscribe(
-            new ApiSecret($partner->api_key, $partner->secret_key),
-            $payment_method_id_of_normal_user_with_ridiselect,
+        $subscription = new SubscriptionEntity(
+            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_of_normal_user_with_ridiselect),
+            PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDISELECT
         );
+        SubscriptionRepository::getRepository()->save($subscription);
 
         $payment_method_id_of_leaved_user = TestUtil::registerCard(
             $user_indices[3],

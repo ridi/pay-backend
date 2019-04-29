@@ -4,12 +4,14 @@ declare(strict_types=1);
 namespace RidiPay\Controller;
 
 use OpenApi\Annotations as OA;
+use Ridibooks\OAuth2\Symfony\Annotation\OAuth2;
 use RidiPay\Controller\Logger\ControllerAccessLogger;
 use RidiPay\Controller\Response\CommonErrorCodeConstant;
 use RidiPay\Controller\Response\PartnerErrorCodeConstant;
 use RidiPay\Controller\Response\PgErrorCodeConstant;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
+use RidiPay\Library\Cors\Annotation\Cors;
 use RidiPay\Library\DuplicatedRequestException;
 use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\SentryHelper;
@@ -22,6 +24,7 @@ use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
+use RidiPay\Transaction\Domain\Exception\NotReservedSubscriptionException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -31,24 +34,25 @@ use Symfony\Component\Routing\Annotation\Route;
 class BillingPaymentController extends BaseController
 {
     /**
-     * @Route("/payments/subscriptions", methods={"POST"})
+     * @Route("/payments/subscriptions/reserve", methods={"POST"})
      * @ParamValidator(
      *   rules={
      *     {"param"="payment_method_id", "constraints"={"Uuid"}},
-     *     {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}}
+     *     {"param"="product_name", "constraints"={"NotBlank", {"Type"="string"}}},
+     *     {"param"="return_url", "constraints"={"Url"}}
      *   }
      * )
      *
      * @OA\Post(
-     *   path="/payments/subscriptions",
-     *   summary="정기 결제 등록",
+     *   path="/payments/reserve",
+     *   summary="구독 예약",
      *   tags={"public-api"},
      *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
      *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
      *   @OA\RequestBody(
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"payment_method_id", "product_name"},
+     *       required={"payment_method_id", "product_name", "return_url"},
      *       @OA\Property(
      *         property="payment_method_id",
      *         type="string",
@@ -56,6 +60,12 @@ class BillingPaymentController extends BaseController
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       ),
      *       @OA\Property(property="product_name", type="string", description="구독 상품", example="리디셀렉트 구독"),
+     *       @OA\Property(
+     *         property="return_url",
+     *         type="string",
+     *         description="RIDI Pay 결제 비밀번호 확인 성공/실패 후, Redirect 되는 가맹점 URL",
+     *         example="https://ridibooks.com/select/payments/ridi-pay/callback"
+     *       )
      *     )
      *   ),
      *   @OA\Response(
@@ -63,25 +73,14 @@ class BillingPaymentController extends BaseController
      *     description="Success",
      *     @OA\JsonContent(
      *       type="object",
-     *       required={
-     *         "subscription_id",
-     *         "product_name",
-     *         "subscribed_at"
-     *       },
-     *       @OA\Property(
-     *         property="subscription_id",
-     *         type="string",
-     *         description="RIDI Pay 구독 ID",
-     *         example="880E8200-A29B-24B2-8716-42B65544A000"
-     *       ),
-     *       @OA\Property(property="product_name", type="string", description="결제 상품", example="리디북스 전자책"),
-     *       @OA\Property(
-     *         property="subscribed_at",
-     *         type="string",
-     *         description="구독 등록 일시(ISO 8601 Format)",
-     *         example="2018-06-07T01:59:30+09:00"
-     *       )
+     *       required={"reservation_id"},
+     *       @OA\Property(property="reservation_id", type="string", example="880E8200-A29B-24B2-8716-42B65544A000")
      *     )
+     *   ),
+     *   @OA\Response(
+     *     response="400",
+     *     description="Bad Request",
+     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -108,7 +107,7 @@ class BillingPaymentController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function subscribe(Request $request): JsonResponse
+    public function reserveSubscription(Request $request): JsonResponse
     {
         if ($request->getContentType() !== BaseController::REQUEST_CONTENT_TYPE) {
             return BaseController::createErrorResponse(
@@ -123,17 +122,14 @@ class BillingPaymentController extends BaseController
             $partner_api_secret = ApiSecretValidator::validate($request);
 
             $body = json_decode($request->getContent());
-            $result = SubscriptionAppService::subscribe(
+            $reservation_id = SubscriptionAppService::reserveSubscription(
                 $partner_api_secret,
                 $body->payment_method_id,
-                $body->product_name
+                $body->product_name,
+                $body->return_url
             );
 
-            $response = BaseController::createSuccessResponse([
-                'subscription_id' => $result->subscription_id,
-                'product_name' => $result->product_name,
-                'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
-            ]);
+            $response = BaseController::createSuccessResponse(['reservation_id' => $reservation_id]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
             $response = BaseController::createErrorResponse(
                 PartnerErrorCodeConstant::class,
@@ -150,6 +146,224 @@ class BillingPaymentController extends BaseController
             $response = BaseController::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
+            $response = BaseController::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
+    }
+
+    /**
+     * @Route(
+     *   "/payments/subscriptions/{reservation_id}",
+     *   methods={"OPTIONS"},
+     *   requirements={
+     *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
+     * @Cors(methods={"GET"})
+     *
+     * @return JsonResponse
+     */
+    public function getReservationPreflight(): JsonResponse
+    {
+        return BaseController::createSuccessResponse();
+    }
+
+    /**
+     * @Route(
+     *   "/payments/subscriptions/{reservation_id}",
+     *   methods={"GET"},
+     *   requirements={
+     *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
+     * @OAuth2()
+     *
+     * @OA\Get(
+     *   path="/payments/subscriptions/{reservation_id}",
+     *   summary="구독 예약 정보 조회",
+     *   tags={"private-api"},
+     *   @OA\Parameter(
+     *     name="reservation_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 구독 예약 ID, [POST] /payments/subscriptions/reserve API 참고",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(type="object")
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
+     *         @OA\Schema(ref="#/components/schemas/InvalidValidationToken"),
+     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(ref="#/components/schemas/NotReservedSubscription")
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @param string $reservation_id
+     * @return JsonResponse
+     */
+    public function getReservation(Request $request, string $reservation_id): JsonResponse
+    {
+        $context = ['u_idx' => $this->getUidx()];
+        ControllerAccessLogger::logRequest($request, $context);
+
+        try {
+            SubscriptionAppService::getReservedSubscription($reservation_id, $this->getUidx());
+
+            $response = self::createSuccessResponse();
+        } catch (NotReservedSubscriptionException $e) {
+            $response = BaseController::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_RESERVED_SUBSCRIPTION,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
+            $response = BaseController::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
+    }
+
+    /**
+     * @Route(
+     *   "/payments/subscriptions/{reservation_id}",
+     *   methods={"POST"},
+     *   requirements={
+     *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
+     * @ParamValidator(
+     *   rules={
+     *     {"param"="validation_token", "constraints"={"Uuid"}}
+     *   }
+     * )
+     * @OAuth2()
+     *
+     * @OA\Post(
+     *   path="/payments/subscriptions/{reservation_id}",
+     *   summary="구독 등록",
+     *   tags={"private-api"},
+     *   @OA\RequestBody(
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"validation_token"},
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="결제 비밀번호 확인 후 발급된 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"return_url"},
+     *       @OA\Property(
+     *         property="return_url",
+     *         type="string",
+     *         example="https://ridibooks.com/select/payments/ridi-pay/callback?subscription_id=550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnregisteredPaymentMethod"),
+     *         @OA\Schema(ref="#/components/schemas/NotReservedSubscription")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @param string $reservation_id
+     * @return JsonResponse
+     */
+    public function subscribe(Request $request, string $reservation_id): JsonResponse
+    {
+        if ($request->getContentType() !== BaseController::REQUEST_CONTENT_TYPE) {
+            return BaseController::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
+            );
+        }
+
+        ControllerAccessLogger::logRequest($request);
+
+        try {
+            $result = SubscriptionAppService::subscribe($reservation_id, $this->getUidx());
+
+            $response = BaseController::createSuccessResponse([
+                'return_url' => $result->return_url . '?' . http_build_query(['subscription_id' => $result->subscription_id])
+            ]);
+        } catch (UnregisteredPaymentMethodException $e) {
+            $response = BaseController::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            $response = BaseController::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
+                $e->getMessage()
+            );
+        } catch (NotReservedSubscriptionException $e) {
+            $response = BaseController::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_RESERVED_SUBSCRIPTION,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
@@ -523,7 +737,6 @@ class BillingPaymentController extends BaseController
      *         description="RIDI Pay 구독 ID",
      *         example="880E8200-A29B-24B2-8716-42B65544A000"
      *       ),
-     *       @OA\Property(property="product_name", type="string", description="구독 결제 상품", example="리디셀렉트 구독"),
      *       @OA\Property(property="amount", type="integer", description="구독 결제 금액", example="10000"),
      *       @OA\Property(
      *         property="subscribed_at",

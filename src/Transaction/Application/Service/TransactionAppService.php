@@ -9,7 +9,6 @@ use RidiPay\Library\Pg\Kcp\Order;
 use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\Validation\ApiSecret;
-use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Application\Service\PgAppService;
@@ -88,18 +87,6 @@ class TransactionAppService
         $redis->expire($reservation_key, TimeUnitConstant::SEC_IN_HOUR);
 
         return $reservation_id;
-    }
-
-    /**
-     * @param string $reservation_id
-     * @return string
-     * @throws \Exception
-     */
-    public static function generateValidationToken(string $reservation_id): string
-    {
-        $reservation_key = self::getReservationKey($reservation_id);
-
-        return ValidationTokenManager::generate($reservation_key, 5 * TimeUnitConstant::SEC_IN_MINUTE);
     }
 
     /**
@@ -247,7 +234,7 @@ class TransactionAppService
      * @param string $reservation_id
      * @return string
      */
-    public static function getReservationKey(string $reservation_id): string
+    private static function getReservationKey(string $reservation_id): string
     {
         return "reservation:${reservation_id}";
     }

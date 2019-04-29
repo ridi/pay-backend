@@ -670,11 +670,7 @@ class UserController extends BaseController
             $body = json_decode($request->getContent());
             UserAppService::validatePin($this->getUidx(), $body->pin);
 
-            if (isset($body->reservation_id)) {
-                $validation_token = TransactionAppService::generateValidationToken($body->reservation_id);
-            } else {
-                $validation_token = UserAppService::generateValidationToken($this->getUidx());
-            }
+            $validation_token = UserAppService::generateValidationToken($this->getUidx());
 
             $response = self::createSuccessResponse(['validation_token' => $validation_token]);
         } catch (LeavedUserException $e) {

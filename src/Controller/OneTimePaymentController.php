@@ -25,6 +25,7 @@ use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
+use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -407,8 +408,8 @@ class OneTimePaymentController extends BaseController
 
         try {
             $body = json_decode($request->getContent());
-            $reservation_key = TransactionAppService::getReservationKey($reservation_id);
-            $validation_token = ValidationTokenManager::get($reservation_key);
+            $user_key = UserAppService::getUserKey($this->getUidx());
+            $validation_token = ValidationTokenManager::get($user_key);
             if ($validation_token !== $body->validation_token) {
                 $response = BaseController::createErrorResponse(
                     CommonErrorCodeConstant::class,
@@ -420,7 +421,7 @@ class OneTimePaymentController extends BaseController
             }
 
             $result = TransactionAppService::createTransaction($this->getUidx(), $reservation_id);
-            ValidationTokenManager::invalidate($reservation_key);
+            ValidationTokenManager::invalidate($user_key);
 
             $response = BaseController::createSuccessResponse([
                 'return_url' => $result->return_url . '?' . http_build_query(['transaction_id' => $result->transaction_id])
