@@ -15,7 +15,6 @@ use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
-use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -94,11 +93,6 @@ class PaymentMethodController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/CardAlreadyExists")
-     *   ),
-     *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
      *     @OA\JsonContent(
@@ -138,12 +132,6 @@ class PaymentMethodController extends BaseController
             $validation_token = CardAppService::generateValidationToken($this->getUidx());
 
             $response = self::createSuccessResponse(['validation_token' => $validation_token]);
-        } catch (CardAlreadyExistsException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::CARD_ALREADY_EXISTS,
-                $e->getMessage()
-            );
         } catch (CardRegistrationException $e) {
             $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,

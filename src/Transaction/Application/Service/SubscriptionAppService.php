@@ -23,10 +23,12 @@ use RidiPay\Transaction\Application\Dto\SubscriptionPaymentDto;
 use RidiPay\Transaction\Application\Dto\UnsubscriptionDto;
 use RidiPay\Library\DuplicatedRequestException;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
+use RidiPay\Transaction\Domain\Entity\SubscriptionPaymentMethodHistoryEntity;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedSubscriptionException;
+use RidiPay\Transaction\Domain\Repository\SubscriptionPaymentMethodHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
 use RidiPay\Transaction\Domain\Service\BillingPaymentTransactionApprovalProcessor;
 use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
@@ -35,6 +37,7 @@ use RidiPay\Transaction\Domain\SubscriptionConstant;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
+use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 
 class SubscriptionAppService
 {
@@ -303,6 +306,47 @@ class SubscriptionAppService
                     SentryHelper::captureException($e);
                 }
             }
+        }
+    }
+
+    /**
+     * @param int $previous_payment_method_id
+     * @param int $new_payment_method_id
+     * @throws UnregisteredPaymentMethodException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    public static function changePaymentMethod(int $previous_payment_method_id, int $new_payment_method_id): void
+    {
+        $new_payment_method = PaymentMethodRepository::getRepository()->findOneById($new_payment_method_id);
+        if ($new_payment_method === null) {
+            throw new UnregisteredPaymentMethodException();
+        }
+
+        $subscription_repo = SubscriptionRepository::getRepository();
+        $subscriptions = $subscription_repo->findActiveOnesByPaymentMethodId($previous_payment_method_id);
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            foreach ($subscriptions as $subscription) {
+                $subscription->setPaymentMethodId($new_payment_method_id);
+                $subscription_repo->save($subscription);
+
+                // 결제 수단 변경 이력 기록
+                SubscriptionPaymentMethodHistoryRepository::getRepository()->save(
+                    new SubscriptionPaymentMethodHistoryEntity($subscription, $new_payment_method)
+                );
+            }
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            throw $t;
         }
     }
 

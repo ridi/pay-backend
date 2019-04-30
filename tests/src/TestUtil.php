@@ -19,7 +19,6 @@ use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Entity\CardIssuerEntity;
-use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
@@ -129,7 +128,6 @@ class TestUtil
      * @param string $card_password
      * @param string $tax_id
      * @return string
-     * @throws CardAlreadyExistsException
      * @throws CardRegistrationException
      * @throws LeavedUserException
      * @throws NotFoundUserException

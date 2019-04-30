@@ -13,7 +13,6 @@ use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\ValidationTokenManager;
-use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\User\Application\Service\CardAppService;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -398,7 +397,13 @@ class UserController extends BaseController
             }
 
             UserAppService::createPin($this->getUidx(), $body->pin);
-            $card = CardAppService::finishCardRegistration($this->getOAuth2User());
+
+            if (empty(PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx())->cards)) {
+                $card = CardAppService::finishCardRegistration($this->getOAuth2User());
+            } else {
+                $card = CardAppService::changeCard($this->getOAuth2User());
+            }
+
             ValidationTokenManager::invalidate($card_registration_key);
 
             $response = self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);

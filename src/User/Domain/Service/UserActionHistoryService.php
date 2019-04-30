@@ -32,6 +32,15 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
+    public static function logChangeCard(int $u_idx): void
+    {
+        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_CHANGE_CARD);
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws \Exception
+     */
     public static function logUpdatePin(int $u_idx): void
     {
         self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_UPDATE_PIN);

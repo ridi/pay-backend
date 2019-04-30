@@ -62,7 +62,6 @@ class OneTimePaymentTest extends ControllerTestCase
      * @throws \Doctrine\ORM\ORMException
      * @throws \RidiPay\Pg\Domain\Exception\CardRegistrationException
      * @throws \RidiPay\Pg\Domain\Exception\UnsupportedPgException
-     * @throws \RidiPay\User\Domain\Exception\CardAlreadyExistsException
      * @throws \RidiPay\User\Domain\Exception\LeavedUserException
      * @throws \RidiPay\User\Domain\Exception\NotFoundUserException
      * @throws \RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException
