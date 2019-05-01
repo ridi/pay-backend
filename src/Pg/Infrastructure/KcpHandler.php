@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace RidiPay\Pg\Infrastructure;
 
+use GuzzleHttp\Exception\GuzzleException;
 use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
-use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\Pg\Kcp\Order;
+use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\Pg\Kcp\Util;
 use RidiPay\Pg\Domain\Service\Buyer;
 use RidiPay\Pg\Domain\Service\CardRegistrationResponse;
@@ -30,7 +31,7 @@ class KcpHandler implements PgHandlerInterface
     {
         $client = Client::create();
 
-        return new KcpHandler($client, true);
+        return new KcpHandler($client);
     }
 
     /**
@@ -40,27 +41,16 @@ class KcpHandler implements PgHandlerInterface
     {
         $client = Client::createWithTaxDeduction();
 
-        return new KcpHandler($client, true);
+        return new KcpHandler($client);
     }
 
-    /**
-     * @return KcpHandler
-     */
-    public static function createWithTest(): KcpHandler
-    {
-        $client = Client::create();
-
-        return new KcpHandler($client, false);
-    }
 
     /**
      * @param Client $client
-     * @param bool $is_prod
      */
-    private function __construct(Client $client, bool $is_prod)
+    private function __construct(Client $client)
     {
         $this->client = $client;
-        $this->is_prod = $is_prod;
     }
 
     /**
@@ -69,7 +59,7 @@ class KcpHandler implements PgHandlerInterface
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
      * @return CardRegistrationResponse
-     * @throws \Exception
+     * @throws GuzzleException
      */
     public function registerCard(
         string $card_number,
@@ -94,6 +84,7 @@ class KcpHandler implements PgHandlerInterface
      * @param string $pg_bill_key
      * @param Buyer $buyer
      * @return TransactionApprovalResponse
+     * @throws GuzzleException
      * @throws UnderMinimumPaymentAmountException
      */
     public function approveTransaction(
@@ -126,7 +117,7 @@ class KcpHandler implements PgHandlerInterface
      * @param string $pg_transaction_id
      * @param string $cancel_reason
      * @return TransactionCancellationResponse
-     * @throws \Exception
+     * @throws GuzzleException
      */
     public function cancelTransaction(string $pg_transaction_id, string $cancel_reason): TransactionCancellationResponse
     {

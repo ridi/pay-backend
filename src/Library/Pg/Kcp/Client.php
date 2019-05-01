@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 class Client
 {
     /** @var int  */
-    private const TEN_SECONDS = 10;
+    private const TIMEOUT_IN_SECONDS = 10;
 
     /** @var HttpClient */
     private $http_client;
@@ -30,14 +30,16 @@ class Client
     /**
      * @return Client
      */
-    public static function create(): Client {
+    public static function create(): Client
+    {
         return new Client(false);
     }
 
     /**
      * @return Client
      */
-    public static function createWithTaxDeduction(): Client {
+    public static function createWithTaxDeduction(): Client
+    {
         return new Client(true);
     }
 
@@ -45,11 +47,12 @@ class Client
      * Client constructor.
      * @param bool $is_tax_deductible
      */
-    private function __construct(bool $is_tax_deductible = false) {
+    private function __construct(bool $is_tax_deductible = false)
+    {
         $this->http_client = new HttpClient([
             'base_uri' => getenv('KCP_HTTP_PROXY_HOST'),
-            'connect_timeout' => self::TEN_SECONDS,
-            'timeout' => self::TEN_SECONDS,
+            'connect_timeout' => self::TIMEOUT_IN_SECONDS,
+            'timeout' => self::TIMEOUT_IN_SECONDS,
             'headers' => [ 'Content-Type' => 'application/json' ]
         ]);
         $this->is_tax_deductible = $is_tax_deductible;
@@ -70,17 +73,14 @@ class Client
             'card_password' => $card->getPassword()
         ];
 
-        try {
-            $response = $this->http_client->request(
-                Request::METHOD_POST,
-                '/payments/batch-key',
-                [ 'body' => \json_encode($data) ]
-            );
-            $decoded_response = \json_decode($response->getBody()->getContents(), true);
-            return new BatchKeyResponse($decoded_response);
-        } catch (\Exception $e) {
-            throw $e;
-        }
+
+        $response = $this->http_client->request(
+            Request::METHOD_POST,
+            '/payments/batch-key',
+            [ 'body' => \json_encode($data) ]
+        );
+        $decoded_response = \json_decode($response->getBody()->getContents(), true);
+        return new BatchKeyResponse($decoded_response);
     }
 
     /**
@@ -103,17 +103,14 @@ class Client
             'installment_months' => $installment_months
         ];
 
-        try {
-            $response = $this->http_client->request(
-                Request::METHOD_POST,
-                '/payments',
-                [ 'body' => \json_encode($data) ]
-            );
-            $decoded_response = \json_decode($response->getBody()->getContents(), true);
-            return new BatchOrderResponse($decoded_response);
-        } catch (\Exception $e) {
-            throw $e;
-        }
+
+        $response = $this->http_client->request(
+            Request::METHOD_POST,
+            '/payments',
+            [ 'body' => \json_encode($data) ]
+        );
+        $decoded_response = \json_decode($response->getBody()->getContents(), true);
+        return new BatchOrderResponse($decoded_response);
     }
 
     /**
@@ -138,6 +135,7 @@ class Client
             $decoded_response = \json_decode($response->getBody()->getContents(), true);
             return new CancelTransactionResponse($decoded_response);
         } catch (\Exception $e) {
+            // 기취소된 결제 건 취소로 인한 409 상태를 응답받았을 때
             if ($e instanceof RequestException && $e->getCode() === Response::HTTP_CONFLICT) {
                 $decoded_response = \json_decode($e->getResponse()->getBody()->getContents(), true);
                 return new CancelTransactionResponse($decoded_response);
