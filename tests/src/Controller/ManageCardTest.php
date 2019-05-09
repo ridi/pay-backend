@@ -16,6 +16,7 @@ use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
 use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
+use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionPaymentMethodChangeNotifier;
 use RidiPay\Transaction\Domain\SubscriptionConstant;
 use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
@@ -166,6 +167,8 @@ class ManageCardTest extends ControllerTestCase
         string $payment_method_id,
         array $expected_subscription_ids
     ) {
+        Test::double(RidiSelectSubscriptionPaymentMethodChangeNotifier::class, ['optout' => null]);
+        
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $body = json_encode([
@@ -206,6 +209,8 @@ class ManageCardTest extends ControllerTestCase
         $this->assertMigrateSubscriptionSuccessfully($expected_subscription_ids, $card->payment_method_id);
 
         TestUtil::tearDownOAuth2Doubles();
+
+        Test::clean(RidiSelectSubscriptionPaymentMethodChangeNotifier::class);
     }
 
     /**
