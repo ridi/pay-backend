@@ -18,6 +18,7 @@ use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\Validation\ApiSecretValidationException;
 use RidiPay\Library\Validation\ApiSecretValidator;
+use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Partner\Domain\Exception\UnauthorizedPartnerException;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
@@ -25,6 +26,7 @@ use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedSubscriptionException;
+use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -203,7 +205,22 @@ class BillingPaymentController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent(type="object")
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"is_pin_validation_required"},
+     *       @OA\Property(
+     *         property="is_pin_validation_required",
+     *         type="boolean",
+     *         description="결제 비밀번호 검증 필요 여부",
+     *         example="true"
+     *       ),
+     *       @OA\Property(
+     *         property="validation_token",
+     *         type="string",
+     *         description="is_pin_validation_required = false인 경우 발급되는 토큰",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -240,7 +257,15 @@ class BillingPaymentController extends BaseController
         try {
             SubscriptionAppService::getReservedSubscription($reservation_id, $this->getUidx());
 
-            $response = self::createSuccessResponse();
+            $is_pin_validation_required = UserAppService::isPinValidationRequired($this->getUidx());
+
+            $data = [
+                'is_pin_validation_required' => $is_pin_validation_required
+            ];
+            if (!$is_pin_validation_required) {
+                $data['validation_token'] = ValidationTokenManager::get(UserAppService::getUserKey($this->getUidx()));
+            }
+            $response = self::createSuccessResponse($data);
         } catch (NotReservedSubscriptionException $e) {
             $response = BaseController::createErrorResponse(
                 TransactionErrorCodeConstant::class,
@@ -340,10 +365,25 @@ class BillingPaymentController extends BaseController
             );
         }
 
+        $context = ['u_idx' => $this->getUidx()];
         ControllerAccessLogger::logRequest($request);
 
         try {
+            $body = json_decode($request->getContent());
+            $user_key = UserAppService::getUserKey($this->getUidx());
+            $validation_token = ValidationTokenManager::get($user_key);
+            if ($validation_token !== $body->validation_token) {
+                $response = self::createErrorResponse(
+                    CommonErrorCodeConstant::class,
+                    CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
+                );
+                ControllerAccessLogger::logResponse($request, $response, $context);
+
+                return $response;
+            }
+
             $result = SubscriptionAppService::subscribe($reservation_id, $this->getUidx());
+            ValidationTokenManager::invalidate($user_key);
 
             $response = BaseController::createSuccessResponse([
                 'return_url' => $result->return_url . '?' . http_build_query(['subscription_id' => $result->subscription_id])
