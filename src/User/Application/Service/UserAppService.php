@@ -81,6 +81,8 @@ class UserAppService
         UserRepository::getRepository()->save($user);
 
         $redis->hdel($user_key, [$field_name]);
+
+        UserAppService::generateValidationToken($u_idx);
     }
 
     /**
@@ -175,6 +177,15 @@ class UserAppService
         }
 
         $abuse_blocker->initialize();
+    }
+
+    /**
+     * @param int $u_idx
+     * @return bool
+     */
+    public static function isPinValidationRequired(int $u_idx): bool
+    {
+        return ValidationTokenManager::get(self::getUserKey($u_idx)) === null;
     }
 
     /**

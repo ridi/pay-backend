@@ -78,13 +78,19 @@ class BillingPaymentTest extends ControllerTestCase
         $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_GET, '/payments/subscriptions/' . self::$reservation_id);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $subscription_reservation_response = json_decode($client->getResponse()->getContent());
+        $is_pin_validation_required = $subscription_reservation_response->is_pin_validation_required;
 
-        // 결제 비밀번호 확인
-        $pin_validation_body = json_encode(['pin' => self::PIN]);
-        $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
-        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        $pin_validation_response = json_decode($client->getResponse()->getContent());
-        $validation_token = $pin_validation_response->validation_token;
+        if ($is_pin_validation_required) {
+            // 결제 비밀번호 확인
+            $pin_validation_body = json_encode(['pin' => self::PIN]);
+            $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
+            $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+            $pin_validation_response = json_decode($client->getResponse()->getContent());
+            $validation_token = $pin_validation_response->validation_token;
+        } else {
+            $validation_token = $subscription_reservation_response->validation_token;
+        }
 
         // 구독 등록
         $body = json_encode(['validation_token' => $validation_token]);
@@ -232,13 +238,18 @@ class BillingPaymentTest extends ControllerTestCase
         $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_GET, '/payments/subscriptions/' . $reservation_id);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $subscription_reservation_response = json_decode($client->getResponse()->getContent());
 
-        // 결제 비밀번호 확인
-        $pin_validation_body = json_encode(['pin' => self::PIN]);
-        $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
-        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
-        $pin_validation_response = json_decode($client->getResponse()->getContent());
-        $validation_token = $pin_validation_response->validation_token;
+        if ($subscription_reservation_response->is_pin_validation_required) {
+            // 결제 비밀번호 확인
+            $pin_validation_body = json_encode(['pin' => self::PIN]);
+            $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
+            $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+            $pin_validation_response = json_decode($client->getResponse()->getContent());
+            $validation_token = $pin_validation_response->validation_token;
+        } else {
+            $validation_token = $subscription_reservation_response->validation_token;
+        }
 
         // 구독 등록
         $body = json_encode(['validation_token' => $validation_token]);
