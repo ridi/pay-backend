@@ -44,7 +44,7 @@ class BillingPaymentController extends BaseController
      * )
      *
      * @OA\Post(
-     *   path="/payments/reserve",
+     *   path="/payments/subscriptions/reserve",
      *   summary="구독 예약",
      *   tags={"public-api"},
      *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
