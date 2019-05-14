@@ -93,6 +93,7 @@ class CardAppService
             if (empty($available_payment_methods->cards)) {
                 UserAppService::initializePinEntryHistory($u_idx);
                 UserAppService::deletePin($u_idx);
+                UserAppService::deleteOnetouchPay($u_idx);
             }
 
             SubscriptionAppService::optoutSubscriptions($u_idx, $payment_method_id);
