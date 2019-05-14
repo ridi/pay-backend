@@ -43,7 +43,7 @@ class SubscriptionPaymentMethodHistoryEntity
     private $subscription;
 
     /**
-     * @var int
+     * @var PaymentMethodEntity
      *
      * @ManyToOne(targetEntity="RidiPay\User\Domain\Entity\PaymentMethodEntity")
      * @JoinColumn(name="payment_method_id", referencedColumnName="id", nullable=false)
