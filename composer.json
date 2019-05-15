@@ -27,11 +27,11 @@
         "ridibooks/crm": "^1.0",
         "ridibooks/oauth2": "^0.2.0",
         "sentry/sentry": "^1.9",
-        "symfony/console": "^4.1",
+        "symfony/console": "^4.2",
         "symfony/flex": "^1.1",
-        "symfony/framework-bundle": "^4.1",
-        "symfony/validator": "^4.1",
-        "symfony/yaml": "^4.1",
+        "symfony/framework-bundle": "^4.2",
+        "symfony/validator": "^4.2",
+        "symfony/yaml": "^4.2",
         "twig/twig": "^2.0",
         "zircote/swagger-php": "^3.0"
     },
@@ -41,9 +41,9 @@
         "phpstan/phpstan-doctrine": "^0.9",
         "phpunit/phpunit": "^7.3",
         "squizlabs/php_codesniffer": "^3.1.0",
-        "symfony/browser-kit": "^4.1",
-        "symfony/dotenv": "^4.1",
-        "symfony/process": "^4.1"
+        "symfony/browser-kit": "^4.2",
+        "symfony/dotenv": "^4.2",
+        "symfony/process": "^4.2"
     },
     "config": {
         "preferred-install": {
@@ -67,7 +67,7 @@
     "extra": {
         "symfony": {
             "allow-contrib": false,
-            "require": "^4.1"
+            "require": "^4.2"
         }
     }
 }
