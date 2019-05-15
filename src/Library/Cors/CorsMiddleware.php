@@ -114,6 +114,7 @@ class CorsMiddleware implements EventSubscriberInterface
         return [
             getenv('RIDI_PAY_URL', true),
             getenv('RIDIBOOKS_SERVER_HOST', true),
+            getenv('RIDISELECT_URL', true)
         ];
     }
 }
