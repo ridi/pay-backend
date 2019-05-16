@@ -326,7 +326,7 @@ class SubscriptionAppService
         }
 
         $subscription_repo = SubscriptionRepository::getRepository();
-        $subscriptions = $subscription_repo->findActiveOnesByPaymentMethodId($previous_payment_method_id);
+        $subscriptions = $subscription_repo->findByPaymentMethodId($previous_payment_method_id);
 
         $first_party_subscriptions = [];
 

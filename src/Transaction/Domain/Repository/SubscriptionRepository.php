@@ -22,6 +22,15 @@ class SubscriptionRepository extends BaseEntityRepository
      * @param int $payment_method_id
      * @return SubscriptionEntity[]
      */
+    public function findByPaymentMethodId(int $payment_method_id): array
+    {
+        return $this->findBy(['payment_method_id' => $payment_method_id]);
+    }
+
+    /**
+     * @param int $payment_method_id
+     * @return SubscriptionEntity[]
+     */
     public function findActiveOnesByPaymentMethodId(int $payment_method_id): array
     {
         return $this->findBy([
