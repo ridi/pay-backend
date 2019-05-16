@@ -14,6 +14,7 @@ use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\User\Application\Service\CardAppService;
+use RidiPay\User\Domain\Exception\PaymentMethodChangeDeclinedException;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -361,6 +362,11 @@ class UserController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(ref="#/components/schemas/PaymentMethodChangeDeclined")
+     *   ),
+     *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
      *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
@@ -407,6 +413,12 @@ class UserController extends BaseController
             ValidationTokenManager::invalidate($card_registration_key);
 
             $response = self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);
+        } catch (PaymentMethodChangeDeclinedException $e) {
+            $response = self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::PAYMENT_METHOD_CHANGE_DECLINED,
+                $e->getMessage()
+            );
         } catch (WrongFormattedPinException $e) {
             $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,

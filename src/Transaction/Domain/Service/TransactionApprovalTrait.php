@@ -3,8 +3,10 @@ declare(strict_types=1);
 
 namespace RidiPay\Transaction\Domain\Service;
 
+use Predis\Client;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\SentryHelper;
+use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
 use RidiPay\Pg\Domain\Service\Buyer;
 use RidiPay\Pg\Domain\Service\PgHandlerInterface;
@@ -13,6 +15,7 @@ use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
 use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
+use RidiPay\User\Application\Service\UserAppService;
 
 trait TransactionApprovalTrait
 {
@@ -33,6 +36,8 @@ trait TransactionApprovalTrait
         string $pg_bill_key,
         Buyer $buyer
     ): TransactionEntity {
+        self::startTransactionApproval($transaction->getUidx(), $transaction->getId());
+
         $pg_response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
         if (!$pg_response->isSuccess()) {
             self::createTransactionHistory($transaction, $pg_response);
@@ -59,7 +64,40 @@ trait TransactionApprovalTrait
             throw $t;
         }
 
+        self::endTransactionApproval($transaction->getUidx());
+
         return $transaction;
+    }
+
+    /**
+     * @param int $u_idx
+     * @return bool
+     */
+    public static function isTransactionApprovalRunning(int $u_idx): bool
+    {
+        $redis = new Client(['host' => getenv('REDIS_HOST', true)]);
+        return $redis->hexists(UserAppService::getUserKey($u_idx), 'transaction') === 1;
+    }
+
+    /**
+     * @param int $u_idx
+     * @param int $transaction_id
+     */
+    private static function startTransactionApproval(int $u_idx, int $transaction_id): void
+    {
+        $redis = new Client(['host' => getenv('REDIS_HOST', true)]);
+        $user_key = UserAppService::getUserKey($u_idx);
+        $redis->hset($user_key, 'transaction', $transaction_id);
+        $redis->expire($user_key, 5 * TimeUnitConstant::SEC_IN_MINUTE);
+    }
+
+    /**
+     * @param int $u_idx
+     */
+    private static function endTransactionApproval(int $u_idx): void
+    {
+        $redis = new Client(['host' => getenv('REDIS_HOST', true)]);
+        $redis->del([UserAppService::getUserKey($u_idx)]);
     }
 
     /**

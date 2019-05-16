@@ -12,10 +12,12 @@ use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
+use RidiPay\Transaction\Domain\Service\TransactionApprovalTrait;
 use RidiPay\User\Application\Dto\CardDto;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
+use RidiPay\User\Domain\Exception\PaymentMethodChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
@@ -24,6 +26,8 @@ use RidiPay\User\Domain\Service\UserActionHistoryService;
 
 class CardAppService
 {
+    use TransactionApprovalTrait;
+
     /**
      * @param int $u_idx
      * @param string $card_number 카드 번호 16자리
@@ -171,6 +175,7 @@ class CardAppService
      * @return CardDto
      * @throws LeavedUserException
      * @throws NotFoundUserException
+     * @throws PaymentMethodChangeDeclinedException
      * @throws UnauthorizedCardRegistrationException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -184,6 +189,9 @@ class CardAppService
         UserAppService::validateUser($oauth2_user->getUidx());
         if (!CardService::isCardRegistrationInProgress($oauth2_user->getUidx())) {
             throw new UnauthorizedCardRegistrationException();
+        }
+        if (self::isTransactionApprovalRunning($oauth2_user->getUidx())) {
+            throw new PaymentMethodChangeDeclinedException();
         }
 
         $em = EntityManagerProvider::getEntityManager();
