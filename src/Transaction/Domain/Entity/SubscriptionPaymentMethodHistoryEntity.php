@@ -28,7 +28,7 @@ class SubscriptionPaymentMethodHistoryEntity
     /**
      * @var int
      *
-     * @Column(name="id", type="bigint", nullable=false, options={"unsigned"=true})
+     * @Column(name="id", type="integer", nullable=false, options={"unsigned"=true})
      * @Id
      * @GeneratedValue(strategy="IDENTITY")
      */

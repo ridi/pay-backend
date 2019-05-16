@@ -81,9 +81,9 @@ trait TransactionApprovalTrait
 
     /**
      * @param int $u_idx
-     * @param int $transaction_id
+     * @param string $transaction_id
      */
-    private static function startTransactionApproval(int $u_idx, int $transaction_id): void
+    private static function startTransactionApproval(int $u_idx, string $transaction_id): void
     {
         $redis = new Client(['host' => getenv('REDIS_HOST', true)]);
         $user_key = UserAppService::getUserKey($u_idx);

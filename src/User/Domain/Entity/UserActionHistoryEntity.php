@@ -15,7 +15,7 @@ namespace RidiPay\User\Domain\Entity;
 class UserActionHistoryEntity
 {
     /**
-     * @var int
+     * @var string
      *
      * @Column(name="id", type="bigint", nullable=false, options={"unsigned"=true})
      * @Id

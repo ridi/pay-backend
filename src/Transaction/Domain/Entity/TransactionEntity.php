@@ -22,7 +22,7 @@ use RidiPay\Transaction\Domain\TransactionStatusConstant;
 class TransactionEntity
 {
     /**
-     * @var int
+     * @var string
      *
      * @Column(name="id", type="bigint", nullable=false, options={"unsigned"=true})
      * @Id
@@ -183,9 +183,9 @@ class TransactionEntity
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getId(): int
+    public function getId(): string
     {
         return $this->id;
     }
