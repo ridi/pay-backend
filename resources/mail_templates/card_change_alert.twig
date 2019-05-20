@@ -1,4 +1,65 @@
 {% extends "mail_base.twig" %}
 {% block contents %}
-  {# TODO #}
+  <h1 style="margin: 0; padding: 40px 0 10px; font-size: 28px; font-weight: 600; color: #2b2f33; text-align: center; line-height: 1.4em;">
+    카드 변경 안내
+  </h1>
+  <table cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: collapse; color: #333; font-size: 13px; line-height: 1.7em; border-top: 1px solid #848484;" >
+    <tbody>
+    <tr>
+      <th style="text-align: left; padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold; background: #f6f6f6;">
+        카드 변경 일시
+      </th>
+      <td style="padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">
+        {{ "now"|date("Y년 m월 d일 H:i") }}
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold; background: #f6f6f6;">
+        카드사
+      </th>
+      <td style="padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">
+        {{ card_issuer_name }}
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold; background: #f6f6f6;">
+        카드 번호
+      </th>
+      <td style="padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">
+        {% import "macros.twig" as macros %}
+        {{ macros.format_iin(iin) }}
+      </td>
+    </tr>
+    <tr>
+      <th style="text-align: left; padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold; background: #f6f6f6;">
+        구독 중인 서비스
+      </th>
+      <td style="padding: 10px 10px 10px 15px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">
+        {{ subscriptions|join(', ') }}
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <div style="padding: 30px 0 40px 0; text-align: center;">
+    <a
+        href="{{ RIDI_PAY_SETTINGS_URL }}"
+        style="
+        display: inline-block;
+        text-decoration: none;
+        margin: 0;
+        padding: 12px 50px;
+        border: 1px solid #1f8ce6;
+        background-color: #1f8ce6;
+        font-size: 13px;
+        line-height: 1em;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        box-shadow: none;
+        border-radius: 2px; -webkit-border-radius: 2px; -moz-border-radius: 2px; -ms-border-radius: 2px;
+      "
+    >
+      카드 관리
+    </a>
+  </div>
 {% endblock %}
