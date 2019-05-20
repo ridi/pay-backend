@@ -119,18 +119,41 @@ class SubscriptionAppService
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
      */
     public static function subscribe(
         string $reservation_id,
         int $u_idx
     ): SubscriptionRegistrationDto {
         $reserved_subscription = self::getReservedSubscription($reservation_id, $u_idx);
-        $subscription = new SubscriptionEntity(
-            intval($reserved_subscription['payment_method_id']),
-            intval($reserved_subscription['partner_id']),
-            $reserved_subscription['product_name']
-        );
-        SubscriptionRepository::getRepository()->save($subscription);
+
+        $payment_method_id = intval($reserved_subscription['payment_method_id']);
+        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+        if ($payment_method === null) {
+            throw new UnregisteredPaymentMethodException();
+        }
+
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $subscription = new SubscriptionEntity(
+                $payment_method_id,
+                intval($reserved_subscription['partner_id']),
+                $reserved_subscription['product_name']
+            );
+            SubscriptionRepository::getRepository()->save($subscription);
+
+            SubscriptionPaymentMethodHistoryRepository::getRepository()->save(
+                new SubscriptionPaymentMethodHistoryEntity($subscription, $payment_method)
+            );
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+
+            throw $t;
+        }
 
         return new SubscriptionRegistrationDto($subscription, $reserved_subscription['return_url']);
     }
