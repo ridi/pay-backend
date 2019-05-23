@@ -386,7 +386,9 @@ class BillingPaymentController extends BaseController
             ValidationTokenManager::invalidate($user_key);
 
             $response = BaseController::createSuccessResponse([
-                'return_url' => $result->return_url . '?' . http_build_query(['subscription_id' => $result->subscription_id])
+                'return_url' => $result->return_url
+                    . (empty(parse_url($result->return_url, PHP_URL_QUERY)) ? '?' : '&')
+                    . http_build_query(['subscription_id' => $result->subscription_id])
             ]);
         } catch (UnregisteredPaymentMethodException $e) {
             $response = BaseController::createErrorResponse(
