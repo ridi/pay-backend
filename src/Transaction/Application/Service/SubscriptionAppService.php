@@ -33,7 +33,6 @@ use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
 use RidiPay\Transaction\Domain\Service\BillingPaymentTransactionApprovalProcessor;
 use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
-use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionPaymentMethodChangeNotifier;
 use RidiPay\Transaction\Domain\SubscriptionConstant;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
@@ -351,17 +350,11 @@ class SubscriptionAppService
         $subscription_repo = SubscriptionRepository::getRepository();
         $subscriptions = $subscription_repo->findByPaymentMethodId($previous_payment_method_id);
 
-        $first_party_subscriptions = [];
-
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
 
         try {
             foreach ($subscriptions as $subscription) {
-                if (self::isFirstPartySubscription($subscription)) {
-                    $first_party_subscriptions[] = $subscription;
-                }
-
                 $subscription->setPaymentMethodId($new_payment_method_id);
                 $subscription_repo->save($subscription);
 
@@ -377,20 +370,6 @@ class SubscriptionAppService
             $em->close();
 
             throw $t;
-        }
-
-        foreach ($first_party_subscriptions as $subscription) {
-            try {
-                self::notifyPaymentMethodChangeToFirstPartySubscription(
-                    $new_payment_method->getUidx(),
-                    $subscription
-                );
-            } catch (\Exception $e) {
-                // First-party Notification 중 발생한 오류가 RIDI Pay의 결제 수단 변경에 영향을 주지 않도록 catch
-                if ($e instanceof ServerException) {
-                    SentryHelper::captureException($e);
-                }
-            }
         }
     }
 
@@ -424,23 +403,6 @@ class SubscriptionAppService
             );
         } elseif ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDISELECT) {
             RidiSelectSubscriptionOptoutManager::optout(
-                $u_idx,
-                $subscription->getUuid()->toString()
-            );
-        }
-    }
-
-    /**
-     * @param int $u_idx
-     * @param SubscriptionEntity $subscription
-     * @throws \Exception
-     */
-    private static function notifyPaymentMethodChangeToFirstPartySubscription(
-        int $u_idx,
-        SubscriptionEntity $subscription
-    ) {
-        if ($subscription->getProductName() === SubscriptionConstant::PRODUCT_RIDISELECT) {
-            RidiSelectSubscriptionPaymentMethodChangeNotifier::notify(
                 $u_idx,
                 $subscription->getUuid()->toString()
             );
