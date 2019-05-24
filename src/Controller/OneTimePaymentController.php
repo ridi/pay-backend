@@ -96,22 +96,38 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPartner")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -273,7 +289,11 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -410,7 +430,11 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="400",
      *     description="Bad Request",
-     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidParameter")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -425,17 +449,29 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NotReservedTransaction")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotReservedTransaction")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -579,12 +615,20 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="400",
      *     description="Bad Request",
-     *     @OA\JsonContent(ref="#/components/schemas/UnderMinimumPaymentAmount"),
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnderMinimumPaymentAmount")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner"),
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPartner")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="403",
@@ -600,7 +644,11 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NotFoundTransaction")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotFoundTransaction")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",

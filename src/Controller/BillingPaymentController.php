@@ -86,22 +86,38 @@ class BillingPaymentController extends BaseController
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPartner")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnregisteredPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -223,22 +239,38 @@ class BillingPaymentController extends BaseController
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPartner")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/AlreadyCancelledSubscription")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledSubscription")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NotFoundSubscription")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotFoundSubscription")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -350,7 +382,11 @@ class BillingPaymentController extends BaseController
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPartner")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="403",
@@ -375,7 +411,11 @@ class BillingPaymentController extends BaseController
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -542,12 +582,20 @@ class BillingPaymentController extends BaseController
      *   @OA\Response(
      *     response="400",
      *     description="Bad Request",
-     *     @OA\JsonContent(ref="#/components/schemas/UnderMinimumPaymentAmount")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnderMinimumPaymentAmount")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/UnauthorizedPartner")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPartner")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="403",

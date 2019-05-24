@@ -81,7 +81,11 @@ class PaymentMethodController extends BaseController
      *   @OA\Response(
      *     response="400",
      *     description="Bad Request",
-     *     @OA\JsonContent(ref="#/components/schemas/InvalidParameter")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidParameter")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -96,7 +100,11 @@ class PaymentMethodController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/CardAlreadyExists")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/CardAlreadyExists")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
@@ -242,7 +250,11 @@ class PaymentMethodController extends BaseController
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
