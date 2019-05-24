@@ -18,7 +18,7 @@ class TransactionHistoryEntity
     private const ACTION_CANCEL = 'CANCEL';
 
     /**
-     * @var int
+     * @var string
      *
      * @Column(name="id", type="bigint", nullable=false, options={"unsigned"=true})
      * @Id
