@@ -41,12 +41,20 @@ class CmsController extends BaseController
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/InvalidJwt")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidJwt")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
@@ -101,12 +109,20 @@ class CmsController extends BaseController
      *   @OA\Response(
      *     response="401",
      *     description="Unauthorized",
-     *     @OA\JsonContent(ref="#/components/schemas/InvalidJwt")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InvalidJwt")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
      *     description="Internal Server Error",
-     *     @OA\JsonContent(ref="#/components/schemas/InternalServerError")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
      *   )
      * )
      *
