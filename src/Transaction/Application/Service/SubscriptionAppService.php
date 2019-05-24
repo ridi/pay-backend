@@ -164,11 +164,9 @@ class SubscriptionAppService
         }
 
         $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
+        $subscription = $em->transactional(function () use ($payment_method, $reserved_subscription) {
             $subscription = new SubscriptionEntity(
-                $payment_method_id,
+                $payment_method->getId(),
                 intval($reserved_subscription['partner_id']),
                 $reserved_subscription['product_name']
             );
@@ -178,12 +176,8 @@ class SubscriptionAppService
                 new SubscriptionPaymentMethodHistoryEntity($subscription, $payment_method)
             );
 
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-
-            throw $t;
-        }
+            return $subscription;
+        });
 
         return new SubscriptionRegistrationDto($subscription, $reserved_subscription['return_url']);
     }
@@ -378,30 +372,20 @@ class SubscriptionAppService
             throw new UnregisteredPaymentMethodException();
         }
 
-        $subscription_repo = SubscriptionRepository::getRepository();
-        $subscriptions = $subscription_repo->findByPaymentMethodId($previous_payment_method_id);
+        $subscriptions = SubscriptionRepository::getRepository()->findByPaymentMethodId($previous_payment_method_id);
 
         $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
+        $em->transactional(function () use ($new_payment_method, $subscriptions) {
             foreach ($subscriptions as $subscription) {
-                $subscription->setPaymentMethodId($new_payment_method_id);
-                $subscription_repo->save($subscription);
+                $subscription->setPaymentMethodId($new_payment_method->getId());
+                SubscriptionRepository::getRepository()->save($subscription);
 
                 // 결제 수단 변경 이력 기록
                 SubscriptionPaymentMethodHistoryRepository::getRepository()->save(
                     new SubscriptionPaymentMethodHistoryEntity($subscription, $new_payment_method)
                 );
             }
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
+        });
     }
 
     /**

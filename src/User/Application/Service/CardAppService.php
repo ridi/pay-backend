@@ -195,9 +195,7 @@ class CardAppService
         }
 
         $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
+        $new_payment_method = $em->transactional(function () use ($oauth2_user) {
             // 기존 카드 삭제
             $payment_method_repo = PaymentMethodRepository::getRepository();
             $previous_payment_methods = $payment_method_repo->getAvailablePaymentMethods($oauth2_user->getUidx());
@@ -220,13 +218,8 @@ class CardAppService
                 );
             }
 
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
+            return $new_payment_method;
+        });
 
         $card = new CardDto($new_payment_method->getCardForOneTimePayment());
         $data = [
