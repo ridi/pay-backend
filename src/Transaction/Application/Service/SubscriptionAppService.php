@@ -121,7 +121,7 @@ class SubscriptionAppService
      * @throws UnregisteredPaymentMethodException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
-     * @throws \Exception
+     * @throws \Throwable
      */
     public static function subscribeOld(
         ApiSecret $partner_api_secret,
@@ -132,10 +132,25 @@ class SubscriptionAppService
             $partner_api_secret->getApiKey(),
             $partner_api_secret->getSecretKey()
         );
-        $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
+        $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_uuid));
+        if ($payment_method === null) {
+            throw new UnregisteredPaymentMethodException();
+        }
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
 
-        $subscription = new SubscriptionEntity($payment_method_id, $partner_id, $product_name);
-        SubscriptionRepository::getRepository()->save($subscription);
+        $em = EntityManagerProvider::getEntityManager();
+        $subscription = $em->transactional(function () use ($payment_method, $partner_id, $product_name) {
+            $subscription = new SubscriptionEntity($payment_method->getId(), $partner_id, $product_name);
+            SubscriptionRepository::getRepository()->save($subscription);
+
+            SubscriptionPaymentMethodHistoryRepository::getRepository()->save(
+                new SubscriptionPaymentMethodHistoryEntity($subscription, $payment_method)
+            );
+
+            return $subscription;
+        });
 
         return new SubscriptionDto($subscription);
     }
@@ -157,10 +172,14 @@ class SubscriptionAppService
     ): SubscriptionRegistrationDto {
         $reserved_subscription = self::getReservedSubscription($reservation_id, $u_idx);
 
-        $payment_method_id = intval($reserved_subscription['payment_method_id']);
-        $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+        $payment_method = PaymentMethodRepository::getRepository()->findOneById(
+            intval($reserved_subscription['payment_method_id'])
+        );
         if ($payment_method === null) {
             throw new UnregisteredPaymentMethodException();
+        }
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
         }
 
         $em = EntityManagerProvider::getEntityManager();
