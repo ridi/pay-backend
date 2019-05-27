@@ -40,6 +40,8 @@ task_definition:
           name: REDIS_HOST
         - value_from: "/ridi-pay/${APP_ENV}/RIDIBOOKS_SERVER_HOST"
           name: RIDIBOOKS_SERVER_HOST
+        - value_from: "/ridi-pay/${APP_ENV}/RIDISELECT_URL"
+          name: RIDISELECT_URL
         - value_from: "/ridi-pay/${APP_ENV}/RIDISELECT_TO_RIDI_PAY_PUBLIC_KEY"
           name: RIDISELECT_TO_RIDI_PAY_PUBLIC_KEY
         - value_from: "/ridi-pay/${APP_ENV}/RIDI_PAY_TO_RIDISELECT_PRIVATE_KEY"
