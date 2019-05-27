@@ -253,12 +253,20 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/DeletedPaymentMethod")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="404",
      *     description="Not Found",
-     *     @OA\JsonContent(ref="#/components/schemas/NotReservedTransaction")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotReservedTransaction")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",

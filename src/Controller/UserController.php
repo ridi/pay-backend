@@ -400,7 +400,11 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="403",
      *     description="Forbidden",
-     *     @OA\JsonContent(ref="#/components/schemas/PaymentMethodChangeDeclined")
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/PaymentMethodChangeDeclined")
+     *       }
+     *     )
      *   ),
      *   @OA\Response(
      *     response="500",
