@@ -192,11 +192,11 @@ class BillingPaymentController extends BaseController
      *     "reservation_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
      *   }
      * )
-     * @Cors(methods={"GET"})
+     * @Cors(methods={"GET", "POST"})
      *
      * @return JsonResponse
      */
-    public function getReservationPreflight(): JsonResponse
+    public function getReservationAndSubscribePreflight(): JsonResponse
     {
         return BaseController::createSuccessResponse();
     }
