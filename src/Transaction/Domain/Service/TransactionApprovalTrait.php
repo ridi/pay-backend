@@ -26,8 +26,6 @@ trait TransactionApprovalTrait
      * @param Buyer $buyer
      * @return TransactionEntity
      * @throws TransactionApprovalException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
     public static function approveTransaction(
@@ -38,28 +36,17 @@ trait TransactionApprovalTrait
     ): TransactionEntity {
         self::startTransactionApproval($transaction->getUidx(), $transaction->getId());
 
-        $pg_response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
-        if (!$pg_response->isSuccess()) {
-            self::createTransactionHistory($transaction, $pg_response);
-
-            throw new TransactionApprovalException($pg_response->getResponseMessage());
-        }
-
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
         try {
-            $transaction->approve($pg_response->getPgTransactionId());
-            TransactionRepository::getRepository()->save($transaction);
+            $pg_response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
+            if (!$pg_response->isSuccess()) {
+                self::createTransactionHistory($transaction, $pg_response);
 
-            self::createTransactionHistory($transaction, $pg_response);
+                throw new TransactionApprovalException($pg_response->getResponseMessage());
+            }
 
-            $em->commit();
+            $transaction = self::makeTransactionApproved($transaction, $pg_response, $pg_handler);
         } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            self::refundPgTransaction($transaction, $pg_handler);
+            self::endTransactionApproval($transaction->getUidx());
 
             throw $t;
         }
@@ -88,7 +75,7 @@ trait TransactionApprovalTrait
         $redis = new Client(['host' => getenv('REDIS_HOST', true)]);
         $user_key = UserAppService::getUserKey($u_idx);
         $redis->hset($user_key, 'transaction', $transaction_id);
-        $redis->expire($user_key, 5 * TimeUnitConstant::SEC_IN_MINUTE);
+        $redis->expire($user_key, TimeUnitConstant::SEC_IN_MINUTE);
     }
 
     /**
@@ -98,6 +85,43 @@ trait TransactionApprovalTrait
     {
         $redis = new Client(['host' => getenv('REDIS_HOST', true)]);
         $redis->del([UserAppService::getUserKey($u_idx)]);
+    }
+
+    /**
+     * @param TransactionEntity $transaction
+     * @param TransactionApprovalResponse $pg_response
+     * @param PgHandlerInterface $pg_handler
+     * @return TransactionEntity
+     * @throws TransactionApprovalException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     */
+    private static function makeTransactionApproved(
+        TransactionEntity $transaction,
+        TransactionApprovalResponse $pg_response,
+        PgHandlerInterface $pg_handler
+    ): TransactionEntity {
+        $em = EntityManagerProvider::getEntityManager();
+        $em->beginTransaction();
+
+        try {
+            $transaction->approve($pg_response->getPgTransactionId());
+            TransactionRepository::getRepository()->save($transaction);
+
+            self::createTransactionHistory($transaction, $pg_response);
+
+            $em->commit();
+        } catch (\Throwable $t) {
+            $em->rollback();
+            $em->close();
+
+            self::refundPgTransaction($transaction, $pg_handler);
+
+            throw $t;
+        }
+
+        return $transaction;
     }
 
     /**
