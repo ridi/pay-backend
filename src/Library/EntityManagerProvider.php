@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace RidiPay\Library;
 
+use Doctrine\DBAL\DBALException;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\ORMException;
 use Doctrine\ORM\Proxy\ProxyFactory;
 use Doctrine\ORM\Tools\Setup;
 use RidiPay\Kernel;
@@ -14,31 +16,29 @@ class EntityManagerProvider
     private static $entity_manager_pool;
 
     /**
-     * @param string $connection_group
      * @return EntityManager
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Exception
+     * @throws DBALException
+     * @throws ORMException
      */
-    public static function getEntityManager(string $connection_group = ConnectionGroupConstant::WRITE): EntityManager
+    public static function getEntityManager(): EntityManager
     {
+        $connection_group = ConnectionGroupConstant::MASTER;
+
         if (!isset(self::$entity_manager_pool[$connection_group])
             || !self::$entity_manager_pool[$connection_group]->isOpen()
         ) {
-            self::$entity_manager_pool[$connection_group] = self::createEntityManager($connection_group);
+            self::$entity_manager_pool[$connection_group] = self::createEntityManager();
         }
 
         return self::$entity_manager_pool[$connection_group];
     }
 
     /**
-     * @param string $connection_group
      * @return EntityManager
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Exception
+     * @throws DBALException
+     * @throws ORMException
      */
-    protected static function createEntityManager(string $connection_group): EntityManager
+    private static function createEntityManager(): EntityManager
     {
         $is_dev = Kernel::isDev();
         $config = Setup::createAnnotationMetadataConfiguration(
@@ -64,7 +64,7 @@ class EntityManagerProvider
             $config->setProxyDir(sys_get_temp_dir() . '/doctrine_proxy/' . $entity_version);
         }
 
-        $connection = ConnectionProvider::getConnection($connection_group);
+        $connection = ConnectionProvider::getConnection();
         $entity_manager = EntityManager::create($connection, $config);
         $platform = $entity_manager->getConnection()->getDatabasePlatform();
         $platform->registerDoctrineTypeMapping('enum', 'string');

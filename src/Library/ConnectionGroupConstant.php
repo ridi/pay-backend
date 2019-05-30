@@ -5,5 +5,5 @@ namespace RidiPay\Library;
 
 abstract class ConnectionGroupConstant
 {
-    public const WRITE = 'WRITE';
+    public const MASTER = 'MASTER';
 }
