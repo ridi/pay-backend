@@ -4,6 +4,11 @@ declare(strict_types=1);
 namespace RidiPay\Library;
 
 use RidiPay\Kernel;
+use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
+use Twig\Loader\FilesystemLoader;
 
 class MailRenderer
 {
@@ -14,8 +19,8 @@ class MailRenderer
 
     public function __construct()
     {
-        $loader = new \Twig_Loader_Filesystem([self::MAIL_TEMPLATE_DIR]);
-        $this->twig = new \Twig_Environment($loader, [
+        $loader = new FilesystemLoader([self::MAIL_TEMPLATE_DIR]);
+        $this->twig = new Environment($loader, [
             'debug' => Kernel::isLocal()
         ]);
 
@@ -34,9 +39,9 @@ class MailRenderer
      * @param string $template_file_name
      * @param array $data
      * @return string
-     * @throws \Twig_Error_Loader
-     * @throws \Twig_Error_Runtime
-     * @throws \Twig_Error_Syntax
+     * @throws LoaderError
+     * @throws RuntimeError
+     * @throws SyntaxError
      */
     public function render(string $template_file_name, array $data = []): string
     {
