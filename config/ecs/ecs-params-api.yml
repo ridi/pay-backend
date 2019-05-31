@@ -20,6 +20,8 @@ task_definition:
           name: OAUTH2_CLIENT_SECRET
         - value_from: "/ridi-pay/${APP_ENV}/OAUTH2_JWT_SECRET"
           name: OAUTH2_JWT_SECRET
+        - value_from: "/ridi-pay/${APP_ENV}/OAUTH2_JWT_PUBLIC_KEY"
+          name: OAUTH2_JWT_PUBLIC_KEY
         - value_from: "/ridi-pay/${APP_ENV}/PARTNER_SECRET_KEY_SECRET"
           name: PARTNER_SECRET_KEY_SECRET
         - value_from: "/ridi-pay/${APP_ENV}/PG_BILL_KEY_SECRET"

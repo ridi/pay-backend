@@ -38,7 +38,7 @@ make fixture
 #### 4. Try to connect to https://api.pay.local.ridi.io 
 
 ## API document
-[Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/api.html)
+[Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/master/api.html)
 
 ## Deploy
 - We are using travis ci and github releases for deploy. For details, please refer to `.travis.yml`.

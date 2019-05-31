@@ -20,7 +20,7 @@ class JwtAuthorizationMiddlewareTest extends WebTestCase
      */
     protected static function createKernel(array $options = []): DummyKernel
     {
-        return new DummyKernel(getenv('APP_ENV'), true);
+        return new DummyKernel(getenv('APP_ENV', true), true);
     }
 
     /**
@@ -46,11 +46,15 @@ class JwtAuthorizationMiddlewareTest extends WebTestCase
         $public_key = file_get_contents(__DIR__ . '/Dummy/dummy.key.pub');
         putenv("DUMMY_TO_RIDI_PAY_PRIVATE_KEY={$private_key}");
         putenv("DUMMY_TO_RIDI_PAY_PUBLIC_KEY={$public_key}");
+        putenv("INVALID_ISS_TO_RIDI_PAY_PRIVATE_KEY={$private_key}");
+        putenv("INVALID_ISS_TO_RIDI_PAY_PUBLIC_KEY={$public_key}");
 
         $jwt = JwtAuthorizationHelper::encodeJwt(self::JWT_ISS_DUMMY, JwtAuthorizationServiceNameConstant::RIDI_PAY);
+        $jwt_with_invalid_iss = JwtAuthorizationHelper::encodeJwt('invalid-iss', JwtAuthorizationServiceNameConstant::RIDI_PAY);
 
         return [
             [['HTTP_Authorization' => "Bearer {$jwt}"], Response::HTTP_OK],
+            [['HTTP_Authorization' => "Bearer {$jwt_with_invalid_iss}"], Response::HTTP_UNAUTHORIZED],
             [['HTTP_Authorization' => 'Bearer abcde'], Response::HTTP_UNAUTHORIZED],
             [['HTTP_Authorization' => '12345'], Response::HTTP_UNAUTHORIZED],
             [[], Response::HTTP_UNAUTHORIZED]

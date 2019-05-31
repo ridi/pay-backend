@@ -103,7 +103,7 @@ class PgEntity
      */
     private function setName(string $name): void
     {
-        if (!in_array($name, PgConstant::AVAILABLE_PGS)) {
+        if (!in_array($name, PgConstant::AVAILABLE_PGS, true)) {
             throw new UnsupportedPgException();
         }
 

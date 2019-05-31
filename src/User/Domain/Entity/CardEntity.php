@@ -228,7 +228,7 @@ class CardEntity
      */
     private static function getPgBillKeySecret(): string
     {
-        return base64_decode(getenv('PG_BILL_KEY_SECRET'));
+        return base64_decode(getenv('PG_BILL_KEY_SECRET', true));
     }
 
     /**
@@ -271,7 +271,7 @@ class CardEntity
      */
     private function setPurpose(string $purpose): void
     {
-        if (!in_array($purpose, self::AVAILABLE_PURPOSES)) {
+        if (!in_array($purpose, self::AVAILABLE_PURPOSES, true)) {
             throw new UnavailableCardPurposeException();
         }
 

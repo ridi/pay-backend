@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace RidiPay\Transaction\Application\Dto;
+namespace RidiPay\Transaction\Domain\Service;
 
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 
-class ApproveTransactionDto
+class TransactionCancellationResult
 {
     /** @var string */
     public $transaction_id;
@@ -25,6 +25,9 @@ class ApproveTransactionDto
     /** @var \DateTime */
     public $approved_at;
 
+    /** @var \DateTime */
+    public $canceled_at;
+
     /**
      * @param TransactionEntity $transaction
      */
@@ -36,5 +39,6 @@ class ApproveTransactionDto
         $this->amount = $transaction->getAmount();
         $this->reserved_at = $transaction->getReservedAt();
         $this->approved_at = $transaction->getApprovedAt();
+        $this->canceled_at = $transaction->getCanceledAt();
     }
 }

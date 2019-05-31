@@ -16,7 +16,7 @@ class CorsMiddlewareTest extends WebTestCase
      */
     protected static function createKernel(array $options = []): DummyKernel
     {
-        return new DummyKernel(getenv('APP_ENV'), true);
+        return new DummyKernel(getenv('APP_ENV', true), true);
     }
 
     /**
@@ -66,7 +66,7 @@ class CorsMiddlewareTest extends WebTestCase
      */
     public function headerProvider(): array
     {
-        $ridi_pay_url = getenv('RIDI_PAY_URL');
+        $ridi_pay_url = getenv('RIDI_PAY_URL', true);
 
         return [
             [

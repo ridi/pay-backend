@@ -15,7 +15,7 @@ class DummyController extends Controller
 {
     /**
      * @Route("/jwt-auth", methods={"GET"})
-     * @JwtAuth()
+     * @JwtAuth(isses={"dummy"})
      *
      * @param Request $request
      * @return Response

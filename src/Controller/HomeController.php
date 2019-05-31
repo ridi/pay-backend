@@ -25,7 +25,7 @@ class HomeController extends BaseController
                 throw new \Exception('MariaDB connection is not working.');
             }
 
-            $redis = new Client(['host' => getenv('REDIS_HOST')]);
+            $redis = new Client(['host' => getenv('REDIS_HOST', true)]);
             if (!$redis->ping()) {
                 throw new \Exception('Redis connection is not working.');
             }
@@ -38,17 +38,6 @@ class HomeController extends BaseController
             );
         }
 
-        return self::createSuccessResponse();
-    }
-
-    /**
-     * Ignore requests for favicon.ico
-     * @Route("/favicon.ico", methods={"GET"})
-     *
-     * @return JsonResponse
-     */
-    public function favicon(): JsonResponse
-    {
         return self::createSuccessResponse();
     }
 }

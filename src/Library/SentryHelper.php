@@ -18,8 +18,8 @@ class SentryHelper
             \Raven_Autoloader::register();
 
             self::$client = new \Raven_Client($dsn, $options);
-            self::$client->setRelease(getenv('GIT_REVISION'));
-            self::$client->setEnvironment(getenv('APP_ENV'));
+            self::$client->setRelease(getenv('GIT_REVISION', true));
+            self::$client->setEnvironment(getenv('APP_ENV', true));
 
             $error_handler = new \Raven_ErrorHandler(self::$client);
             $error_handler->registerExceptionHandler();

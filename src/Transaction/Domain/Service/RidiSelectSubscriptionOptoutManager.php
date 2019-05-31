@@ -39,7 +39,7 @@ class RidiSelectSubscriptionOptoutManager
     private static function createClient(): Client
     {
         return new Client([
-            'base_uri' => getenv('RIDIBOOKS_SERVER_HOST'),
+            'base_uri' => getenv('RIDIBOOKS_SERVER_HOST', true),
             'connect_timeout' => self::API_TIME_OUT,
             'timeout' => self::API_TIME_OUT,
         ]);

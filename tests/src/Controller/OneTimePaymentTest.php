@@ -4,10 +4,12 @@ declare(strict_types=1);
 namespace RidiPay\Tests\Controller;
 
 use Ramsey\Uuid\Uuid;
+use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
+use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Domain\PaymentMethodConstant;
 use Symfony\Bundle\FrameworkBundle\Client;
@@ -170,6 +172,92 @@ class OneTimePaymentTest extends ControllerTestCase
             [false, 10000, true], // 원터치 결제 OFF, 10,000원 결제 => is_pin_validation_required = true
             [false, 100000, true] // 원터치 결제 OFF, 100,000원 결제 => is_pin_validation_required = true
         ];
+    }
+
+    /**
+     * 동일한 transaction_id에 대해서 중복 결제 승인이 발생하지 않는지 확인
+     */
+    public function testPaymentIdempotency()
+    {
+        $pin = '123456';
+        self::$u_idx = TestUtil::getRandomUidx();
+        self::$payment_method_id = TestUtil::registerCard(
+            self::$u_idx,
+            $pin,
+            true,
+            TestUtil::CARD['CARD_NUMBER'],
+            TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            TestUtil::CARD['CARD_PASSWORD'],
+            TestUtil::TAX_ID
+        );
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
+
+        $partner_transaction_id = Uuid::uuid4()->toString();
+        $product_name = 'mock';
+        $amount = 10000;
+        $return_url = 'https://mock.net';
+
+        // 결제 예약
+        $this->assertReservePaymentSuccessfully(
+            self::$payment_method_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount,
+            $return_url
+        );
+
+        // 결제 예약 정보 조회
+        $client = self::createClientWithOAuth2AccessToken(
+            [],
+            [
+                'HTTP_Api-Key' => self::$partner->api_key,
+                'HTTP_Secret-Key' => self::$partner->secret_key,
+                'CONTENT_TYPE' => 'application/json'
+            ]
+        );
+        $client->request(Request::METHOD_GET, '/payments/' . self::$reservation_id);
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $getting_reserved_payment_response = json_decode($client->getResponse()->getContent());
+        $this->assertObjectHasAttribute('validation_token', $getting_reserved_payment_response);
+        $this->assertNotEmpty($getting_reserved_payment_response->validation_token);
+        $validation_token = $getting_reserved_payment_response->validation_token;
+
+        // 결제 생성
+        $this->assertCreatePaymentSuccessfully(
+            $validation_token,
+            self::$reservation_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
+
+        // 결제 승인
+        $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
+        
+        $pg_transaction_id = TransactionRepository::getRepository()->findOneByUuid(
+            Uuid::fromString(self::$transaction_id)
+        )->getPgTransactionId();
+
+        // 결제 승인 retry
+        $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
+        $this->assertSame(
+            $pg_transaction_id,
+            TransactionRepository::getRepository()->findOneByUuid(
+                Uuid::fromString(self::$transaction_id)
+            )->getPgTransactionId()
+        );
+
+        // 결제 취소
+        $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame(self::$transaction_id, $response->transaction_id);
+        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+
+        // 결제 취소 retry
+        self::$client->request(Request::METHOD_POST, '/payments/' . self::$transaction_id . '/cancel');
+        $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame(TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION, $response->code);
     }
 
     public function testExceptionHandlingInCaseOfUnauthorizedPartner()

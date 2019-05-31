@@ -19,7 +19,7 @@ abstract class ControllerTestCase extends WebTestCase
     {
         $cookie = new Cookie(
             AccessTokenConstant::ACCESS_TOKEN_COOKIE_KEY,
-            getenv('OAUTH2_ACCESS_TOKEN')
+            getenv('OAUTH2_ACCESS_TOKEN', true)
         );
         $client = self::createClient($options, $server);
         $client->getCookieJar()->set($cookie);

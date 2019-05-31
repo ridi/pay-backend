@@ -8,6 +8,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Schema(
+ *   schema="DuplicatedRequest",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="DUPLICATED_REQUEST"),
+ *   @OA\Property(property="message", type="string", example="이미 처리 중인 요청입니다.")
+ * )
+ * @OA\Schema(
  *   schema="InvalidAccessToken",
  *   type="object",
  *   required={"code", "message"},
@@ -59,6 +66,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class CommonErrorCodeConstant
 {
+    public const DUPLICATED_REQUEST = 'DUPLICATED_REQUEST';
     public const INVALID_CONTENT_TYPE = 'INVALID_CONTENT_TYPE';
     public const INVALID_PARAMETER = 'INVALID_PARAMETER';
     public const INVALID_JWT = 'INVALID_JWT';
@@ -68,6 +76,7 @@ class CommonErrorCodeConstant
     public const INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR';
 
     public const HTTP_STATUS_CODES = [
+        self::DUPLICATED_REQUEST => Response::HTTP_FORBIDDEN,
         self::INVALID_CONTENT_TYPE => Response::HTTP_BAD_REQUEST,
         self::INVALID_PARAMETER => Response::HTTP_BAD_REQUEST,
         self::INVALID_JWT => Response::HTTP_UNAUTHORIZED,
