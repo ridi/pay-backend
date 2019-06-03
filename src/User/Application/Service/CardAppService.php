@@ -145,6 +145,8 @@ class CardAppService
             }
 
             $payment_method = CardService::useRegisteredCard($u_idx);
+            UserActionHistoryService::logRegisterCard($u_idx);
+
             UserAppService::useCreatedPin($u_idx);
 
             $em->commit();

@@ -148,8 +148,6 @@ class CardService
             $payment_method->setCards($cards);
             PaymentMethodRepository::getRepository()->save($payment_method);
 
-            UserActionHistoryService::logRegisterCard($u_idx);
-
             $em->commit();
         } catch (\Throwable $t) {
             $em->rollback();
