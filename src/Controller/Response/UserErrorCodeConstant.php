@@ -8,13 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @OA\Schema(
- *   schema="CardAlreadyExists",
- *   type="object",
- *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="CARD_ALREADY_EXISTS"),
- *   @OA\Property(property="message", type="string", example="카드는 하나만 등록할 수 있습니다.")
- * )
- * @OA\Schema(
  *   schema="DeletedPaymentMethod",
  *   type="object",
  *   required={"code", "message"},
@@ -36,11 +29,11 @@ use Symfony\Component\HttpFoundation\Response;
  *   @OA\Property(property="message", type="string", example="이용자가 아닙니다.")
  * )
  * @OA\Schema(
- *   schema="OnetouchPaySettingChangeDeclined",
+ *   schema="PaymentMethodChangeDeclined",
  *   type="object",
  *   required={"code", "message"},
- *   @OA\Property(property="code", type="string", example="ONETOUCH_PAY_SETTING_CHANGE_DECLINED"),
- *   @OA\Property(property="message", type="string", example="결제 비밀번호를 설정해주세요.")
+ *   @OA\Property(property="code", type="string", example="PAYMENT_METHOD_CHANGE_DECLINED"),
+ *   @OA\Property(property="message", type="string", example="결제 시도 중에는 결제 수단을 변경할 수 없습니다. 잠시 후 다시 시도해주세요.")
  * )
  * @OA\Schema(
  *   schema="PinEntryBlocked",
@@ -87,11 +80,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class UserErrorCodeConstant
 {
-    public const CARD_ALREADY_EXISTS = 'CARD_ALREADY_EXISTS';
     public const DELETED_PAYMENT_METHOD = 'DELETED_PAYMENT_METHOD';
     public const LEAVED_USER = 'LEAVED_USER';
     public const NOT_FOUND_USER = 'NOT_FOUND_USER';
-    public const ONETOUCH_PAY_SETTING_CHANGE_DECLINED = 'ONETOUCH_PAY_SETTING_CHANGE_DECLINED';
+    public const PAYMENT_METHOD_CHANGE_DECLINED = 'PAYMENT_METHOD_CHNAGE_DECLINED';
     public const PIN_ENTRY_BLOCKED = 'PIN_ENTRY_BLOCKED';
     public const PIN_UNMATCHED = 'PIN_UNMATCHED';
     public const UNAUTHORIZED_CARD_REGISTRATION = 'UNAUTHORIZED_CARD_REGISTRATION';
@@ -100,11 +92,10 @@ class UserErrorCodeConstant
     public const WRONG_FORMATTED_PIN = 'WRONG_FORMATTED_PIN';
 
     public const HTTP_STATUS_CODES = [
-        self::CARD_ALREADY_EXISTS => Response::HTTP_FORBIDDEN,
         self::DELETED_PAYMENT_METHOD => Response::HTTP_FORBIDDEN,
         self::LEAVED_USER => Response::HTTP_FORBIDDEN,
         self::NOT_FOUND_USER => Response::HTTP_NOT_FOUND,
-        self::ONETOUCH_PAY_SETTING_CHANGE_DECLINED => Response::HTTP_FORBIDDEN,
+        self::PAYMENT_METHOD_CHANGE_DECLINED => Response::HTTP_FORBIDDEN,
         self::PIN_ENTRY_BLOCKED => Response::HTTP_FORBIDDEN,
         self::PIN_UNMATCHED => Response::HTTP_BAD_REQUEST,
         self::UNAUTHORIZED_CARD_REGISTRATION => Response::HTTP_UNAUTHORIZED,

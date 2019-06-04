@@ -47,7 +47,14 @@ use Symfony\Component\HttpFoundation\Response;
  *   type="object",
  *   required={"code", "message"},
  *   @OA\Property(property="code", type="string", example="NOT_RESERVED_TRANSACTION"),
- *   @OA\Property(property="message", type="string", example="올바르지 않은 결제 요청입니다.")
+ *   @OA\Property(property="message", type="string", example="예약되지 않은 결제에 대한 요청입니다.")
+ * )
+ * @OA\Schema(
+ *   schema="NotReservedSubscription",
+ *   type="object",
+ *   required={"code", "message"},
+ *   @OA\Property(property="code", type="string", example="NOT_RESERVED_SUBSCRIPTION"),
+ *   @OA\Property(property="message", type="string", example="예약되지 않은 구독에 대한 요청입니다.")
  * )
  */
 class TransactionErrorCodeConstant
@@ -58,6 +65,7 @@ class TransactionErrorCodeConstant
     public const NOT_FOUND_SUBSCRIPTION = 'NOT_FOUND_SUBSCRIPTION';
     public const NOT_FOUND_TRANSACTION = 'NOT_FOUND_TRANSACTION';
     public const NOT_RESERVED_TRANSACTION = 'NOT_RESERVED_TRANSACTION';
+    public const NOT_RESERVED_SUBSCRIPTION = 'NOT_RESERVED_SUBSCRIPTION';
 
     public const HTTP_STATUS_CODES = [
         self::ALREADY_CANCELLED_TRANSACTION => Response::HTTP_FORBIDDEN,
@@ -65,6 +73,7 @@ class TransactionErrorCodeConstant
         self::ALREADY_CANCELLED_SUBSCRIPTION => Response::HTTP_FORBIDDEN,
         self::NOT_FOUND_SUBSCRIPTION => Response::HTTP_NOT_FOUND,
         self::NOT_FOUND_TRANSACTION => Response::HTTP_NOT_FOUND,
-        self::NOT_RESERVED_TRANSACTION => Response::HTTP_NOT_FOUND
+        self::NOT_RESERVED_TRANSACTION => Response::HTTP_NOT_FOUND,
+        self::NOT_RESERVED_SUBSCRIPTION => Response::HTTP_NOT_FOUND
     ];
 }

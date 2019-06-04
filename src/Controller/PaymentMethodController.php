@@ -15,7 +15,6 @@ use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
-use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -73,7 +72,7 @@ class PaymentMethodController extends BaseController
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="카드 등록, 결제 비밀번호 등록, 원터치 결제 설정까지 필요한 인증 토큰",
+     *         description="카드 등록, 결제 비밀번호 등록까지 필요한 인증 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )
@@ -94,15 +93,6 @@ class PaymentMethodController extends BaseController
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
      *         @OA\Schema(ref="#/components/schemas/LoginRequired")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/CardAlreadyExists")
      *       }
      *     )
      *   ),
@@ -146,12 +136,6 @@ class PaymentMethodController extends BaseController
             $validation_token = CardAppService::generateValidationToken($this->getUidx());
 
             $response = self::createSuccessResponse(['validation_token' => $validation_token]);
-        } catch (CardAlreadyExistsException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::CARD_ALREADY_EXISTS,
-                $e->getMessage()
-            );
         } catch (CardRegistrationException $e) {
             $response = self::createErrorResponse(
                 PgErrorCodeConstant::class,

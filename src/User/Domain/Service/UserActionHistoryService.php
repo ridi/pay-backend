@@ -32,27 +32,18 @@ class UserActionHistoryService
      * @param int $u_idx
      * @throws \Exception
      */
+    public static function logChangeCard(int $u_idx): void
+    {
+        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_CHANGE_CARD);
+    }
+
+    /**
+     * @param int $u_idx
+     * @throws \Exception
+     */
     public static function logUpdatePin(int $u_idx): void
     {
         self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_UPDATE_PIN);
-    }
-
-    /**
-     * @param int $u_idx
-     * @throws \Exception
-     */
-    public static function logEnableOnetouchPay(int $u_idx): void
-    {
-        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_ENABLE_ONETOUCH_PAY);
-    }
-
-    /**
-     * @param int $u_idx
-     * @throws \Exception
-     */
-    public static function logDisableOnetouchPay(int $u_idx): void
-    {
-        self::logUserAction($u_idx, UserActionHistoryConstant::ACTION_DISABLE_ONETOUCH_PAY);
     }
 
     /**

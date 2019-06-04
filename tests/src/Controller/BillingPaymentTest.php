@@ -9,12 +9,15 @@ use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
+use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class BillingPaymentTest extends ControllerTestCase
 {
+    private const PIN = '123456';
+
     /** @var Client */
     private static $client;
 
@@ -27,13 +30,18 @@ class BillingPaymentTest extends ControllerTestCase
     /** @var string */
     private static $payment_method_id;
 
+    /** @var string */
+    private static $reservation_id;
+
+    /** @var string */
+    private static $subscription_id;
+
     public static function setUpBeforeClass()
     {
         self::$u_idx = TestUtil::getRandomUidx();
         self::$payment_method_id = TestUtil::registerCard(
             self::$u_idx,
-            '123456',
-            true,
+            self::PIN,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],
@@ -53,65 +61,71 @@ class BillingPaymentTest extends ControllerTestCase
 
     public function testBillingPaymentLifeCycle()
     {
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
+
         $product_name = 'mock';
         $amount = 10000;
+        $return_url = 'https://mock.net';
 
-        // 정기 결제 등록
-        $body = json_encode([
-            'payment_method_id' => self::$payment_method_id,
-            'product_name' => $product_name
-        ]);
-        self::$client->request(Request::METHOD_POST, '/payments/subscriptions', [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-
-        $response_content = json_decode(self::$client->getResponse()->getContent());
-        $subscription_id = $response_content->subscription_id;
-
-        // 정기 결제 승인
-        $body = json_encode([
-            'partner_transaction_id' => Uuid::uuid4()->toString(),
-            'amount' => $amount,
-            'buyer_id' => TestUtil::U_ID,
-            'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com',
-            'invoice_id' => Uuid::uuid4()->toString()
-        ]);
-        self::$client->request(
-            Request::METHOD_POST,
-            "/payments/subscriptions/{$subscription_id}/pay",
-            [],
-            [],
-            [],
-            $body
+        // 구독 예약
+        $this->assertReserveSubscriptionSuccessfully(
+            self::$payment_method_id,
+            $product_name,
+            $return_url
         );
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
-        // 정기 결제 해지
+        // 구독 예약 정보 조회
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
+        $client->request(Request::METHOD_GET, '/payments/subscriptions/' . self::$reservation_id);
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $subscription_reservation_response = json_decode($client->getResponse()->getContent());
+        $is_pin_validation_required = $subscription_reservation_response->is_pin_validation_required;
+
+        if ($is_pin_validation_required) {
+            // 결제 비밀번호 확인
+            $pin_validation_body = json_encode(['pin' => self::PIN]);
+            $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
+            $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+            $pin_validation_response = json_decode($client->getResponse()->getContent());
+            $validation_token = $pin_validation_response->validation_token;
+        } else {
+            $validation_token = $subscription_reservation_response->validation_token;
+        }
+
+        // 구독 등록
+        $body = json_encode(['validation_token' => $validation_token]);
+        $client->request(Request::METHOD_POST, '/payments/subscriptions/' . self::$reservation_id, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $return_url = json_decode($client->getResponse()->getContent())->return_url;
+        $query_strings = [];
+        parse_str(parse_url($return_url)['query'], $query_strings);
+        $subscription_id = $query_strings['subscription_id'];
+
+        // 구독 결제 승인
+        $partner_transaction_id = Uuid::uuid4()->toString();
+        $this->assertPaySubscriptionSuccessfully(
+            $subscription_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount
+        );
+
+        // 구독 해지
         self::$client->request(Request::METHOD_DELETE, "/payments/subscriptions/{$subscription_id}");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
-        // 정기 결제 재개
+        // 구독 재개
         self::$client->request(Request::METHOD_PUT, "/payments/subscriptions/{$subscription_id}/resume");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
-        // 정기 결제 승인
-        $body = json_encode([
-            'partner_transaction_id' => Uuid::uuid4()->toString(),
-            'amount' => $amount,
-            'buyer_id' => TestUtil::U_ID,
-            'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com',
-            'invoice_id' => Uuid::uuid4()->toString()
-        ]);
-        self::$client->request(
-            Request::METHOD_POST,
-            "/payments/subscriptions/{$subscription_id}/pay",
-            [],
-            [],
-            [],
-            $body
+        // 구독 결제 승인
+        $partner_transaction_id = Uuid::uuid4()->toString();
+        $this->assertPaySubscriptionSuccessfully(
+            $subscription_id,
+            $partner_transaction_id,
+            $product_name,
+            $amount
         );
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
     }
 
     public function testExceptionHandlingInCaseOfUnauthorizedPartner()
@@ -128,21 +142,27 @@ class BillingPaymentTest extends ControllerTestCase
         $partner_transaction_id = Uuid::uuid4()->toString();
         $product_name = 'mock';
         $amount = 10000;
+        $return_url = 'https://mock.net';
 
-        $subscription_body = json_encode([
+        // Unauthorized subscription reservation
+        $body = json_encode([
             'payment_method_id' => self::$payment_method_id,
-            'product_name' => $product_name
+            'product_name' => $product_name,
+            'return_url' => $return_url
         ]);
-        // Unauthorized subscription
-        $unauthorized_client->request(Request::METHOD_POST, '/payments/subscriptions', [], [], [], $subscription_body);
+        $unauthorized_client->request(Request::METHOD_POST, '/payments/subscriptions/reserve', [], [], [], $body);
         $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
 
-        // Authorized subscription
-        self::$client->request(Request::METHOD_POST, '/payments/subscriptions', [], [], [], $subscription_body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        // Authorized subscription reservation
+        $this->assertReserveSubscriptionSuccessfully(
+            self::$payment_method_id,
+            $product_name,
+            $return_url
+        );
 
-        $subscription_response_content = json_decode(self::$client->getResponse()->getContent());
-        $subscription_id = $subscription_response_content->subscription_id;
+        // 구독 등록
+        $validation_token = UserAppService::generateValidationToken(self::$u_idx);
+        $this->assertSubscriptionSuccessfully($validation_token);
 
         $subscription_payment_body = json_encode([
             'partner_transaction_id' => $partner_transaction_id,
@@ -156,7 +176,7 @@ class BillingPaymentTest extends ControllerTestCase
         // Unauthorized subscription payment
         $unauthorized_client->request(
             Request::METHOD_POST,
-            "/payments/subscriptions/{$subscription_id}/pay",
+            '/payments/subscriptions/' . self::$subscription_id . '/pay',
             [],
             [],
             [],
@@ -167,7 +187,7 @@ class BillingPaymentTest extends ControllerTestCase
         // Authorized subscription payment
         self::$client->request(
             Request::METHOD_POST,
-            "/payments/subscriptions/{$subscription_id}/pay",
+            '/payments/subscriptions/' . self::$subscription_id . '/pay',
             [],
             [],
             [],
@@ -176,19 +196,19 @@ class BillingPaymentTest extends ControllerTestCase
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         // Unauthorized unsubscription
-        $unauthorized_client->request(Request::METHOD_DELETE, "/payments/subscriptions/{$subscription_id}");
+        $unauthorized_client->request(Request::METHOD_DELETE, '/payments/subscriptions/' . self::$subscription_id);
         $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
 
         // Authorized unsubscription
-        self::$client->request(Request::METHOD_DELETE, "/payments/subscriptions/{$subscription_id}");
+        self::$client->request(Request::METHOD_DELETE, '/payments/subscriptions/' . self::$subscription_id);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         // Unauthorized subscription resumption
-        $unauthorized_client->request(Request::METHOD_PUT, "/payments/subscriptions/{$subscription_id}/resume");
+        $unauthorized_client->request(Request::METHOD_PUT, '/payments/subscriptions/' . self::$subscription_id . '/resume');
         $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
 
         // Authorized subscription resumption
-        self::$client->request(Request::METHOD_PUT, "/payments/subscriptions/{$subscription_id}/resume");
+        self::$client->request(Request::METHOD_PUT, '/payments/subscriptions/' . self::$subscription_id . '/resume');
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
     }
 
@@ -198,18 +218,48 @@ class BillingPaymentTest extends ControllerTestCase
      */
     public function testPaymentIdempotency()
     {
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
+
         $product_name = 'mock';
         $amount = 10000;
+        $return_url = 'https://mock.net';
 
-        // 정기 결제 등록
+        // 구독 예약
         $body = json_encode([
             'payment_method_id' => self::$payment_method_id,
-            'product_name' => $product_name
+            'product_name' => $product_name,
+            'return_url' => $return_url
         ]);
-        self::$client->request(Request::METHOD_POST, '/payments/subscriptions', [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, '/payments/subscriptions/reserve', [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $reservation_id = json_decode(self::$client->getResponse()->getContent())->reservation_id;
 
-        $subscription_id = json_decode(self::$client->getResponse()->getContent())->subscription_id;
+        // 구독 예약 정보 조회
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
+        $client->request(Request::METHOD_GET, '/payments/subscriptions/' . $reservation_id);
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $subscription_reservation_response = json_decode($client->getResponse()->getContent());
+
+        if ($subscription_reservation_response->is_pin_validation_required) {
+            // 결제 비밀번호 확인
+            $pin_validation_body = json_encode(['pin' => self::PIN]);
+            $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
+            $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+            $pin_validation_response = json_decode($client->getResponse()->getContent());
+            $validation_token = $pin_validation_response->validation_token;
+        } else {
+            $validation_token = $subscription_reservation_response->validation_token;
+        }
+
+        // 구독 등록
+        $body = json_encode(['validation_token' => $validation_token]);
+        $client->request(Request::METHOD_POST, "/payments/subscriptions/{$reservation_id}", [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $return_url = json_decode($client->getResponse()->getContent())->return_url;
+        $query_strings = [];
+        parse_str(parse_url($return_url)['query'], $query_strings);
+        $subscription_id = $query_strings['subscription_id'];
+
         $subscription_payment_url = "/payments/subscriptions/{$subscription_id}/pay";
         $invoice_id = Uuid::uuid4()->toString();
 
@@ -296,5 +346,78 @@ class BillingPaymentTest extends ControllerTestCase
         $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame(TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION, $response->code);
+    }
+
+    /**
+     * @param string $payment_method_id
+     * @param string $product_name
+     * @param string $return_url
+     */
+    private function assertReserveSubscriptionSuccessfully(
+        string $payment_method_id,
+        string $product_name,
+        string $return_url
+    ) {
+        $body = json_encode([
+            'payment_method_id' => $payment_method_id,
+            'product_name' => $product_name,
+            'return_url' => $return_url
+        ]);
+        self::$client->request(Request::METHOD_POST, '/payments/subscriptions/reserve', [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+
+        self::$reservation_id = json_decode(self::$client->getResponse()->getContent())->reservation_id;
+    }
+
+    /**
+     * @param string $validation_token
+     */
+    private function assertSubscriptionSuccessfully(string $validation_token)
+    {
+        $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
+        $body = json_encode(['validation_token' => $validation_token]);
+        $client->request(Request::METHOD_POST, '/payments/subscriptions/' . self::$reservation_id, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+
+        $return_url = json_decode($client->getResponse()->getContent())->return_url;
+        $query_strings = [];
+        parse_str(parse_url($return_url)['query'], $query_strings);
+        self::$subscription_id = $query_strings['subscription_id'];
+    }
+
+    /**
+     * @param string $subscription_id
+     * @param string $partner_transaction_id
+     * @param string $product_name
+     * @param int $amount
+     * @throws \Exception
+     */
+    private function assertPaySubscriptionSuccessfully(
+        string $subscription_id,
+        string $partner_transaction_id,
+        string $product_name,
+        int $amount
+    ) {
+        $body = json_encode([
+            'partner_transaction_id' => $partner_transaction_id,
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => Uuid::uuid4()->toString()
+        ]);
+        self::$client->request(
+            Request::METHOD_POST,
+            "/payments/subscriptions/{$subscription_id}/pay",
+            [],
+            [],
+            [],
+            $body
+        );
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        $this->assertSame($product_name, $response->product_name);
+        $this->assertSame($amount, $response->amount);
     }
 }

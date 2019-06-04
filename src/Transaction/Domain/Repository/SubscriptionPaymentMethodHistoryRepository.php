@@ -4,17 +4,17 @@ declare(strict_types=1);
 namespace RidiPay\Transaction\Domain\Repository;
 
 use RidiPay\Library\BaseEntityRepository;
-use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
+use RidiPay\Transaction\Domain\Entity\SubscriptionPaymentMethodHistoryEntity;
 
-class TransactionHistoryRepository extends BaseEntityRepository
+class SubscriptionPaymentMethodHistoryRepository extends BaseEntityRepository
 {
     /**
-     * @return TransactionHistoryRepository
+     * @return SubscriptionPaymentMethodHistoryRepository
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     public static function getRepository(): self
     {
-        return new self(TransactionHistoryEntity::class);
+        return new self(SubscriptionPaymentMethodHistoryEntity::class);
     }
 }

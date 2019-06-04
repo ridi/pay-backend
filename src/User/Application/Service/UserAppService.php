@@ -9,14 +9,12 @@ use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\MailRenderer;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
-use RidiPay\User\Application\Dto\OnetouchPaySettingUpdateHistoryItemDto;
 use RidiPay\User\Application\Dto\PinUpdateHistoryItemDto;
 use RidiPay\User\Application\Dto\UserInformationDto;
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
-use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
@@ -83,6 +81,8 @@ class UserAppService
         UserRepository::getRepository()->save($user);
 
         $redis->hdel($user_key, [$field_name]);
+
+        UserAppService::generateValidationToken($u_idx);
     }
 
     /**
@@ -181,6 +181,15 @@ class UserAppService
 
     /**
      * @param int $u_idx
+     * @return bool
+     */
+    public static function isPinValidationRequired(int $u_idx): bool
+    {
+        return ValidationTokenManager::get(self::getUserKey($u_idx)) === null;
+    }
+
+    /**
+     * @param int $u_idx
      * @return PinUpdateHistoryItemDto[]
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -202,117 +211,6 @@ class UserAppService
 
     /**
      * @param int $u_idx
-     * @param bool $enable_onetouch_pay
-     */
-    public static function setOnetouchPay(int $u_idx, bool $enable_onetouch_pay): void
-    {
-        $user_key = self::getUserKey($u_idx);
-
-        $redis = self::getRedisClient();
-        $redis->hset($user_key, 'enable_onetouch_pay', $enable_onetouch_pay);
-        $redis->expire($user_key, TimeUnitConstant::SEC_IN_HOUR);
-    }
-
-    /**
-     * @param int $u_idx
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Exception
-     */
-    public static function useSavedOnetouchPaySetting(int $u_idx): void
-    {
-        $user_key = self::getUserKey($u_idx);
-        $field_name = 'enable_onetouch_pay';
-
-        $redis = self::getRedisClient();
-        $enable_onetouch_pay = boolval($redis->hget($user_key, $field_name));
-
-        $user = self::getUser($u_idx);
-        if ($enable_onetouch_pay) {
-            $user->enableOnetouchPay();
-        } else {
-            $user->disableOnetouchPay();
-        }
-        UserRepository::getRepository()->save($user);
-
-        $redis->hdel($user_key, [$field_name]);
-    }
-
-    /**
-     * @param User $oauth2_user
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws OnetouchPaySettingChangeDeclinedException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
-     */
-    public static function enableOnetouchPay(User $oauth2_user): void
-    {
-        $u_idx = $oauth2_user->getUidx();
-        $user = self::getUser($u_idx);
-
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
-            $user->enableOnetouchPay();
-            UserRepository::getRepository()->save($user);
-
-            UserActionHistoryService::logEnableOnetouchPay($u_idx);
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
-
-        $data = ['u_id' => $oauth2_user->getUid()];
-        $email_body = (new MailRenderer())->render('onetouch_pay_change_alert.twig', $data);
-        EmailSender::send(
-            $oauth2_user->getEmail(),
-            "{$oauth2_user->getUid()}님, 원터치 결제 설정 변경 안내드립니다.",
-            $email_body
-        );
-    }
-
-    /**
-     * @param int $u_idx
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws OnetouchPaySettingChangeDeclinedException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
-     */
-    public static function disableOnetouchPay(int $u_idx): void
-    {
-        $user = self::getUser($u_idx);
-
-        $em = EntityManagerProvider::getEntityManager();
-        $em->beginTransaction();
-
-        try {
-            $user->disableOnetouchPay();
-            UserRepository::getRepository()->save($user);
-
-            UserActionHistoryService::logDisableOnetouchPay($u_idx);
-
-            $em->commit();
-        } catch (\Throwable $t) {
-            $em->rollback();
-            $em->close();
-
-            throw $t;
-        }
-    }
-
-    /**
-     * @param int $u_idx
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
@@ -325,45 +223,6 @@ class UserAppService
         $user->deleteOnetouchPay();
 
         UserRepository::getRepository()->save($user);
-    }
-
-    /**
-     * @param int $u_idx
-     * @return null|bool
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function isUsingOnetouchPay(int $u_idx): ?bool
-    {
-        $user = self::getUser($u_idx);
-
-        return $user->isUsingOnetouchPay();
-    }
-
-    /**
-     * @param int $u_idx
-     * @return OnetouchPaySettingUpdateHistoryItemDto[]
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function getOnetouchPaySettingUpdateHistory(int $u_idx): array
-    {
-        $actions = UserActionHistoryRepository::getRepository()->findByUidxAndActions(
-            $u_idx,
-            [
-                UserActionHistoryConstant::ACTION_ENABLE_ONETOUCH_PAY,
-                UserActionHistoryConstant::ACTION_DISABLE_ONETOUCH_PAY
-            ]
-        );
-
-        return array_map(
-            function (UserActionHistoryEntity $action) {
-                return new OnetouchPaySettingUpdateHistoryItemDto($action);
-            },
-            $actions
-        );
     }
 
     /**
