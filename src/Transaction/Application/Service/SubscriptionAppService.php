@@ -110,52 +110,6 @@ class SubscriptionAppService
     }
 
     /**
-     * TODO: (구) 구독 등록 API 관련 코드, 결제 수단 변경 배포 중 호환성을 유지하기 위해 배포가 완료되는 시점까지만 유지합니다. 배포 이후 제거합니다.
-     *
-     * @param ApiSecret $partner_api_secret
-     * @param string $payment_method_uuid
-     * @param string $product_name
-     * @return SubscriptionDto
-     * @throws DeletedPaymentMethodException
-     * @throws UnauthorizedPartnerException
-     * @throws UnregisteredPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
-     */
-    public static function subscribeOld(
-        ApiSecret $partner_api_secret,
-        string $payment_method_uuid,
-        string $product_name
-    ): SubscriptionDto {
-        $partner_id = PartnerAppService::validatePartner(
-            $partner_api_secret->getApiKey(),
-            $partner_api_secret->getSecretKey()
-        );
-        $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_uuid));
-        if ($payment_method === null) {
-            throw new UnregisteredPaymentMethodException();
-        }
-        if ($payment_method->isDeleted()) {
-            throw new DeletedPaymentMethodException();
-        }
-
-        $em = EntityManagerProvider::getEntityManager();
-        $subscription = $em->transactional(function () use ($payment_method, $partner_id, $product_name) {
-            $subscription = new SubscriptionEntity($payment_method->getId(), $partner_id, $product_name);
-            SubscriptionRepository::getRepository()->save($subscription);
-
-            SubscriptionPaymentMethodHistoryRepository::getRepository()->save(
-                new SubscriptionPaymentMethodHistoryEntity($subscription, $payment_method)
-            );
-
-            return $subscription;
-        });
-
-        return new SubscriptionDto($subscription);
-    }
-
-    /**
      * @param string $reservation_id
      * @param int $u_idx
      * @return SubscriptionRegistrationDto
