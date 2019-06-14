@@ -7,7 +7,6 @@ services:
       - 80
     environment:
       - APP_ENV=dev
-      - KCP_HTTP_PROXY_HOST=${KCP_HTTP_PROXY_HOST}
     volumes:
       - .:/app
     logging:
