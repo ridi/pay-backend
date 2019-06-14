@@ -13,13 +13,11 @@ use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\ValidationTokenManager;
-use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\User\Application\Service\CardAppService;
+use RidiPay\User\Domain\Exception\PaymentMethodChangeDeclinedException;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
-use RidiPay\User\Domain\Exception\OnetouchPaySettingChangeDeclinedException;
-use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
@@ -224,7 +222,7 @@ class UserController extends BaseController
      *     description="Success",
      *     @OA\JsonContent(
      *       type="object",
-     *       required={"user_id", "payment_methods", "has_pin", "is_using_onetouch_pay"},
+     *       required={"user_id", "payment_methods", "has_pin"},
      *       @OA\Property(
      *         property="user_id",
      *         type="string",
@@ -240,13 +238,6 @@ class UserController extends BaseController
      *         type="boolean",
      *         description="결제 비밀번호 등록 여부",
      *         example=true
-     *       ),
-     *       @OA\Property(
-     *         property="is_using_onetouch_pay",
-     *         type="boolean",
-     *         description="원터치 결제 이용 여부",
-     *         example=true,
-     *         nullable=true
      *       )
      *     )
      *   ),
@@ -304,8 +295,7 @@ class UserController extends BaseController
                 [
                     'user_id' => $this->getUid(),
                     'payment_methods' => $user_information->payment_methods,
-                    'has_pin' => $user_information->has_pin,
-                    'is_using_onetouch_pay' => $user_information->is_using_onetouch_pay
+                    'has_pin' => $user_information->has_pin
                 ]
             );
         } catch (LeavedUserException $e) {
@@ -368,7 +358,7 @@ class UserController extends BaseController
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="카드 등록, 결제 비밀번호 등록, 원터치 결제 설정까지 필요한 인증 토큰",
+     *         description="카드 등록, 결제 비밀번호 등록까지 필요한 인증 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )
@@ -376,7 +366,16 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent(type="object")
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"payment_method_id"},
+     *       @OA\Property(
+     *         property="payment_method_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 수단 ID",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       )
+     *     )
      *   ),
      *   @OA\Response(
      *     response="400",
@@ -395,6 +394,15 @@ class UserController extends BaseController
      *       oneOf={
      *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
      *         @OA\Schema(ref="#/components/schemas/LoginRequired")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/PaymentMethodChangeDeclined")
      *       }
      *     )
      *   ),
@@ -440,7 +448,21 @@ class UserController extends BaseController
 
             UserAppService::createPin($this->getUidx(), $body->pin);
 
-            $response = self::createSuccessResponse();
+            if (empty(PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx())->cards)) {
+                $card = CardAppService::finishCardRegistration($this->getOAuth2User());
+            } else {
+                $card = CardAppService::changeCard($this->getOAuth2User());
+            }
+
+            ValidationTokenManager::invalidate($card_registration_key);
+
+            $response = self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);
+        } catch (PaymentMethodChangeDeclinedException $e) {
+            $response = self::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::PAYMENT_METHOD_CHANGE_DECLINED,
+                $e->getMessage()
+            );
         } catch (WrongFormattedPinException $e) {
             $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -660,7 +682,7 @@ class UserController extends BaseController
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="결제 비밀번호 인증 후 발급된 토큰",
+     *         description="결제 비밀번호 확인 후 발급된 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )
@@ -733,11 +755,7 @@ class UserController extends BaseController
             $body = json_decode($request->getContent());
             UserAppService::validatePin($this->getUidx(), $body->pin);
 
-            if (isset($body->reservation_id)) {
-                $validation_token = TransactionAppService::generateValidationToken($body->reservation_id);
-            } else {
-                $validation_token = UserAppService::generateValidationToken($this->getUidx());
-            }
+            $validation_token = UserAppService::generateValidationToken($this->getUidx());
 
             $response = self::createSuccessResponse(['validation_token' => $validation_token]);
         } catch (LeavedUserException $e) {
@@ -762,308 +780,6 @@ class UserController extends BaseController
             $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
                 UserErrorCodeConstant::PIN_ENTRY_BLOCKED,
-                $e->getMessage()
-            );
-        } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
-
-            $response = self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
-            );
-        }
-
-        ControllerAccessLogger::logResponse($request, $response, $context);
-
-        return $response;
-    }
-
-    /**
-     * @Route("/me/onetouch", methods={"OPTIONS"})
-     * @Cors(methods={"POST, PUT"})
-     *
-     * @return JsonResponse
-     */
-    public function setAndChangeOnetouchPayPreflight(): JsonResponse
-    {
-        return self::createSuccessResponse();
-    }
-
-    /**
-     * @Route("/me/onetouch", methods={"POST"})
-     * @ParamValidator(
-     *   rules={
-     *     {"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}},
-     *     {"param"="validation_token", "constraints"={"Uuid"}}
-     *   }
-     * )
-     * @OAuth2()
-     *
-     * @OA\Post(
-     *   path="/me/onetouch",
-     *   summary="원터치 결제 설정",
-     *   tags={"private-api"},
-     *   @OA\RequestBody(
-     *     @OA\JsonContent(
-     *       type="object",
-     *       required={"enable_onetouch_pay"},
-     *       @OA\Property(property="enable_onetouch_pay", type="boolean", description="원터치 결제 이용 여부", example=true)
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Success",
-     *     @OA\JsonContent(type="object")
-     *   ),
-     *   @OA\Response(
-     *     response="400",
-     *     description="Bad Request",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InvalidParameter")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="401",
-     *     description="Unauthorized",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
-     *         @OA\Schema(ref="#/components/schemas/InvalidValidationToken"),
-     *         @OA\Schema(ref="#/components/schemas/LoginRequired"),
-     *         @OA\Schema(ref="#/components/schemas/UnauthorizedCardRegistration")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/LeavedUser")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="404",
-     *     description="Not Found",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/NotFoundUser")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="500",
-     *     description="Internal Server Error",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
-     *       }
-     *     )
-     *   )
-     * )
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function setOnetouchPay(Request $request)
-    {
-        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
-            );
-        }
-
-        $context = ['u_idx' => $this->getUidx()];
-        ControllerAccessLogger::logRequest($request, $context);
-
-        try {
-            $body = json_decode($request->getContent());
-            $card_registration_key = CardAppService::getCardRegistrationKey($this->getUidx());
-            $validation_token = ValidationTokenManager::get($card_registration_key);
-            if ($validation_token !== $body->validation_token) {
-                $response = self::createErrorResponse(
-                    CommonErrorCodeConstant::class,
-                    CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
-                );
-                ControllerAccessLogger::logResponse($request, $response, $context);
-
-                return $response;
-            }
-
-            UserAppService::setOnetouchPay($this->getUidx(), $body->enable_onetouch_pay);
-            $card = CardAppService::finishCardRegistration($this->getOAuth2User());
-            ValidationTokenManager::invalidate($card_registration_key);
-
-            $response = self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);
-        } catch (LeavedUserException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::LEAVED_USER,
-                $e->getMessage()
-            );
-        } catch (NotFoundUserException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
-        } catch (UnauthorizedCardRegistrationException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::UNAUTHORIZED_CARD_REGISTRATION,
-                $e->getMessage()
-            );
-        } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
-
-            $response = self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
-            );
-        }
-
-        ControllerAccessLogger::logResponse($request, $response, $context);
-
-        return $response;
-    }
-
-    /**
-     * @Route("/me/onetouch", methods={"PUT"})
-     * @ParamValidator(
-     *   rules={
-     *     {"param"="enable_onetouch_pay", "constraints"={{"Type"="bool"}}}
-     *   }
-     * )
-     * @OAuth2()
-     *
-     * @OA\Put(
-     *   path="/me/onetouch",
-     *   summary="원터치 결제 이용 여부 변경",
-     *   tags={"private-api"},
-     *   @OA\RequestBody(
-     *     @OA\JsonContent(
-     *       type="object",
-     *       required={"enable_onetouch_pay"},
-     *       @OA\Property(property="enable_onetouch_pay", type="boolean", description="원터치 결제 이용 여부", example=true),
-     *       @OA\Property(
-     *         property="validation_token",
-     *         type="string",
-     *         description="결제 비밀번호 인증 후 발급된 토큰",
-     *         example="550E8400-E29B-41D4-A716-446655440000"
-     *       )
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="200",
-     *     description="Success",
-     *     @OA\JsonContent(type="object")
-     *   ),
-     *   @OA\Response(
-     *     response="400",
-     *     description="Bad Request",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InvalidParameter")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="401",
-     *     description="Unauthorized",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InvalidAccessToken"),
-     *         @OA\Schema(ref="#/components/schemas/LoginRequired")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/LeavedUser"),
-     *         @OA\Schema(ref="#/components/schemas/OnetouchPaySettingChangeDeclined")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="404",
-     *     description="Not Found",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/NotFoundUser")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
-     *     response="500",
-     *     description="Internal Server Error",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
-     *       }
-     *     )
-     *   )
-     * )
-     *
-     * @param Request $request
-     * @return JsonResponse
-     */
-    public function changeOnetouchPay(Request $request)
-    {
-        if ($request->getContentType() !== self::REQUEST_CONTENT_TYPE) {
-            return self::createErrorResponse(
-                CommonErrorCodeConstant::class,
-                CommonErrorCodeConstant::INVALID_CONTENT_TYPE
-            );
-        }
-
-        $context = ['u_idx' => $this->getUidx()];
-        ControllerAccessLogger::logRequest($request, $context);
-
-        try {
-            $body = json_decode($request->getContent());
-            if ($body->enable_onetouch_pay) {
-                $user_key = UserAppService::getUserKey($this->getUidx());
-                $validation_token = ValidationTokenManager::get($user_key);
-                if (!isset($body->validation_token) || $validation_token !== $body->validation_token) {
-                    $response = self::createErrorResponse(
-                        CommonErrorCodeConstant::class,
-                        CommonErrorCodeConstant::INVALID_VALIDATION_TOKEN
-                    );
-                    ControllerAccessLogger::logResponse($request, $response, $context);
-
-                    return $response;
-                }
-
-                UserAppService::enableOnetouchPay($this->getOAuth2User());
-                ValidationTokenManager::invalidate($user_key);
-            } else {
-                UserAppService::disableOnetouchPay($this->getUidx());
-            }
-
-            $response = self::createSuccessResponse();
-        } catch (LeavedUserException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::LEAVED_USER,
-                $e->getMessage()
-            );
-        } catch (NotFoundUserException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
-        } catch (OnetouchPaySettingChangeDeclinedException $e) {
-            $response = self::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::ONETOUCH_PAY_SETTING_CHANGE_DECLINED,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {

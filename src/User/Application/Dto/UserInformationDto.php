@@ -13,9 +13,6 @@ class UserInformationDto
     /** @var bool */
     public $has_pin;
 
-    /** @var null|bool */
-    public $is_using_onetouch_pay;
-
     /**
      * @param AvailablePaymentMethodsDto $payment_methods
      * @param UserEntity $user
@@ -24,6 +21,5 @@ class UserInformationDto
     {
         $this->payment_methods = $payment_methods;
         $this->has_pin = $user->hasPin();
-        $this->is_using_onetouch_pay = $user->isUsingOnetouchPay();
     }
 }

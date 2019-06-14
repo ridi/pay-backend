@@ -60,7 +60,6 @@ class ValidatePinTest extends ControllerTestCase
         TestUtil::registerCard(
             $u_idx,
             self::VALID_PIN,
-            true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],
@@ -122,7 +121,6 @@ class ValidatePinTest extends ControllerTestCase
         TestUtil::registerCard(
             $user_indices[0],
             self::VALID_PIN,
-            true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],
@@ -132,7 +130,6 @@ class ValidatePinTest extends ControllerTestCase
         TestUtil::registerCard(
             $user_indices[1],
             self::VALID_PIN,
-            true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],
@@ -143,7 +140,6 @@ class ValidatePinTest extends ControllerTestCase
         TestUtil::registerCard(
             $user_indices[3],
             self::VALID_PIN,
-            true,
             TestUtil::CARD['CARD_NUMBER'],
             TestUtil::CARD['CARD_EXPIRATION_DATE'],
             TestUtil::CARD['CARD_PASSWORD'],

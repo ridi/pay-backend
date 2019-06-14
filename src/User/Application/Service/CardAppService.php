@@ -12,28 +12,28 @@ use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
-use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
+use RidiPay\Transaction\Domain\Service\TransactionApprovalTrait;
 use RidiPay\User\Application\Dto\CardDto;
-use RidiPay\User\Domain\Exception\CardAlreadyExistsException;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
+use RidiPay\User\Domain\Exception\PaymentMethodChangeDeclinedException;
 use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
-use RidiPay\User\Domain\Service\CardRegistrationValidator;
 use RidiPay\User\Domain\Service\CardService;
 use RidiPay\User\Domain\Service\UserActionHistoryService;
 
 class CardAppService
 {
+    use TransactionApprovalTrait;
+
     /**
      * @param int $u_idx
      * @param string $card_number 카드 번호 16자리
      * @param string $card_password 카드 비밀번호 앞 2자리
      * @param string $card_expiration_date 카드 유효 기한 (YYMM)
      * @param string $tax_id 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
-     * @throws CardAlreadyExistsException
      * @throws CardRegistrationException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -47,9 +47,6 @@ class CardAppService
         string $card_password,
         string $tax_id
     ): void {
-        $card_registration_validator = new CardRegistrationValidator($u_idx);
-        $card_registration_validator->validate();
-
         CardService::registerCard(
             $u_idx,
             $card_number,
@@ -83,7 +80,7 @@ class CardAppService
 
         try {
             $payment_method_repo = PaymentMethodRepository::getRepository();
-            $payment_method = PaymentMethodRepository::getRepository()->findOneById($payment_method_id);
+            $payment_method = $payment_method_repo->findOneById($payment_method_id);
             $payment_method->delete();
             $payment_method_repo->save($payment_method);
 
@@ -148,8 +145,9 @@ class CardAppService
             }
 
             $payment_method = CardService::useRegisteredCard($u_idx);
+            UserActionHistoryService::logRegisterCard($u_idx);
+
             UserAppService::useCreatedPin($u_idx);
-            UserAppService::useSavedOnetouchPaySetting($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -168,6 +166,73 @@ class CardAppService
         EmailSender::send(
             $oauth2_user->getEmail(),
             "{$oauth2_user->getUid()}님, 카드 등록 안내드립니다.",
+            $email_body
+        );
+
+        return $card;
+    }
+
+    /**
+     * @param User $oauth2_user
+     * @return CardDto
+     * @throws LeavedUserException
+     * @throws NotFoundUserException
+     * @throws PaymentMethodChangeDeclinedException
+     * @throws UnauthorizedCardRegistrationException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
+     * @throws \Twig_Error_Loader
+     * @throws \Twig_Error_Runtime
+     * @throws \Twig_Error_Syntax
+     */
+    public static function changeCard(User $oauth2_user): CardDto
+    {
+        UserAppService::validateUser($oauth2_user->getUidx());
+        if (!CardService::isCardRegistrationInProgress($oauth2_user->getUidx())) {
+            throw new UnauthorizedCardRegistrationException();
+        }
+        if (self::isTransactionApprovalRunning($oauth2_user->getUidx())) {
+            throw new PaymentMethodChangeDeclinedException();
+        }
+
+        $em = EntityManagerProvider::getEntityManager();
+        $new_payment_method = $em->transactional(function () use ($oauth2_user) {
+            // 기존 카드 삭제
+            $payment_method_repo = PaymentMethodRepository::getRepository();
+            $previous_payment_methods = $payment_method_repo->getAvailablePaymentMethods($oauth2_user->getUidx());
+            foreach ($previous_payment_methods as $previous_payment_method) {
+                $previous_payment_method->delete();
+                $payment_method_repo->save($previous_payment_method, true);
+            }
+
+            UserActionHistoryService::logChangeCard($oauth2_user->getUidx());
+
+            // 신규 카드 등록
+            $new_payment_method = CardService::useRegisteredCard($oauth2_user->getUidx());
+            UserAppService::useCreatedPin($oauth2_user->getUidx());
+
+            // 기존 카드로부터 신규 카드로 구독 이전
+            foreach ($previous_payment_methods as $previous_payment_method) {
+                SubscriptionAppService::changePaymentMethod(
+                    $previous_payment_method->getId(),
+                    $new_payment_method->getId()
+                );
+            }
+
+            return $new_payment_method;
+        });
+
+        $card = new CardDto($new_payment_method->getCardForOneTimePayment());
+        $data = [
+            'card_issuer_name' => $card->issuer_name,
+            'iin' => $card->iin,
+            'subscriptions' => $card->subscriptions
+        ];
+        $email_body = (new MailRenderer())->render('card_change_alert.twig', $data);
+        EmailSender::send(
+            $oauth2_user->getEmail(),
+            "{$oauth2_user->getUid()}님, 카드 변경 안내드립니다.",
             $email_body
         );
 

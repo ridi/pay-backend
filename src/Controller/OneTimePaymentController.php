@@ -25,9 +25,8 @@ use RidiPay\Transaction\Application\Service\TransactionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
+use RidiPay\User\Application\Service\UserAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
-use RidiPay\User\Domain\Exception\LeavedUserException;
-use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -69,7 +68,7 @@ class OneTimePaymentController extends BaseController
      *       @OA\Property(
      *         property="return_url",
      *         type="string",
-     *         description="RIDI Pay 결제 인증 성공/실패 후, Redirect 되는 가맹점 URL",
+     *         description="RIDI Pay 결제 비밀번호 확인 성공/실패 후, Redirect 되는 가맹점 URL",
      *         example="https://ridibooks.com/payment/callback/ridi-pay"
      *       )
      *     )
@@ -238,22 +237,7 @@ class OneTimePaymentController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent(
-     *       type="object",
-     *       required={"is_pin_validation_required"},
-     *       @OA\Property(
-     *         property="is_pin_validation_required",
-     *         type="boolean",
-     *         description="결제 비밀번호 검증 필요 여부",
-     *         example=true
-     *       ),
-     *       @OA\Property(
-     *         property="validation_token",
-     *         type="string",
-     *         description="is_pin_validation_required = false인 경우, 발급된 인증 토큰",
-     *         example="550E8400-E29B-41D4-A716-446655440000"
-     *       )
-     *     )
+     *     @OA\JsonContent(type="object")
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -271,8 +255,7 @@ class OneTimePaymentController extends BaseController
      *     description="Forbidden",
      *     @OA\JsonContent(
      *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod"),
-     *         @OA\Schema(ref="#/components/schemas/LeavedUser")
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
      *       }
      *     )
      *   ),
@@ -281,7 +264,6 @@ class OneTimePaymentController extends BaseController
      *     description="Not Found",
      *     @OA\JsonContent(
      *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/NotFoundUser"),
      *         @OA\Schema(ref="#/components/schemas/NotReservedTransaction")
      *       }
      *     )
@@ -307,32 +289,9 @@ class OneTimePaymentController extends BaseController
         ControllerAccessLogger::logRequest($request, $context);
 
         try {
-            $is_pin_validation_required = TransactionAppService::isPinValidationRequired(
-                $reservation_id,
-                $this->getUidx()
-            );
-            if (!$is_pin_validation_required) {
-                $validation_token = TransactionAppService::generateValidationToken($reservation_id);
-            }
+            TransactionAppService::getReservedTransaction($reservation_id, $this->getUidx());
 
-            $data = ['is_pin_validation_required' => $is_pin_validation_required];
-            if (isset($validation_token)) {
-                $data['validation_token'] = $validation_token;
-            }
-
-            $response = BaseController::createSuccessResponse($data);
-        } catch (LeavedUserException $e) {
-            $response = BaseController::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::LEAVED_USER,
-                $e->getMessage()
-            );
-        } catch (NotFoundUserException $e) {
-            $response = BaseController::createErrorResponse(
-                UserErrorCodeConstant::class,
-                UserErrorCodeConstant::NOT_FOUND_USER,
-                $e->getMessage()
-            );
+            $response = self::createSuccessResponse();
         } catch (DeletedPaymentMethodException $e) {
             $response = BaseController::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -393,7 +352,7 @@ class OneTimePaymentController extends BaseController
      *
      * @OA\Post(
      *   path="/payments/{reservation_id}",
-     *   summary="결제 인증 성공 후, 결제 생성",
+     *   summary="결제 비밀번호 확인 성공 후, 결제 생성",
      *   tags={"private-api"},
      *   @OA\Parameter(
      *     name="reservation_id",
@@ -409,7 +368,7 @@ class OneTimePaymentController extends BaseController
      *       @OA\Property(
      *         property="validation_token",
      *         type="string",
-     *         description="결제 인증 후 발급된 토큰",
+     *         description="결제 비밀번호 확인 후 발급된 토큰",
      *         example="550E8400-E29B-41D4-A716-446655440000"
      *       )
      *     )
@@ -493,8 +452,8 @@ class OneTimePaymentController extends BaseController
 
         try {
             $body = json_decode($request->getContent());
-            $reservation_key = TransactionAppService::getReservationKey($reservation_id);
-            $validation_token = ValidationTokenManager::get($reservation_key);
+            $user_key = UserAppService::getUserKey($this->getUidx());
+            $validation_token = ValidationTokenManager::get($user_key);
             if ($validation_token !== $body->validation_token) {
                 $response = BaseController::createErrorResponse(
                     CommonErrorCodeConstant::class,
@@ -506,7 +465,7 @@ class OneTimePaymentController extends BaseController
             }
 
             $result = TransactionAppService::createTransaction($this->getUidx(), $reservation_id);
-            ValidationTokenManager::invalidate($reservation_key);
+            ValidationTokenManager::invalidate($user_key);
 
             $response = BaseController::createSuccessResponse([
                 'return_url' => $result->return_url . '?' . http_build_query(['transaction_id' => $result->transaction_id])

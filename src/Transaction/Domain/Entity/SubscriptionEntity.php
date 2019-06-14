@@ -6,7 +6,6 @@ namespace RidiPay\Transaction\Domain\Entity;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
-use RidiPay\Transaction\Domain\Exception\AlreadyCancelledTransactionException;
 use RidiPay\Transaction\Domain\Exception\AlreadyResumedSubscriptionException;
 
 /**
@@ -182,5 +181,13 @@ class SubscriptionEntity
         }
 
         $this->unsubscribed_at = null;
+    }
+
+    /**
+     * @param int $payment_method_id
+     */
+    public function setPaymentMethodId(int $payment_method_id): void
+    {
+        $this->payment_method_id = $payment_method_id;
     }
 }
