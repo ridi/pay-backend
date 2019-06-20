@@ -44,13 +44,12 @@ class Client
     }
 
     /**
-     * Client constructor.
      * @param bool $is_tax_deductible
      */
     private function __construct(bool $is_tax_deductible = false)
     {
         $this->http_client = new HttpClient([
-            'base_uri' => getenv('KCP_HTTP_PROXY_HOST'),
+            'base_uri' => getenv('KCP_HTTP_PROXY_URL'),
             'connect_timeout' => self::TIMEOUT_IN_SECONDS,
             'timeout' => self::TIMEOUT_IN_SECONDS,
             'headers' => [ 'Content-Type' => 'application/json' ]
