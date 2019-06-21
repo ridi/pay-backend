@@ -76,7 +76,7 @@ class TransactionApprovalTest extends TestCase
             self::approveTransaction(
                 $transaction,
                 PgHandlerFactory::createWithTest($pg->name),
-                '',
+                'dummy',
                 new Buyer('id', 'name', 'ridi-pay-test@ridi.com')
             );
         } catch (TransactionApprovalException $e) {

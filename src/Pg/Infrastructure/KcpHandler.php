@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Pg\Infrastructure;
 
 use GuzzleHttp\Exception\GuzzleException;
+use RidiPay\Kernel;
 use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Order;
@@ -20,9 +21,6 @@ class KcpHandler implements PgHandlerInterface
 {
     /** @var Client */
     private $client;
-
-    /** @var bool */
-    private $is_prod;
 
     /**
      * @return KcpHandler
@@ -143,7 +141,7 @@ class KcpHandler implements PgHandlerInterface
             $transaction->getUuid()->toString(),
             $transaction->getAmount(),
             Util::RECEIPT_LANG_KO,
-            $this->is_prod
+            !Kernel::isDev()
         );
     }
 }

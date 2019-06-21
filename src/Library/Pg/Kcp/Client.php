@@ -53,6 +53,7 @@ class Client
             'connect_timeout' => self::TIMEOUT_IN_SECONDS,
             'timeout' => self::TIMEOUT_IN_SECONDS,
             'headers' => ['Content-Type' => 'application/json'],
+            'http_errors' => false,
         ]);
         $this->is_tax_deductible = $is_tax_deductible;
     }
