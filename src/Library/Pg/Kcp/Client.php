@@ -52,7 +52,7 @@ class Client
             'base_uri' => getenv('KCP_HTTP_PROXY_URL'),
             'connect_timeout' => self::TIMEOUT_IN_SECONDS,
             'timeout' => self::TIMEOUT_IN_SECONDS,
-            'headers' => [ 'Content-Type' => 'application/json' ]
+            'headers' => ['Content-Type' => 'application/json'],
         ]);
         $this->is_tax_deductible = $is_tax_deductible;
     }
@@ -72,11 +72,10 @@ class Client
             'card_password' => $card->getPassword()
         ];
 
-
         $response = $this->http_client->request(
             Request::METHOD_POST,
             '/payments/batch-key',
-            [ 'body' => \json_encode($data) ]
+            ['body' => \json_encode($data)]
         );
         $decoded_response = \json_decode($response->getBody()->getContents(), true);
         return new BatchKeyResponse($decoded_response);
@@ -102,11 +101,10 @@ class Client
             'installment_months' => $installment_months
         ];
 
-
         $response = $this->http_client->request(
             Request::METHOD_POST,
             '/payments',
-            [ 'body' => \json_encode($data) ]
+            ['body' => \json_encode($data)]
         );
         $decoded_response = \json_decode($response->getBody()->getContents(), true);
         return new BatchOrderResponse($decoded_response);
@@ -129,7 +127,7 @@ class Client
             $response = $this->http_client->request(
                 Request::METHOD_DELETE,
                 "/payments/${kcp_tno}",
-                [ 'body' => \json_encode($data) ]
+                ['body' => \json_encode($data)]
             );
             $decoded_response = \json_decode($response->getBody()->getContents(), true);
             return new CancelTransactionResponse($decoded_response);
