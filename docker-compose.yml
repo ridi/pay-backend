@@ -24,6 +24,18 @@ services:
         aliases:
           - pay-api
       default:
+  kcp:
+    image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/kcp-http-proxy:latest
+    ports:
+      - 80
+    environment:
+      - APP_ENV=dev
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - DYNAMODB_ENDPOINT=http://dynamodb:8000
+      - REDIS_HOST=redis
+    depends_on:
+      - dynamodb
   fluentd:
     build: ./config/fluentd
     ports:
@@ -52,6 +64,11 @@ services:
     image: redis:latest
     volumes:
       - ./data/redis:/data
+  dynamodb:
+    image: amazon/dynamodb-local
+    command: ['-jar', 'DynamoDBLocal.jar', '-sharedDb', '-dbPath', '.']
+    volumes:
+      - ./data/dynamodb:/home/dynamodblocal/data
 networks:
   traefik:
     external:
