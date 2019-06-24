@@ -48,9 +48,6 @@ jobs:
       script:
         - $(aws ecr get-login --no-include-email --region ap-northeast-2)
         - GIT_REVISION=$TRAVIS_COMMIT make deploy-build
-      after_success:
-        - docker push 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend:$TRAVIS_COMMIT
-        - docker push 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend-fluentd:$TRAVIS_COMMIT
     - stage: deploy
       name: prod-deploy
       if: tag IS present AND tag =~ ^v
