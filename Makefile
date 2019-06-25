@@ -1,9 +1,6 @@
 dev:
-	$(MAKE) composer
-	$(MAKE) env
-
-composer:
 	composer install
+	$(MAKE) env
 
 env:
 	cp .env.example .env
@@ -11,16 +8,11 @@ env:
 fixture:
 	docker exec -it $(shell docker-compose ps -q api) php bin/fixture.php
 
-phpunit:
-	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpunit
+test:
+	docker-compose -f docker-compose.test.yml up --build --exit-code-from api
+	docker-compose -f docker-compose.test.yml down
 
-phpstan:
-	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpstan analyse -l 6 -c config/phpstan/phpstan.neon src
-
-phpcs:
-	docker exec -it $(shell docker-compose ps -q api) vendor/bin/phpcs --standard=config/phpcs/ruleset.xml
-
-deploy-build:
+build:
 	GIT_REVISION=${GIT_REVISION} docker-compose -f ./config/ecs/api.yml build
 	docker push 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend:${GIT_REVISION}
 

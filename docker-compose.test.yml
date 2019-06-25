@@ -3,24 +3,12 @@ version: "3"
 services:
   api:
     build: .
-    ports:
-      - 80
     environment:
       - APP_ENV=dev
-    volumes:
-      - .:/app
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=${EXTERNAL_NETWORK:-ridi}"
-      - "traefik.frontend.rule=Host:api.pay.local.ridi.io"
     depends_on:
       - mariadb
       - redis
-    networks:
-      traefik:
-        aliases:
-          - pay-api
-      default:
+    command: ['bash', '-c', 'composer test']
   kcp:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/kcp-http-proxy:latest
     ports:
@@ -37,18 +25,10 @@ services:
     image: mariadb:10.3
     ports:
       - 3306
-    volumes:
-      - ./data/mariadb:/var/lib/mysql
     environment:
       - MYSQL_DATABASE=ridi_pay
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
   redis:
     image: redis:latest
-    volumes:
-      - ./data/redis:/data
   dynamodb:
     image: amazon/dynamodb-local
-networks:
-  traefik:
-    external:
-      name: ${EXTERNAL_NETWORK:-ridi}

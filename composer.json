@@ -61,6 +61,16 @@
             "RidiPay\\Tests\\": "tests/src"
         }
     },
+    "scripts": {
+        "phpcs": "phpcs --standard=config/phpcs/ruleset.xml",
+        "phpstan": "phpstan analyse -l 6 -c config/phpstan/phpstan.neon src",
+        "phpunit": "phpunit --colors=never --coverage-clover=coverage.xml",
+        "test": [
+            "@phpcs",
+            "@phpstan",
+            "@phpunit"
+        ]
+    },
     "conflict": {
         "symfony/symfony": "*"
     },
