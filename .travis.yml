@@ -56,9 +56,8 @@ jobs:
         - |
           APP_ENV=prod \
           GIT_REVISION=$TRAVIS_COMMIT \
-          FLUENTD_TARGET_GROUP_ARN=$PROD_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$PROD_API_TARGET_GROUP_ARN \
-          FLUENTD_ADDRESS=$PROD_FLUENTD_ADDRESS make deploy
+          make deploy
       after_success:
         - sh ./bin/slack_notification.sh success
       after_failure:
@@ -71,9 +70,8 @@ jobs:
         - |
           APP_ENV=test \
           GIT_REVISION=$TRAVIS_COMMIT \
-          FLUENTD_TARGET_GROUP_ARN=$TEST_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$TEST_API_TARGET_GROUP_ARN \
-          FLUENTD_ADDRESS=$TEST_FLUENTD_ADDRESS make deploy
+          make deploy
     - stage: deploy
       name: staging-deploy
       if: branch = staging
@@ -82,9 +80,8 @@ jobs:
         - |
           APP_ENV=staging \
           GIT_REVISION=$TRAVIS_COMMIT \
-          FLUENTD_TARGET_GROUP_ARN=$STAGING_FLUENTD_TARGET_GROUP_ARN \
           API_TARGET_GROUP_ARN=$STAGING_API_TARGET_GROUP_ARN \
-          FLUENTD_ADDRESS=$STAGING_FLUENTD_ADDRESS make deploy
+          make deploy
     - stage: docs
       name: api
       install:

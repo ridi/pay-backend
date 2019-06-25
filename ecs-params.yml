@@ -44,9 +44,3 @@ task_definition:
           name: SENTRY_DSN
         - value_from: "/ridi-pay/${APP_ENV}/STORE_TO_RIDI_PAY_PUBLIC_KEY"
           name: STORE_TO_RIDI_PAY_PUBLIC_KEY
-
-run_params:
-  task_placement:
-    constraints:
-      - type: memberOf
-        expression: "attribute:service !exists"

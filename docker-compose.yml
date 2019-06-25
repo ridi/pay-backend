@@ -9,12 +9,6 @@ services:
       - APP_ENV=dev
     volumes:
       - .:/app
-    logging:
-      driver: fluentd
-      options:
-        tag: dev.ridi-pay.backend.api
-    depends_on:
-      - fluentd
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${EXTERNAL_NETWORK:-ridi}"
@@ -35,14 +29,6 @@ services:
       - DYNAMODB_ENDPOINT=http://dynamodb:8000
     depends_on:
       - dynamodb
-  fluentd:
-    build: ./config/fluentd
-    ports:
-      - 24224:24224
-    volumes:
-      - ./config/fluentd:/fluentd/etc
-    environment:
-      - FLUENTD_CONF=fluent.local.conf
   mariadb:
     image: mariadb:10.3
     ports:
