@@ -29,7 +29,10 @@ class KernelExceptionHandler implements EventSubscriberInterface
     {
         $exception = $event->getException();
 
-        $response = new JsonResponse();
+        $response = new JsonResponse([
+            'code' => $event->getException()->getCode(),
+            'message' => $event->getException()->getMessage()
+        ]);
         if ($exception instanceof HttpExceptionInterface) {
             $response->setStatusCode($exception->getStatusCode());
             $response->headers->replace($exception->getHeaders());
