@@ -29,17 +29,25 @@ class KernelExceptionHandler implements EventSubscriberInterface
     {
         $exception = $event->getException();
 
-        $response = new JsonResponse([
-            'code' => $event->getException()->getCode(),
-            'message' => $event->getException()->getMessage()
-        ]);
         if ($exception instanceof HttpExceptionInterface) {
-            $response->setStatusCode($exception->getStatusCode());
+            $response = new JsonResponse(
+                [
+                    'code' => $exception->getStatusCode(),
+                    'message' => Response::$statusTexts[$exception->getStatusCode()]
+                ],
+                $exception->getStatusCode()
+            );
             $response->headers->replace($exception->getHeaders());
         } else {
             SentryHelper::captureException($exception);
 
-            $response->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+            $response = new JsonResponse(
+                [
+                    'code' => 'INTERNAL_SERVER_ERROR',
+                    'message' => Response::$statusTexts[Response::HTTP_INTERNAL_SERVER_ERROR]
+                ],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
 
         $event->setResponse($response);
