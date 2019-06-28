@@ -766,6 +766,155 @@ class BillingPaymentController extends BaseController
 
     /**
      * @Route(
+     *   "/payments/subscriptions/{subscription_id}/status",
+     *   methods={"GET"},
+     *   requirements={
+     *     "subscription_id"="^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+     *   }
+     * )
+     *
+     * @OA\Get(
+     *   path="/payments/subscriptions/{subscription_id}/status",
+     *   summary="구독 정보 조회",
+     *   tags={"public-api"},
+     *   @OA\Parameter(ref="#/components/parameters/Api-Key"),
+     *   @OA\Parameter(ref="#/components/parameters/Secret-Key"),
+     *   @OA\Parameter(
+     *     name="subscription_id",
+     *     in="path",
+     *     required=true,
+     *     description="RIDI Pay 구독 ID",
+     *     @OA\Schema(type="string")
+     *   ),
+     *   @OA\Response(
+     *     response="200",
+     *     description="Success",
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={
+     *         "subscription_id",
+     *         "u_idx",
+     *         "payment_method_id",
+     *         "payment_method_type",
+     *         "product_name",
+     *         "subscribed_at"
+     *       },
+     *       @OA\Property(
+     *         property="subscription_id",
+     *         type="string",
+     *         description="RIDI Pay 구독 ID",
+     *         example="550E8400-E29B-41D4-A716-446655440000"
+     *       ),
+     *       @OA\Property(
+     *         property="u_idx",
+     *         type="integer",
+     *         description="RIDIBOOKS 유저 고유 번호"
+     *       ),
+     *       @OA\Property(
+     *         property="payment_method_id",
+     *         type="string",
+     *         description="RIDI Pay 결제 수단 ID",
+     *         example="880E8200-A29B-24B2-8716-42B65544A000"
+     *       ),
+     *       @OA\Property(property="payment_method_type", type="string", description="RIDI Pay 결제 수단 종류", example="CARD"),
+     *       @OA\Property(property="product_name", type="string", description="구독 상품", example="리디셀렉트 구독"),
+     *       @OA\Property(
+     *         property="subscribed_at",
+     *         type="string",
+     *         description="구독 등록 일시(ISO 8601 Format)",
+     *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="unsubscribed_at",
+     *         type="string",
+     *         description="구독 해지 일시(ISO 8601 Format)",
+     *         example="2018-06-08T01:59:30+09:00"
+     *       ),
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="401",
+     *     description="Unauthorized",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/UnauthorizedPartner")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="404",
+     *     description="Not Found",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/NotFoundSubscription")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response="500",
+     *     description="Internal Server Error",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/InternalServerError")
+     *       }
+     *     )
+     *   )
+     * )
+     *
+     * @param Request $request
+     * @param string $subscription_id
+     * @return JsonResponse
+     */
+    public function getSubscription(Request $request, string $subscription_id): JsonResponse
+    {
+        ControllerAccessLogger::logRequest($request);
+
+        try {
+            $partner_api_secret = ApiSecretValidator::validate($request);
+
+            $result = SubscriptionAppService::getSubscription($partner_api_secret, $subscription_id);
+
+            $data = [
+                'subscription_id' => $result->subscription_id,
+                'u_idx' => $result->u_idx,
+                'payment_method_id' => $result->payment_method_id,
+                'payment_method_type' => $result->payment_method_type,
+                'product_name' => $result->product_name,
+                'subscribed_at' => $result->subscribed_at->format(DATE_ATOM)
+            ];
+            if ($result->unsubscribed_at !== null) {
+                $data['unsubscribed_at'] = $result->unsubscribed_at->format(DATE_ATOM);
+            }
+
+            $response = BaseController::createSuccessResponse($data);
+        } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {
+            $response = BaseController::createErrorResponse(
+                PartnerErrorCodeConstant::class,
+                PartnerErrorCodeConstant::UNAUTHORIZED_PARTNER,
+                $e->getMessage()
+            );
+        } catch (NotFoundSubscriptionException $e) {
+            $response = BaseController::createErrorResponse(
+                TransactionErrorCodeConstant::class,
+                TransactionErrorCodeConstant::NOT_FOUND_SUBSCRIPTION,
+                $e->getMessage()
+            );
+        } catch (\Throwable $t) {
+            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+
+            $response = BaseController::createErrorResponse(
+                CommonErrorCodeConstant::class,
+                CommonErrorCodeConstant::INTERNAL_SERVER_ERROR
+            );
+        }
+
+        ControllerAccessLogger::logResponse($request, $response);
+
+        return $response;
+    }
+
+    /**
+     * @Route(
      *   "/payments/subscriptions/{subscription_id}/pay",
      *   methods={"POST"},
      *   requirements={

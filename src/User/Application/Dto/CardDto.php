@@ -69,7 +69,7 @@ class CardDto extends PaymentMethodDto
             function (SubscriptionDto $subscription) {
                 return $subscription->product_name;
             },
-            SubscriptionAppService::getSubscriptions($card->getPaymentMethod()->getId())
+            SubscriptionAppService::getSubscriptionByPaymentMethodId($card->getPaymentMethod()->getId())
         ));
     }
 }
