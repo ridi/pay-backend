@@ -327,7 +327,7 @@ class UserController extends BaseController
 
     /**
      * @Route("/me/pin", methods={"OPTIONS"})
-     * @Cors(methods={"POST, PUT"})
+     * @Cors(methods={"POST", "PUT"})
      *
      * @return JsonResponse
      */
