@@ -120,7 +120,7 @@ class UserEntity
      */
     private static function assertValidPin(string $pin): void
     {
-        if (!preg_match('/[0-9]{6}/', $pin)) {
+        if (!preg_match('/^\d{6}$/', $pin)) {
             throw new WrongFormattedPinException();
         }
     }
