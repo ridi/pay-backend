@@ -210,6 +210,7 @@ class BillingPaymentController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"GET"})
      *
      * @OA\Get(
      *   path="/payments/subscriptions/{reservation_id}",
@@ -328,6 +329,7 @@ class BillingPaymentController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @OA\Post(
      *   path="/payments/subscriptions/{reservation_id}",

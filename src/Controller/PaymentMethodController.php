@@ -48,6 +48,7 @@ class PaymentMethodController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @OA\Post(
      *   path="/me/cards",
@@ -183,6 +184,7 @@ class PaymentMethodController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"DELETE"})
      *
      * @OA\Delete(
      *   path="/me/cards/{payment_method_id}",

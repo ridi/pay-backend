@@ -212,6 +212,7 @@ class UserController extends BaseController
     /**
      * @Route("/me", methods={"GET"})
      * @OAuth2()
+     * @Cors(methods={"GET"})
      *
      * @OA\Get(
      *   path="/me",
@@ -345,6 +346,7 @@ class UserController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @OA\Post(
      *   path="/me/pin",
@@ -492,6 +494,7 @@ class UserController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"PUT"})
      *
      * @OA\Put(
      *   path="/me/pin",
@@ -656,6 +659,7 @@ class UserController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @OA\Post(
      *   path="/me/pin/validate",
