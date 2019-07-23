@@ -10,3 +10,9 @@ services:
     environment:
       - APP_ENV=${APP_ENV}
       - GIT_REVISION=${GIT_REVISION}
+    logging:
+      driver: awslogs
+      options:
+        awslogs-region: ap-northeast-2
+        awslogs-group: ${APP_ENV}.ridi-pay-backend
+        awslogs-stream-prefix: ${APP_ENV}.ridi-pay-backend
