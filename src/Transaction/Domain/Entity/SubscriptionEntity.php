@@ -152,9 +152,9 @@ class SubscriptionEntity
     }
 
     /**
-     * @return \DateTime
+     * @return \DateTime|null
      */
-    public function getUnsubscribedAt(): \DateTime
+    public function getUnsubscribedAt(): ?\DateTime
     {
         return $this->unsubscribed_at;
     }

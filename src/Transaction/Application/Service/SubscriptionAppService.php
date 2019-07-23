@@ -265,12 +265,39 @@ class SubscriptionAppService
     }
 
     /**
+     * @param ApiSecret $partner_api_secret
+     * @param string $subscription_uuid
+     * @return SubscriptionDto
+     * @throws NotFoundSubscriptionException
+     * @throws UnauthorizedPartnerException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    public static function getSubscription(ApiSecret $partner_api_secret, string $subscription_uuid): SubscriptionDto
+    {
+        $partner_id = PartnerAppService::validatePartner(
+            $partner_api_secret->getApiKey(),
+            $partner_api_secret->getSecretKey()
+        );
+
+        $subscription = SubscriptionRepository::getRepository()->findOneByUuid(Uuid::fromString($subscription_uuid));
+        if ($subscription === null) {
+            throw new NotFoundSubscriptionException();
+        }
+        if ($partner_id !== $subscription->getPartnerId()) {
+            throw new UnauthorizedPartnerException();
+        }
+
+        return new SubscriptionDto($subscription);
+    }
+
+    /**
      * @param int $payment_method_id
      * @return string[]
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    public static function getSubscriptions(int $payment_method_id)
+    public static function getSubscriptionByPaymentMethodId(int $payment_method_id)
     {
         $subscriptions = SubscriptionRepository::getRepository()->findActiveOnesByPaymentMethodId($payment_method_id);
 

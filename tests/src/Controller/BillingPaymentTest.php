@@ -95,11 +95,21 @@ class BillingPaymentTest extends ControllerTestCase
         // 구독 등록
         $body = json_encode(['validation_token' => $validation_token]);
         $client->request(Request::METHOD_POST, '/payments/subscriptions/' . self::$reservation_id, [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $return_url = json_decode($client->getResponse()->getContent())->return_url;
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        $subscription_response = json_decode($client->getResponse()->getContent());
+        $return_url = $subscription_response->return_url;
         $query_strings = [];
         parse_str(parse_url($return_url)['query'], $query_strings);
         $subscription_id = $query_strings['subscription_id'];
+
+        // 구독 확인
+        self::$client->request(Request::METHOD_GET, "/payments/subscriptions/{$subscription_id}/status");
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $subscription_status_response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($subscription_id, $subscription_status_response->subscription_id);
+        $this->assertSame(self::$u_idx, $subscription_status_response->u_idx);
+        $this->assertSame($product_name, $subscription_status_response->product_name);
+        $this->assertSame(self::$payment_method_id, $subscription_status_response->payment_method_id);
 
         // 구독 결제 승인
         $partner_transaction_id = Uuid::uuid4()->toString();
@@ -163,6 +173,20 @@ class BillingPaymentTest extends ControllerTestCase
         // 구독 등록
         $validation_token = UserAppService::generateValidationToken(self::$u_idx);
         $this->assertSubscriptionSuccessfully($validation_token);
+
+        // Unauthorized getting subscription status
+        $unauthorized_client->request(
+            Request::METHOD_GET,
+            '/payments/subscriptions/' . self::$subscription_id . '/status'
+        );
+        $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
+
+        // Authorized getting subscription status
+        self::$client->request(
+            Request::METHOD_GET,
+            '/payments/subscriptions/' . self::$subscription_id . '/status'
+        );
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         $subscription_payment_body = json_encode([
             'partner_transaction_id' => $partner_transaction_id,
@@ -254,7 +278,7 @@ class BillingPaymentTest extends ControllerTestCase
         // 구독 등록
         $body = json_encode(['validation_token' => $validation_token]);
         $client->request(Request::METHOD_POST, "/payments/subscriptions/{$reservation_id}", [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $return_url = json_decode($client->getResponse()->getContent())->return_url;
         $query_strings = [];
         parse_str(parse_url($return_url)['query'], $query_strings);

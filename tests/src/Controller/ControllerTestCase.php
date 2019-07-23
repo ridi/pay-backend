@@ -21,7 +21,7 @@ abstract class ControllerTestCase extends WebTestCase
             AccessTokenConstant::ACCESS_TOKEN_COOKIE_KEY,
             getenv('OAUTH2_ACCESS_TOKEN', true)
         );
-        $client = self::createClient($options, $server);
+        $client = self::createClient($options, array_merge($server, ['HTTP_Origin' => 'https://pay.ridi.io']));
         $client->getCookieJar()->set($cookie);
 
         return $client;

@@ -222,6 +222,7 @@ class OneTimePaymentController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"GET"})
      *
      * @OA\Get(
      *   path="/payments/{reservation_id}",
@@ -349,6 +350,7 @@ class OneTimePaymentController extends BaseController
      *   }
      * )
      * @OAuth2()
+     * @Cors(methods={"POST"})
      *
      * @OA\Post(
      *   path="/payments/{reservation_id}",

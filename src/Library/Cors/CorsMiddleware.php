@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Library\Cors;
 
 use Doctrine\Common\Annotations\CachedReader;
+use RidiPay\Kernel;
 use RidiPay\Library\Cors\Annotation\Cors;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,9 +19,6 @@ class CorsMiddleware implements EventSubscriberInterface
 
     /** @var CachedReader */
     private $annotation_reader;
-
-    /** @var string[] */
-    private $access_control_allow_methods;
 
     /**
      * @param CachedReader $reader
@@ -61,7 +59,7 @@ class CorsMiddleware implements EventSubscriberInterface
             return;
         }
 
-        $this->access_control_allow_methods = $annotation->getMethods();
+        $event->getRequest()->attributes->set('access_control_allow_methods', $annotation->getMethods());
 
         return;
     }
@@ -76,18 +74,28 @@ class CorsMiddleware implements EventSubscriberInterface
         }
 
         $request = $event->getRequest();
-        $response = $event->getResponse();
-        $http_method = $request->getRealMethod();
-
-        $origin = $request->headers->get('Origin');
-        if (!in_array($origin, self::getAccessControlAllowOrigins(), true)) {
+        $access_control_allow_methods = $request->attributes->get('access_control_allow_methods');
+        if (empty($access_control_allow_methods)) {
             return;
         }
 
+        $origin = $request->headers->get('Origin');
+        if (Kernel::isDev()) {
+            $regex_sub_domains_of_ridi_io = '/^https:\/\/[a-zA-Z0-9-_\.]+\.ridi\.io$/';
+            if (!preg_match($regex_sub_domains_of_ridi_io, $origin)) {
+                return;
+            }
+        } else {
+            if (!in_array($origin, self::getAccessControlAllowOrigins(), true)) {
+                return;
+            }
+        }
+
+        $response = $event->getResponse();
         $response->headers->set('Access-Control-Allow-Origin', $origin);
         $response->headers->set('Access-Control-Allow-Credentials', 'true');
-        if ($http_method === Request::METHOD_OPTIONS) {
-            $response->headers->set('Access-Control-Allow-Methods', implode(', ', $this->access_control_allow_methods));
+        if ($request->getRealMethod() === Request::METHOD_OPTIONS) {
+            $response->headers->set('Access-Control-Allow-Methods', implode(', ', $access_control_allow_methods));
             $response->headers->set('Access-Control-Allow-Headers', implode(', ', self::ACCESS_CONTROL_ALLOW_HEADERS));
         }
     }
