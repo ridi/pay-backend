@@ -13,7 +13,7 @@ test:
 	docker-compose -f docker-compose.test.yml down
 
 build:
-	GIT_REVISION=${GIT_REVISION} docker-compose -f ./config/ecs/api.yml build
+	GIT_REVISION=${GIT_REVISION} docker-compose -f docker-compose.prod.yml build
 	docker push 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend:${GIT_REVISION}
 
 deploy:
