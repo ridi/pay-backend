@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\Library\Cors;
 
 use Doctrine\Common\Annotations\CachedReader;
+use RidiPay\Kernel;
 use RidiPay\Library\Cors\Annotation\Cors;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -79,8 +80,15 @@ class CorsMiddleware implements EventSubscriberInterface
         }
 
         $origin = $request->headers->get('Origin');
-        if (!in_array($origin, self::getAccessControlAllowOrigins(), true)) {
-            return;
+        if (Kernel::isDev()) {
+            $regex_sub_domains_of_ridi_io = '/^https:\/\/[a-zA-Z0-9-_\.]+\.ridi\.io$/';
+            if (!preg_match($regex_sub_domains_of_ridi_io, $origin)) {
+                return;
+            }
+        } else {
+            if (!in_array($origin, self::getAccessControlAllowOrigins(), true)) {
+                return;
+            }
         }
 
         $response = $event->getResponse();
