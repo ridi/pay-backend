@@ -3,10 +3,12 @@ version: 1
 task_definition:
   task_role_arn: apiRole
   task_execution_role: ecsTaskExecutionRole
+  ecs_network_mode: awsvpc
+  task_size:
+    mem_limit: 512
+    cpu_limit: 256
   services:
     api:
-      mem_limit: 384m
-      mem_reservation: 192m
       secrets:
         - value_from: "/ridi-pay/${APP_ENV}/APP_SECRET"
           name: APP_SECRET
@@ -44,3 +46,12 @@ task_definition:
           name: SENTRY_DSN
         - value_from: "/ridi-pay/${APP_ENV}/STORE_TO_RIDI_PAY_PUBLIC_KEY"
           name: STORE_TO_RIDI_PAY_PUBLIC_KEY
+run_params:
+  network_configuration:
+    awsvpc_configuration:
+      subnets:
+        - ${AP_NORTHEAST_2A_PRIVATE_SUBNET_ID}
+        - ${AP_NORTHEAST_2C_PRIVATE_SUBNET_ID}
+      security_groups:
+        - ${SECURITY_GROUP_ID}
+      assign_public_ip: DISABLED
