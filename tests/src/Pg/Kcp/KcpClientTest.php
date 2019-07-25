@@ -33,7 +33,7 @@ class KcpClientTest extends TestCase
      */
     public function testPaymentLifecycle(Card $card, Order $order)
     {
-        $client = Client::getTestClient();
+        $client = Client::create();
 
         $card_company = Company::SHINHAN;
 
@@ -154,7 +154,7 @@ class KcpClientTest extends TestCase
                     '리디북스 전자책; echo $(pwd)',
                     Order::GOOD_PRICE_KRW_MIN,
                     'echo $(whoami)',
-                    'kcp-test@ridi.',
+                    'kcp-test@ridi.com',
                     self::DUMMY_ORDER_BUYER_TEL1,
                     self::DUMMY_ORDER_BUYER_TEL2
                 )

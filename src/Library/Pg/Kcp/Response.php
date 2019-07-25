@@ -40,7 +40,7 @@ abstract class Response
      */
     public function getResCd(): string
     {
-        return $this->response['res_cd'];
+        return $this->response['code'];
     }
 
     /**
@@ -48,6 +48,6 @@ abstract class Response
      */
     public function getResMsg(): string
     {
-        return $this->response['res_msg'];
+        return $this->response['message'];
     }
 }

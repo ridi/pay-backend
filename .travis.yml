@@ -28,36 +28,24 @@ jobs:
       name: test
       if: tag IS NOT present
       install:
-        - docker run -d --name mariadb_test -e "MYSQL_DATABASE=ridi_pay" -e "MYSQL_ALLOW_EMPTY_PASSWORD=yes" mariadb:10.3
-        - docker run -d --name redis redis:latest
-        - docker run -itd -v $(pwd):/app --name test --link redis:redis --link mariadb_test:mariadb_test ridibooks/store-php-test:7.2 /bin/bash
-        - docker exec -it -w /app test /bin/bash -c "composer validate && composer install"
+        - sudo apt-get install python3-pip && sudo pip3 install awscli
+        - $(aws ecr get-login --no-include-email --region ap-northeast-2)
       script:
-        - docker exec -it -w /app test bash -c "vendor/bin/phpcs --standard=config/phpcs/ruleset.xml"
-        - docker exec -it -w /app test bash -c "vendor/bin/phpstan analyse -l 6 -c config/phpstan/phpstan.neon src"
-        - docker exec -it -w /app test bash -c "vendor/bin/phpunit --colors=never --coverage-clover=coverage.xml"
+        - make test
       after_success: bash <(curl -s https://codecov.io/bash)
     - stage: build
       name: build
       if: branch IN (test, staging, master)
-      install: sudo apt-get install python3-pip && sudo pip3 install awscli
-      script:
+      install:
+        - sudo apt-get install python3-pip && sudo pip3 install awscli
         - $(aws ecr get-login --no-include-email --region ap-northeast-2)
-        - GIT_REVISION=$TRAVIS_COMMIT make deploy-build
-      after_success:
-        - docker push 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend:$TRAVIS_COMMIT
-        - docker push 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend-fluentd:$TRAVIS_COMMIT
+      script:
+        - GIT_REVISION=$TRAVIS_COMMIT make build
     - stage: deploy
       name: prod-deploy
       if: tag IS present AND tag =~ ^v
       install: sudo curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest && sudo chmod +x /usr/local/bin/ecs-cli
-      script:
-        - |
-          APP_ENV=prod \
-          GIT_REVISION=$TRAVIS_COMMIT \
-          FLUENTD_TARGET_GROUP_ARN=$PROD_FLUENTD_TARGET_GROUP_ARN \
-          API_TARGET_GROUP_ARN=$PROD_API_TARGET_GROUP_ARN \
-          FLUENTD_ADDRESS=$PROD_FLUENTD_ADDRESS make deploy
+      script: APP_ENV=prod GIT_REVISION=$TRAVIS_COMMIT API_TARGET_GROUP_ARN=$PROD_API_TARGET_GROUP_ARN make deploy
       after_success:
         - sh ./bin/slack_notification.sh success
       after_failure:
@@ -66,24 +54,12 @@ jobs:
       name: test-deploy
       if: branch = test
       install: sudo curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest && sudo chmod +x /usr/local/bin/ecs-cli
-      script:
-        - |
-          APP_ENV=test \
-          GIT_REVISION=$TRAVIS_COMMIT \
-          FLUENTD_TARGET_GROUP_ARN=$TEST_FLUENTD_TARGET_GROUP_ARN \
-          API_TARGET_GROUP_ARN=$TEST_API_TARGET_GROUP_ARN \
-          FLUENTD_ADDRESS=$TEST_FLUENTD_ADDRESS make deploy
+      script: APP_ENV=test GIT_REVISION=$TRAVIS_COMMIT API_TARGET_GROUP_ARN=$TEST_API_TARGET_GROUP_ARN make deploy
     - stage: deploy
       name: staging-deploy
       if: branch = staging
       install: sudo curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest && sudo chmod +x /usr/local/bin/ecs-cli
-      script:
-        - |
-          APP_ENV=staging \
-          GIT_REVISION=$TRAVIS_COMMIT \
-          FLUENTD_TARGET_GROUP_ARN=$STAGING_FLUENTD_TARGET_GROUP_ARN \
-          API_TARGET_GROUP_ARN=$STAGING_API_TARGET_GROUP_ARN \
-          FLUENTD_ADDRESS=$STAGING_FLUENTD_ADDRESS make deploy
+      script: APP_ENV=staging GIT_REVISION=$TRAVIS_COMMIT API_TARGET_GROUP_ARN=$STAGING_API_TARGET_GROUP_ARN make deploy
     - stage: docs
       name: api
       install:

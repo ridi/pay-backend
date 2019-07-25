@@ -4,3 +4,4 @@ vendor/
 data/
 .env
 *.cache
+coverage.xml

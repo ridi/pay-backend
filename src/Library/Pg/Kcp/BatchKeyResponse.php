@@ -10,7 +10,7 @@ class BatchKeyResponse extends Response
      */
     public function getCardCd(): string
     {
-        return $this->response['card_cd'];
+        return $this->response['card_code'];
     }
 
     /**
@@ -18,7 +18,7 @@ class BatchKeyResponse extends Response
      */
     public function getCardBankCd(): string
     {
-        return $this->response['card_bank_cd'];
+        return $this->response['card_bank_code'];
     }
 
     /**

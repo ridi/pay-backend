@@ -48,7 +48,7 @@ class PgHandlerFactory
     {
         switch ($pg_name) {
             case PgConstant::KCP:
-                return KcpHandler::createWithTest();
+                return KcpHandler::create();
             default:
                 throw new UnsupportedPgException();
         }

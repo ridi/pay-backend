@@ -39,6 +39,6 @@ RUN sh /app/bin/composer_installation.sh && mv composer.phar /usr/local/bin/comp
 RUN mkdir -p /app/var && chmod -R 777 /app/var
 
 WORKDIR /app
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --optimize-autoloader
 
 CMD apachectl -D FOREGROUND
