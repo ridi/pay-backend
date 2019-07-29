@@ -80,6 +80,10 @@ class CorsMiddleware implements EventSubscriberInterface
         }
 
         $origin = $request->headers->get('Origin');
+        if ($origin === null) {
+            return;
+        }
+
         if (Kernel::isDev()) {
             $regex_sub_domains_of_ridi_io = '/^https:\/\/[a-zA-Z0-9-_\.]+\.ridi\.io$/';
             if (!preg_match($regex_sub_domains_of_ridi_io, $origin)) {
