@@ -5,17 +5,8 @@ namespace RidiPay\Library\Pg\Kcp;
 
 use GuzzleHttp\Client as HttpClient;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
-/**
- * NHN KCP 결제 모듈을 래핑한 클라이언트입니다.
- *
- * 주의: 연관 배열들의 키 순서를 바꾸지 마세요! PHP 연관 배열은 순서가 매겨진 맵이고, 결제 모듈 호출시 파라미터 순서가 유지되어야 합니다.
- *
- * 정의된 상수들은 임의로 변경할 수 없습니다.
- */
 class Client
 {
     /** @var int  */
@@ -124,21 +115,12 @@ class Client
             'reason' => $reason
         ];
 
-        try {
-            $response = $this->http_client->request(
-                Request::METHOD_DELETE,
-                "/payments/${kcp_tno}",
-                ['body' => \json_encode($data)]
-            );
-            $decoded_response = \json_decode($response->getBody()->getContents(), true);
-            return new CancelTransactionResponse($decoded_response);
-        } catch (\Exception $e) {
-            // 기취소된 결제 건 취소로 인한 409 상태를 응답받았을 때
-            if ($e instanceof RequestException && $e->getCode() === Response::HTTP_CONFLICT) {
-                $decoded_response = \json_decode($e->getResponse()->getBody()->getContents(), true);
-                return new CancelTransactionResponse($decoded_response);
-            }
-            throw $e;
-        }
+        $response = $this->http_client->request(
+            Request::METHOD_DELETE,
+            "/payments/${kcp_tno}",
+            ['body' => \json_encode($data)]
+        );
+        $decoded_response = \json_decode($response->getBody()->getContents(), true);
+        return new CancelTransactionResponse($decoded_response);
     }
 }
