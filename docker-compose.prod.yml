@@ -3,10 +3,9 @@ version: "3"
 services:
   api:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend:${GIT_REVISION}
-    container_name: api
     build: .
     ports:
-      - 80
+      - 80:80
     environment:
       - APP_ENV=${APP_ENV}
       - GIT_REVISION=${GIT_REVISION}
