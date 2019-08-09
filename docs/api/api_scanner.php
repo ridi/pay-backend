@@ -12,11 +12,15 @@ use OpenApi\Annotations as OA;
  * )
  *
  * @OA\Server(
- *   url="https://api.pay.local.ridi.io",
+ *   url="https://pay-api.local.ridi.io",
  *   description="Local Server"
  * )
  * @OA\Server(
- *   url="https://api.pay.ridibooks.com",
+ *   url="https://pay-api.ridi.io",
+ *   description="Test Server"
+ * )
+ * @OA\Server(
+ *   url="https://pay-api.ridibooks.com",
  *   description="Production Server"
  * )
  *
