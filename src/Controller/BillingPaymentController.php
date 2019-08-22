@@ -255,6 +255,15 @@ class BillingPaymentController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
+     *     response="403",
+     *     description="Forbidden",
+     *     @OA\JsonContent(
+     *       oneOf={
+     *         @OA\Schema(ref="#/components/schemas/DeletedPaymentMethod")
+     *       }
+     *     )
+     *   ),
+     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(
@@ -299,6 +308,12 @@ class BillingPaymentController extends BaseController
             $response = BaseController::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_RESERVED_SUBSCRIPTION,
+                $e->getMessage()
+            );
+        } catch (DeletedPaymentMethodException $e) {
+            $response = BaseController::createErrorResponse(
+                UserErrorCodeConstant::class,
+                UserErrorCodeConstant::DELETED_PAYMENT_METHOD,
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
