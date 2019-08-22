@@ -71,7 +71,7 @@ class CmsController extends BaseController
 
             $response = self::createSuccessResponse($cards_history);
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -139,7 +139,7 @@ class CmsController extends BaseController
 
             $response = self::createSuccessResponse($pin_update_history);
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,

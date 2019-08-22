@@ -37,9 +37,9 @@ class EmailSender
             }
 
             $client->sendEmail($email);
-        } catch (\Exception $e) {
+        } catch (\Throwable $t) {
             // 이메일 발송 실패로 인한 exception 발생 시, API 요청 자체에 영향을 주지 않도록 catch
-            SentryHelper::captureException($e);
+            SentryHelper::captureException($t);
         }
     }
 }

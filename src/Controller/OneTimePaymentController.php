@@ -183,7 +183,7 @@ class OneTimePaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = BaseController::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -306,7 +306,7 @@ class OneTimePaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = BaseController::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -485,7 +485,7 @@ class OneTimePaymentController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = BaseController::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -702,7 +702,7 @@ class OneTimePaymentController extends BaseController
                 ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = BaseController::createErrorResponse(
                 CommonErrorCodeConstant::class,

@@ -119,7 +119,7 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -185,7 +185,7 @@ class UserController extends BaseController
 
             $response = self::createSuccessResponse(['cards' => $payment_methods->cards]);
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -313,7 +313,7 @@ class UserController extends BaseController
                 ]
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -472,7 +472,7 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -627,7 +627,7 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -787,7 +787,7 @@ class UserController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,

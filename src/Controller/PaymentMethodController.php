@@ -145,7 +145,7 @@ class PaymentMethodController extends BaseController
                 ['pg_message' => $e->getPgMessage()]
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,
@@ -295,7 +295,7 @@ class PaymentMethodController extends BaseController
                 $e->getMessage()
             );
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             $response = self::createErrorResponse(
                 CommonErrorCodeConstant::class,

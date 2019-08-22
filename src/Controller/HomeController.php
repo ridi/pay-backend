@@ -30,7 +30,7 @@ class HomeController extends BaseController
                 throw new \Exception('Redis connection is not working.');
             }
         } catch (\Throwable $t) {
-            SentryHelper::captureMessage($t->getMessage(), [], [], true);
+            SentryHelper::captureException($t);
 
             return self::createErrorResponse(
                 CommonErrorCodeConstant::class,

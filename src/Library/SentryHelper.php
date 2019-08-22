@@ -29,18 +29,18 @@ class SentryHelper
     }
 
     /**
-     * @param \Exception $e
+     * @param \Throwable $t
      * @param array $data
      * @param null $logger
      * @param null $vars
      */
-    public static function captureException(\Exception $e, array $data = [], $logger = null, $vars = null)
+    public static function captureException(\Throwable $t, array $data = [], $logger = null, $vars = null)
     {
         if (!isset(self::$client)) {
             return;
         }
 
-        self::$client->captureException($e, $data, $logger, $vars);
+        self::$client->captureException($t, $data, $logger, $vars);
     }
 
     /**

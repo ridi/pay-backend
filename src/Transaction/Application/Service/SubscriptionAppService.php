@@ -348,10 +348,10 @@ class SubscriptionAppService
         foreach ($first_party_subscriptions as $subscription) {
             try {
                 self::optoutFirstPartySubscription($u_idx, $subscription);
-            } catch (\Exception $e) {
+            } catch (\Throwable $t) {
                 // First-party 구독 해지 요청 중 발생한 오류가 RIDI Pay의 구독 해지 과정에 영향을 주지 않도록 catch
-                if ($e instanceof ServerException) {
-                    SentryHelper::captureException($e);
+                if ($t instanceof ServerException) {
+                    SentryHelper::captureException($t);
                 }
             }
         }
