@@ -30,6 +30,7 @@ jobs:
       install:
         - sudo apt-get install python3-pip && sudo pip3 install awscli
         - $(aws ecr get-login --no-include-email --region ap-northeast-2)
+        - composer validate && composer install
       script:
         - make test
       after_success: bash <(curl -s https://codecov.io/bash)
