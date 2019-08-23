@@ -8,6 +8,8 @@ services:
     depends_on:
       - mariadb
       - redis
+    volumes:
+      - .:/app
     command: ['bash', '-c', 'composer test']
   kcp:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/kcp-http-proxy:latest
