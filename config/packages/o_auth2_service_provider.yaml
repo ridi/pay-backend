@@ -5,7 +5,4 @@ o_auth2_service_provider:
     - kid: RS000
       secret: '%env(OAUTH2_JWT_PUBLIC_KEY)%'
       algorithm: RS256
-    - kid: HS000
-      secret: '%env(OAUTH2_JWT_SECRET)%'
-      algorithm: HS256
   default_exception_handler: RidiPay\Library\OAuth2\LoginRequiredExceptionHandler

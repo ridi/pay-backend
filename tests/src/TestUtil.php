@@ -6,6 +6,8 @@ namespace RidiPay\Tests;
 use AspectMock\Test;
 use Doctrine\ORM\Tools\SchemaTool;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
+use Ridibooks\OAuth2\Authorization\Token\JwtToken;
+use Ridibooks\OAuth2\Authorization\Validator\JwtTokenValidator;
 use Ridibooks\OAuth2\Symfony\Provider\DefaultUserProvider;
 use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\Pg\Kcp\Company;
@@ -75,6 +77,19 @@ class TestUtil
      */
     public static function setUpOAuth2Doubles(int $u_idx, string $u_id): void
     {
+        $token = new \stdClass();
+        $token->sub = '';
+        $token->exp = 60 * 5;
+        $token->u_idx = $u_idx;
+        $token->client_id = '';
+        $token->scope = '';
+
+        Test::double(
+            JwtTokenValidator::class,
+            [
+                'validateToken' => JwtToken::createFrom($token)
+            ]
+        );
         Test::double(
             DefaultUserProvider::class,
             [
@@ -93,6 +108,7 @@ class TestUtil
 
     public static function tearDownOAuth2Doubles(): void
     {
+        Test::clean(JwtTokenValidator::class);
         Test::clean(DefaultUserProvider::class);
     }
 

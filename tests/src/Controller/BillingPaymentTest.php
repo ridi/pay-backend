@@ -140,6 +140,8 @@ class BillingPaymentTest extends ControllerTestCase
 
     public function testExceptionHandlingInCaseOfUnauthorizedPartner()
     {
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
+
         $unauthorized_client = self::createClient(
             [],
             [
