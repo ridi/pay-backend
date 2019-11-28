@@ -28,6 +28,7 @@ use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Transaction\Domain\Service\OneTimePaymentTransactionApprovalProcessor;
 use RidiPay\Transaction\Domain\Service\TransactionCancellationProcessor;
+use RidiPay\Transaction\Domain\Service\TransactionCancellationResult;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
@@ -177,8 +178,13 @@ class TransactionAppService
     ): TransactionCancellationDto {
         PartnerAppService::validatePartner($partner_api_secret->getApiKey(), $partner_api_secret->getSecretKey());
 
-        $transaction_cancellation_processor = new TransactionCancellationProcessor($transaction_uuid);
-        $transaction_cancellation_result = $transaction_cancellation_processor->process();
+        try {
+            $transaction_cancellation_processor = new TransactionCancellationProcessor($transaction_uuid);
+            $transaction_cancellation_result = $transaction_cancellation_processor->process();
+        } catch (AlreadyCancelledTransactionException $e) {
+            $transaction = self::getTransaction($transaction_uuid);
+            $transaction_cancellation_result = new TransactionCancellationResult($transaction);
+        }
 
         return new TransactionCancellationDto($transaction_cancellation_result);
     }

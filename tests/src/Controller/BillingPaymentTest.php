@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace RidiPay\Tests\Controller;
 
 use Ramsey\Uuid\Uuid;
-use RidiPay\Controller\Response\TransactionErrorCodeConstant;
 use RidiPay\Library\Pg\Kcp\CancelTransactionResponse;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
@@ -342,11 +341,6 @@ class BillingPaymentTest extends ControllerTestCase
         // 결제 취소 retry
         self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
-        $transaction_history = TransactionHistoryRepository::getRepository()->findByTransactionId($transaction->getId());
-        /** @var TransactionHistoryEntity $last_transaction_history */
-        $last_transaction_history = end($transaction_history);
-        $this->assertSame(CancelTransactionResponse::ALREADY_CANCELLED, $last_transaction_history->getPgResponseCode());
 
         // 다른 invoice id로 결제 승인
         $body = json_encode([
@@ -376,11 +370,6 @@ class BillingPaymentTest extends ControllerTestCase
         // 결제 취소 retry
         self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
-        $transaction_history = TransactionHistoryRepository::getRepository()->findByTransactionId($transaction->getId());
-        /** @var TransactionHistoryEntity $last_transaction_history */
-        $last_transaction_history = end($transaction_history);
-        $this->assertSame(CancelTransactionResponse::ALREADY_CANCELLED, $last_transaction_history->getPgResponseCode());
     }
 
     /**

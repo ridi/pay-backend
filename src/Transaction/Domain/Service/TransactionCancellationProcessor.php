@@ -34,6 +34,7 @@ class TransactionCancellationProcessor
 
     /**
      * @param string $transaction_uuid
+     * @throws AlreadyCancelledTransactionException
      * @throws NotFoundTransactionException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -73,6 +74,7 @@ class TransactionCancellationProcessor
     /**
      * @param string $transaction_uuid
      * @return TransactionEntity
+     * @throws AlreadyCancelledTransactionException
      * @throws NotFoundTransactionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -83,8 +85,20 @@ class TransactionCancellationProcessor
         if (is_null($transaction)) {
             throw new NotFoundTransactionException();
         }
+        self::assertCancellableTransaction($transaction);
 
         return $transaction;
+    }
+
+    /**
+     * @param TransactionEntity $transaction
+     * @throws AlreadyCancelledTransactionException
+     */
+    private static function assertCancellableTransaction(TransactionEntity $transaction): void
+    {
+        if ($transaction->isCanceled()) {
+            throw new AlreadyCancelledTransactionException();
+        }
     }
 
     /**
