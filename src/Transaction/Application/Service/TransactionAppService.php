@@ -163,7 +163,6 @@ class TransactionAppService
      * @param ApiSecret $partner_api_secret
      * @param string $transaction_uuid
      * @return TransactionCancellationDto
-     * @throws AlreadyCancelledTransactionException
      * @throws NotFoundTransactionException
      * @throws TransactionCancellationException
      * @throws UnauthorizedPartnerException

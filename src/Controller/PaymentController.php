@@ -99,15 +99,6 @@ class PaymentController extends BaseController
      *     )
      *   ),
      *   @OA\Response(
-     *     response="403",
-     *     description="Forbidden",
-     *     @OA\JsonContent(
-     *       oneOf={
-     *         @OA\Schema(ref="#/components/schemas/AlreadyCancelledTransaction")
-     *       }
-     *     )
-     *   ),
-     *   @OA\Response(
      *     response="404",
      *     description="Not Found",
      *     @OA\JsonContent(
@@ -167,12 +158,6 @@ class PaymentController extends BaseController
             $response = self::createErrorResponse(
                 TransactionErrorCodeConstant::class,
                 TransactionErrorCodeConstant::NOT_FOUND_TRANSACTION,
-                $e->getMessage()
-            );
-        } catch (AlreadyCancelledTransactionException $e) {
-            $response = self::createErrorResponse(
-                TransactionErrorCodeConstant::class,
-                TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION,
                 $e->getMessage()
             );
         } catch (TransactionCancellationException $e) {

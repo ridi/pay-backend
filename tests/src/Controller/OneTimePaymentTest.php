@@ -5,10 +5,13 @@ namespace RidiPay\Tests\Controller;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
+use RidiPay\Library\Pg\Kcp\CancelTransactionResponse;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Application\Service\TransactionAppService;
+use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
+use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Application\Service\UserAppService;
@@ -207,9 +210,12 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 결제 취소 retry
         self::$client->request(Request::METHOD_POST, '/payments/' . self::$transaction_id . '/cancel');
-        $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
-        $response = json_decode(self::$client->getResponse()->getContent());
-        $this->assertSame(TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION, $response->code);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString(self::$transaction_id));
+        $transaction_history = TransactionHistoryRepository::getRepository()->findByTransactionId($transaction->getId());
+        /** @var TransactionHistoryEntity $last_transaction_history */
+        $last_transaction_history = end($transaction_history);
+        $this->assertSame(CancelTransactionResponse::ALREADY_CANCELLED, $last_transaction_history->getPgResponseCode());
     }
 
     public function testExceptionHandlingInCaseOfUnauthorizedPartner()

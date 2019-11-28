@@ -34,7 +34,6 @@ class TransactionCancellationProcessor
 
     /**
      * @param string $transaction_uuid
-     * @throws AlreadyCancelledTransactionException
      * @throws NotFoundTransactionException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
@@ -60,7 +59,7 @@ class TransactionCancellationProcessor
     {
         $cancel_reason = '고객 결제 취소';
         $pg_response = $this->pg_handler->cancelTransaction($this->transaction->getPgTransactionId(), $cancel_reason);
-        if (!$pg_response->isSuccess()) {
+        if (!$pg_response->isSuccess() && !$pg_response->isAlreadyCanceled()) {
             $this->createTransactionHistory($pg_response);
 
             throw new TransactionCancellationException($pg_response->getResponseMessage());
@@ -74,7 +73,6 @@ class TransactionCancellationProcessor
     /**
      * @param string $transaction_uuid
      * @return TransactionEntity
-     * @throws AlreadyCancelledTransactionException
      * @throws NotFoundTransactionException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -85,20 +83,8 @@ class TransactionCancellationProcessor
         if (is_null($transaction)) {
             throw new NotFoundTransactionException();
         }
-        self::assertCancellableTransaction($transaction);
 
         return $transaction;
-    }
-
-    /**
-     * @param TransactionEntity $transaction
-     * @throws AlreadyCancelledTransactionException
-     */
-    private static function assertCancellableTransaction(TransactionEntity $transaction): void
-    {
-        if ($transaction->isCanceled()) {
-            throw new AlreadyCancelledTransactionException();
-        }
     }
 
     /**

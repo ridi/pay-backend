@@ -125,6 +125,7 @@ class KcpHandler implements PgHandlerInterface
             $response->isSuccess(),
             $response->getResCd(),
             $response->getResMsg(),
+            $response->isAlreadyCancelled(),
             ($response->isSuccess() ? $response->getAmount() : null),
             ($response->isSuccess() ? $response->getCancTime() : null)
         );

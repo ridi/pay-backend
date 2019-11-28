@@ -5,9 +5,12 @@ namespace RidiPay\Tests\Controller;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Controller\Response\TransactionErrorCodeConstant;
+use RidiPay\Library\Pg\Kcp\CancelTransactionResponse;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
+use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
+use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
@@ -338,9 +341,12 @@ class BillingPaymentTest extends ControllerTestCase
 
         // 결제 취소 retry
         self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
-        $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
-        $response = json_decode(self::$client->getResponse()->getContent());
-        $this->assertSame(TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION, $response->code);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
+        $transaction_history = TransactionHistoryRepository::getRepository()->findByTransactionId($transaction->getId());
+        /** @var TransactionHistoryEntity $last_transaction_history */
+        $last_transaction_history = end($transaction_history);
+        $this->assertSame(CancelTransactionResponse::ALREADY_CANCELLED, $last_transaction_history->getPgResponseCode());
 
         // 다른 invoice id로 결제 승인
         $body = json_encode([
@@ -369,9 +375,12 @@ class BillingPaymentTest extends ControllerTestCase
 
         // 결제 취소 retry
         self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
-        $this->assertSame(Response::HTTP_FORBIDDEN, self::$client->getResponse()->getStatusCode());
-        $response = json_decode(self::$client->getResponse()->getContent());
-        $this->assertSame(TransactionErrorCodeConstant::ALREADY_CANCELLED_TRANSACTION, $response->code);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($transaction_id));
+        $transaction_history = TransactionHistoryRepository::getRepository()->findByTransactionId($transaction->getId());
+        /** @var TransactionHistoryEntity $last_transaction_history */
+        $last_transaction_history = end($transaction_history);
+        $this->assertSame(CancelTransactionResponse::ALREADY_CANCELLED, $last_transaction_history->getPgResponseCode());
     }
 
     /**
