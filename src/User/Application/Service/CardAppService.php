@@ -74,6 +74,9 @@ class CardAppService
         UserAppService::validateUser($u_idx);
 
         $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
+        if ($u_idx !== PaymentMethodAppService::getUidxById($payment_method_id)) {
+            throw new UnregisteredPaymentMethodException();
+        }
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();

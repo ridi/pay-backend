@@ -251,7 +251,7 @@ class ManageCardTest extends ControllerTestCase
     public function deleteCardDataProvider(): array
     {
         $user_indices = [];
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 6; $i++) {
             $user_indices[] = TestUtil::getRandomUidx();
         }
         $partner = PartnerAppService::registerPartner('delete-card', 'test@12345', true);
@@ -305,6 +305,17 @@ class ManageCardTest extends ControllerTestCase
         );
         UserAppService::deleteUser($user_indices[3]);
 
+        // $user_indices[4]: NOT_FOUND_USER
+
+        $payment_method_id_of_other_user = TestUtil::registerCard(
+            $user_indices[5],
+            '123456',
+            self::CARD_A['CARD_NUMBER'],
+            self::CARD_A['CARD_EXPIRATION_DATE'],
+            self::CARD_A['CARD_PASSWORD'],
+            self::TAX_ID
+        );
+
         return [
             [
                 $user_indices[0],
@@ -339,6 +350,12 @@ class ManageCardTest extends ControllerTestCase
             [
                 $user_indices[0],
                 Uuid::uuid4()->toString(),
+                Response::HTTP_NOT_FOUND,
+                UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD
+            ],
+            [
+                $user_indices[0],
+                $payment_method_id_of_other_user,
                 Response::HTTP_NOT_FOUND,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD
             ]
