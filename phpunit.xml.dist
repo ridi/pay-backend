@@ -17,7 +17,6 @@
         <env name="OAUTH2_ACCESS_TOKEN" value="oauth2_access_token" />
         <env name="OAUTH2_CLIENT_ID" value="oauth2_client_id" />
         <env name="OAUTH2_CLIENT_SECRET" value="oauth2_client_secret" />
-        <env name="OAUTH2_JWT_PUBLIC_KEY" value="public_key" />
         <env name="PARTNER_SECRET_KEY_SECRET" value="TXjVCAn1mcEsE4CnZL7zoxB1cMKGjY+8WWRpAYIIYfw=" />
         <env name="PG_BILL_KEY_SECRET" value="NC+J7HXycBr+GQA52O7lzbGnMxi2cwaQWZo+u1HOyAE=" />
         <env name="REDIS_HOST" value="redis" />
