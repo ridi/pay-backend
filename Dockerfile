@@ -19,6 +19,7 @@ RUN apt-get update --fix-missing && apt-get install --no-install-recommends -y \
     php7.2-zip \
     php7.2-xml \
     php7.2-xdebug \
+    php7.2-gmp \
     apache2 \
     libapache2-mod-php7.2
 RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache2/php.ini && \
