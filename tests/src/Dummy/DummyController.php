@@ -36,7 +36,7 @@ class DummyController extends Controller
      *     {"param"="url", "constraints"={"Url"}},
      *     {"param"="card_number", "constraints"={{"Regex"="/^\d{13,16}$/"}}},
      *     {"param"="card_expiration_date", "constraints"={{"Regex"="/^\d{2}(0[1-9]|1[0-2])$/"}}},
-     *     {"param"="tax_id", "constraints"={{"Regex"="/^(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))|\d{10}$/"}}},
+     *     {"param"="tax_id", "constraints"={{"Regex"="/^(\d{2}(0[1-9]|1[0-2])(0[1-9]|[1-2][0-9]|3[0-1]))$|^\d{10}$/"}}},
      *     {"param"="email", "constraints"={"Email"}}
      *   }
      * )
