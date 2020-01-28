@@ -2,4 +2,5 @@ o_auth2_service_provider:
   authorize_url: https://account.dev.ridi.io/ridi/authorize/
   token_url: https://account.dev.ridi.io/oauth2/token/
   user_info_url: https://account.dev.ridi.io/accounts/me/
+  jwk_url: https://account.dev.ridi.io/oauth2/keys/public
   token_cookie_domain: .ridi.io
