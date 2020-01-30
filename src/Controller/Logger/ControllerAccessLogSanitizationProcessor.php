@@ -51,7 +51,7 @@ class ControllerAccessLogSanitizationProcessor implements ProcessorInterface
             ],
             true
         )) {
-            return '*';
+            return str_repeat('*', mb_strlen(strval($value), 'utf-8'));
         } else {
             return $value;
         }
