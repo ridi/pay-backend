@@ -32,7 +32,7 @@ services:
       - DYNAMODB_ENDPOINT=http://dynamodb:8000
     depends_on:
       - dynamodb
-    command: ['bash', '-c', 'yarn run init-db && pm2-docker pm2.yml']
+    command: ['bash', '-c', 'yarn run init-db && yarn start']
   mariadb:
     image: mariadb:10.3
     ports:

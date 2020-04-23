@@ -25,6 +25,7 @@ RUN apt-get update --fix-missing && apt-get install --no-install-recommends -y \
 RUN sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/apache2/php.ini && \
     sed -i "s/;date.timezone =/date.timezone = Asia\/Seoul/" /etc/php/7.2/cli/php.ini
 
+COPY config/apache/apache2.conf /etc/apache2/apache2.conf
 RUN a2enmod rewrite
 RUN a2dissite 000-default && rm /etc/apache2/sites-available/000-default.conf
 COPY config/apache/override.conf /etc/apache2/conf-available/override.conf
