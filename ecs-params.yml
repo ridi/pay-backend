@@ -7,7 +7,11 @@ task_definition:
     mem_limit: 512
     cpu_limit: 256
   services:
-    api:
+    nginx:
+      secrets:
+        - value_from: "/ridi-pay/${APP_ENV}/VPC_CIDR"
+          name: VPC_CIDR
+    app:
       secrets:
         - value_from: "/ridi-pay/${APP_ENV}/APP_SECRET"
           name: APP_SECRET
@@ -41,6 +45,8 @@ task_definition:
           name: SENTRY_DSN
         - value_from: "/ridi-pay/${APP_ENV}/STORE_TO_RIDI_PAY_PUBLIC_KEY"
           name: STORE_TO_RIDI_PAY_PUBLIC_KEY
+        - value_from: "/ridi-pay/${APP_ENV}/VPC_CIDR"
+          name: VPC_CIDR
 run_params:
   network_configuration:
     awsvpc_configuration:
