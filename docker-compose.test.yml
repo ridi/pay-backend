@@ -24,7 +24,7 @@ services:
     volumes:
       - .:/app
       - ./config/php/php.ini-development:/usr/local/etc/php/php.ini
-    command: ['bash', '-c', 'composer test']
+    command: ['bash', '-c', 'chmod +x /app/bin/wait-for-it.sh && /app/bin/wait-for-it.sh mariadb:3306 -- composer test']
   kcp:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/kcp-http-proxy:latest
     ports:
