@@ -14,7 +14,7 @@ Type::addType('uuid_binary', UuidBinaryType::class);
 
 $env = getenv('APP_ENV', true);
 if ($env === false) {
-    throw new \RuntimeException('APP_ENV environment variables is not defined.');
+    throw new \RuntimeException("An environment variable 'APP_ENV' is not defined.");
 }
 
 if (Kernel::isLocal()) {
@@ -28,12 +28,13 @@ if (Kernel::isLocal()) {
     Debug::enable();
 }
 
-if (Kernel::isProd()) {
-    Request::setTrustedProxies(['10.0.0.0/16'], Request::HEADER_X_FORWARDED_ALL);
-} elseif (Kernel::isStaging()) {
-    Request::setTrustedProxies(['10.10.0.0/16'], Request::HEADER_X_FORWARDED_ALL);
-} elseif (Kernel::isTest()) {
-    Request::setTrustedProxies(['10.20.0.0/16'], Request::HEADER_X_FORWARDED_ALL);
+if (Kernel::isProd() || Kernel::isStaging() || Kernel::isTest()) {
+    $vpc_cidr = getenv('VPC_CIDR', true);
+    if ($vpc_cidr === false) {
+        throw new \RuntimeException("An environment variable 'VPC_CIDR' is not defined.");
+    }
+
+    Request::setTrustedProxies([$vpc_cidr], Request::HEADER_X_FORWARDED_ALL);
 }
 
 $sentry_dsn = getenv('SENTRY_DSN', true);

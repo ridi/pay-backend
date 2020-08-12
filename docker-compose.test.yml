@@ -1,8 +1,21 @@
 version: "3"
 
 services:
-  api:
-    build: .
+  nginx:
+    image: nginx:mainline
+    ports:
+      - 80
+    volumes:
+      - ./config/nginx/nginx.common.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+  app:
+    build:
+      context: .
+      dockerfile: config/docker/app/Dockerfile
+    ports:
+      - 9000
     environment:
       - APP_ENV=dev
     depends_on:
@@ -10,7 +23,8 @@ services:
       - redis
     volumes:
       - .:/app
-    command: ['bash', '-c', 'composer test']
+      - ./config/php/php.ini-development:/usr/local/etc/php/php.ini
+    command: ['bash', '-c', 'chmod +x /app/bin/wait-for-it.sh && /app/bin/wait-for-it.sh mariadb:3306 -- composer test']
   kcp:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/kcp-http-proxy:latest
     ports:
