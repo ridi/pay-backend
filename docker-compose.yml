@@ -30,6 +30,9 @@ services:
     volumes:
       - .:/app
       - ./config/php/php.ini-development:/usr/local/etc/php/php.ini
+    networks:
+      traefik:
+      default:
     depends_on:
       - mariadb
       - redis
