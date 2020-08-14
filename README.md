@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.com/ridi/pay-backend.svg?token=xPAQFHxECFy2kMpwAYno&branch=master)](https://travis-ci.com/ridi/pay-backend)
 [![codecov](https://codecov.io/gh/ridi/pay-backend/branch/master/graph/badge.svg?token=g1l9Hrb9zH)](https://codecov.io/gh/ridi/pay-backend)
 
 ## Security bug report
@@ -40,4 +39,4 @@ make fixture
 [Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/master/api.html)
 
 ## Deploy
-- We are using travis ci and github releases for deploy. For details, please refer to `.travis.yml`.
+- We are using github actions and releases for deploy. For details, please refer to `.github/workflows/main.yml`.

@@ -1,0 +1,115 @@
+on:
+  push:
+  release:
+    type:
+      - published
+
+jobs:
+  test:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registries: ${{ secrets.AWS_ACCOUNT_ID }}
+      - name: Run test
+        run: make test
+  build:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/test')
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - uses: aws-actions/amazon-ecr-login@v1
+        with:
+          registries: ${{ secrets.AWS_ACCOUNT_ID }}
+      - name: Build and push docker images
+        run: GIT_REVISION=$GITHUB_SHA make build
+  prod-deploy:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Install ecs-cli
+        run: curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest && chmod +x /usr/local/bin/ecs-cli
+      - name: Deploy
+        id: deploy
+        run: |
+          APP_ENV=prod \
+          GIT_REVISION=$GITHUB_SHA \
+          AP_NORTHEAST_2A_PRIVATE_SUBNET_ID=${{ secrets.PROD_AP_NORTHEAST_2A_PRIVATE_SUBNET_ID }} \
+          AP_NORTHEAST_2C_PRIVATE_SUBNET_ID=${{ secrets.PROD_AP_NORTHEAST_2C_PRIVATE_SUBNET_ID }} \
+          SECURITY_GROUP_ID=${{ secrets.PROD_SECURITY_GROUP_ID }} \
+          TARGET_GROUP_ARN=${{ secrets.PROD_TARGET_GROUP_ARN }} \
+          make deploy
+      - name: Deploy succeeded
+        if: steps.deploy.success == true
+        run: GIT_REVISION=$GITHUB_SHA sh bin/slack_notification.sh success
+      - name: Deploy failed
+        if: steps.deploy.success == false
+        run: GIT_REVISION=$GITHUB_SHA sh bin/slack_notification.sh failure
+  test-deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/test'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Install ecs-cli
+        run: curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest && chmod +x /usr/local/bin/ecs-cli
+      - name: Deploy
+        run: |
+          APP_ENV=test \
+          GIT_REVISION=$GITHUB_SHA \
+          AP_NORTHEAST_2A_PRIVATE_SUBNET_ID=${{ secrets.TEST_AP_NORTHEAST_2A_PRIVATE_SUBNET_ID }} \
+          AP_NORTHEAST_2C_PRIVATE_SUBNET_ID=${{ secrets.TEST_AP_NORTHEAST_2C_PRIVATE_SUBNET_ID }} \
+          SECURITY_GROUP_ID=${{ secrets.TEST_SECURITY_GROUP_ID }} \
+          TARGET_GROUP_ARN=${{ secrets.TEST_TARGET_GROUP_ARN }} \
+          make deploy
+  docs-generation:
+    needs: [prod-deploy, test-deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Install node packages
+        run: yarn global add redoc-cli styled-components
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.2'
+      - name: Install dependencies
+        run: composer validate && composer install
+      - name: Generate a doc
+        run: php docs/api/api_scanner.php > docs/api/api.json && redoc-cli bundle -o docs/api/api.html docs/api/api.json
+      - name: Install awscli
+        run: python -m pip install awscli
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Save in S3
+        run: aws s3 cp docs/api/api.html s3://ridi-pay-backend-api-doc/${GITHUB_REF##*/}/api.html
