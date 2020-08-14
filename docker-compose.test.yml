@@ -10,9 +10,14 @@ services:
     environment:
       - APP_ENV=dev
     depends_on:
+      - kcp
       - mariadb
       - redis
-    command: ['bash', '-c', 'chmod +x /app/bin/wait-for-it.sh && /app/bin/wait-for-it.sh mariadb:3306 -- composer test']
+    command: [
+      'bash',
+      '-c',
+      'chmod +x /app/bin/wait-for-it.sh && /app/bin/wait-for-it.sh mariadb:3306 && /app/bin/wait-for-it.sh kcp:80 -- composer test'
+    ]
   kcp:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/kcp-http-proxy:latest
     ports:
