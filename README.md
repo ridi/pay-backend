@@ -3,7 +3,7 @@
 
 ## Reporting a vulnerability
 
-[Link](https://github.com/ridi/pay-backend/blob/master/SECURITY.md)
+[Link](https://github.com/ridi/pay-backend/security/policy)
 
 ## Settings for development environment
 
