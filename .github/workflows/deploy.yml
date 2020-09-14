@@ -2,8 +2,7 @@ name: Deploy
 
 on:
   release:
-    type:
-      - published
+    types: [published]
 
 jobs:
   deploy:
@@ -29,7 +28,7 @@ jobs:
           make deploy
       - name: Deploy succeeded
         if: steps.deploy.success == true
-        run: GIT_REVISION=$GITHUB_SHA sh bin/slack_notification.sh success
+        run: GIT_REVISION=$GITHUB_SHA SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} sh bin/slack_notification.sh success
       - name: Deploy failed
         if: steps.deploy.success == false
-        run: GIT_REVISION=$GITHUB_SHA sh bin/slack_notification.sh failure
+        run: GIT_REVISION=$GITHUB_SHA SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} sh bin/slack_notification.sh failure
