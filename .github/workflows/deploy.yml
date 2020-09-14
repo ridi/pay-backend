@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  release:
+    type:
+      - published
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+      - name: Install ecs-cli
+        run: sudo curl -o /usr/local/bin/ecs-cli https://s3.amazonaws.com/amazon-ecs-cli/ecs-cli-linux-amd64-latest && sudo chmod +x /usr/local/bin/ecs-cli
+      - name: Deploy
+        id: deploy
+        run: |
+          APP_ENV=prod \
+          GIT_REVISION=$GITHUB_SHA \
+          AP_NORTHEAST_2A_PRIVATE_SUBNET_ID=${{ secrets.PROD_AP_NORTHEAST_2A_PRIVATE_SUBNET_ID }} \
+          AP_NORTHEAST_2C_PRIVATE_SUBNET_ID=${{ secrets.PROD_AP_NORTHEAST_2C_PRIVATE_SUBNET_ID }} \
+          SECURITY_GROUP_ID=${{ secrets.PROD_SECURITY_GROUP_ID }} \
+          TARGET_GROUP_ARN=${{ secrets.PROD_TARGET_GROUP_ARN }} \
+          make deploy
+      - name: Deploy succeeded
+        if: steps.deploy.success == true
+        run: GIT_REVISION=$GITHUB_SHA sh bin/slack_notification.sh success
+      - name: Deploy failed
+        if: steps.deploy.success == false
+        run: GIT_REVISION=$GITHUB_SHA sh bin/slack_notification.sh failure
