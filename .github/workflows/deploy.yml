@@ -27,8 +27,8 @@ jobs:
           TARGET_GROUP_ARN=${{ secrets.PROD_TARGET_GROUP_ARN }} \
           make deploy
       - name: Deploy succeeded
-        if: steps.deploy.success == true
+        if: steps.deploy.conclusion == 'success'
         run: GIT_REVISION=$GITHUB_SHA SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} sh bin/slack_notification.sh success
       - name: Deploy failed
-        if: steps.deploy.success == false
+        if: steps.deploy.conclusion == 'failure'
         run: GIT_REVISION=$GITHUB_SHA SLACK_WEBHOOK_URL=${{ secrets.SLACK_WEBHOOK_URL }} sh bin/slack_notification.sh failure
