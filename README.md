@@ -1,3 +1,4 @@
+[![CI](https://github.com/ridi/pay-backend/workflows/CI/badge.svg?branch=master)](https://github.com/ridi/pay-backend/actions?query=workflow%3ACI+branch%3Amaster)
 [![codecov](https://codecov.io/gh/ridi/pay-backend/branch/master/graph/badge.svg?token=g1l9Hrb9zH)](https://codecov.io/gh/ridi/pay-backend)
 
 ## Reporting a vulnerability
