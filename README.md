@@ -40,4 +40,4 @@ make fixture
 [Link](https://s3.ap-northeast-2.amazonaws.com/ridi-pay-backend-api-doc/master/api.html)
 
 ## Deploy
-- We are using github actions and releases for deploy. For details, please refer to `.github/workflows/main.yml`.
+- We are using github actions and releases for deploy. For details, please refer to `.github/workflows`.
