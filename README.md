@@ -1,8 +1,8 @@
 [![codecov](https://codecov.io/gh/ridi/pay-backend/branch/master/graph/badge.svg?token=g1l9Hrb9zH)](https://codecov.io/gh/ridi/pay-backend)
 
-## Security bug report
+## Reporting a vulnerability
 
-All security bugs in RIDI Pay should be reported by email to security@ridi.com.
+[Link](https://github.com/ridi/pay-backend/security/policy)
 
 ## Settings for development environment
 
