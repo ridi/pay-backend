@@ -2,13 +2,25 @@ version: "3"
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: config/docker/app/Dockerfile
+    build: .
     ports:
-      - 9000
+      - 80
     environment:
-      - APP_ENV=dev
+      - APP_ENV=${APP_ENV}
+      - DATABASE_URL=${DATABASE_URL}
+      - KCP_HTTP_PROXY_URL=${KCP_HTTP_PROXY_URL}
+      - OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID}
+      - OAUTH2_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET}
+      - PARTNER_SECRET_KEY_SECRET=${PARTNER_SECRET_KEY_SECRET}
+      - PG_BILL_KEY_SECRET=${PG_BILL_KEY_SECRET}
+      - REDIS_HOST=${REDIS_HOST}
+      - RIDIBOOKS_SERVER_HOST=${RIDIBOOKS_SERVER_HOST}
+      - RIDISELECT_URL=${RIDISELECT_URL}
+      - RIDI_PAY_URL=${RIDI_PAY_URL}
+      - RIDI_PAY_TO_RIDISELECT_PRIVATE_KEY=${RIDI_PAY_TO_RIDISELECT_PRIVATE_KEY}
+      - RIDI_PAY_TO_STORE_PRIVATE_KEY=${RIDI_PAY_TO_STORE_PRIVATE_KEY}
+      - RIDISELECT_TO_RIDI_PAY_PUBLIC_KEY=${RIDISELECT_TO_RIDI_PAY_PUBLIC_KEY}
+      - STORE_TO_RIDI_PAY_PUBLIC_KEY=${STORE_TO_RIDI_PAY_PUBLIC_KEY}
     depends_on:
       - kcp
       - mariadb
@@ -23,7 +35,7 @@ services:
     ports:
       - 80
     environment:
-      - APP_ENV=dev
+      - APP_ENV=${APP_ENV}
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
       - DYNAMODB_ENDPOINT=http://dynamodb:8000

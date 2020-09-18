@@ -1,29 +1,11 @@
 version: "3"
 
 services:
-  nginx:
-    image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend-nginx:${GIT_REVISION}
-    build:
-      context: .
-      dockerfile: config/docker/nginx/Dockerfile
-    ports:
-      - 80:80
-    logging:
-      driver: awslogs
-      options:
-        awslogs-region: ap-northeast-2
-        awslogs-group: ${APP_ENV}.ridi-pay-backend
-        awslogs-stream-prefix: ${APP_ENV}.ridi-pay-backend
   app:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/pay-backend:${GIT_REVISION}
-    build:
-      context: .
-      dockerfile: config/docker/app/Dockerfile
+    build: .
     ports:
-      - 9000:9000
-    environment:
-      - APP_ENV=${APP_ENV}
-      - GIT_REVISION=${GIT_REVISION}
+      - 80:80
     logging:
       driver: awslogs
       options:
