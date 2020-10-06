@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import { createConnection } from 'typeorm';
 import Sentry from '@sentry/node';
 import { HealthCheckController } from 'src/controllers/HealthCheckController';
+import { ready } from 'libsodium-wrappers';
 
 export enum Environment {
   PROD = 'prod',
@@ -21,6 +22,8 @@ export class App {
       type: 'mysql',
       url: process.env.DATABASE_URL,
     });
+
+    await ready;
 
     const app: Application = express();
     app.use(bodyParser.json());
