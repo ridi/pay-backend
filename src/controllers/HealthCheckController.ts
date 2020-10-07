@@ -13,10 +13,12 @@ export class HealthCheckController {
     } catch (e) {
       Sentry.captureException(e);
 
-      return res.json({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: '오류가 발생했습니다.',
-      });
+      return res
+        .status(500)
+        .json({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: '오류가 발생했습니다.',
+        });
     }
 
     return res.json();

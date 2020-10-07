@@ -8,6 +8,9 @@
     "paths": {
       "src/*": [
         "src/*"
+      ],
+      "tests/src/*": [
+        "tests/src/*"
       ]
     },
     "strict": true,

@@ -28,7 +28,7 @@ services:
     command: [
       'bash',
       '-c',
-      'chmod +x /app/bin/wait-for-it.sh && /app/bin/wait-for-it.sh mariadb:3306 && /app/bin/wait-for-it.sh kcp:80 -- composer test'
+      'chmod +x /app/bin/wait-for-it.sh && /app/bin/wait-for-it.sh mariadb:3306 && /app/bin/wait-for-it.sh kcp:80 -- yarn run test'
     ]
   kcp:
     image: 023315198496.dkr.ecr.ap-northeast-2.amazonaws.com/ridi/kcp-http-proxy:latest
