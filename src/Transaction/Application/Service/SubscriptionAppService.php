@@ -31,6 +31,7 @@ use RidiPay\Transaction\Domain\Exception\NotReservedSubscriptionException;
 use RidiPay\Transaction\Domain\Repository\SubscriptionPaymentMethodHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
 use RidiPay\Transaction\Domain\Service\BillingPaymentTransactionApprovalProcessor;
+use RidiPay\Transaction\Domain\Service\BillingPaymentTransactionApprovalResult;
 use RidiPay\Transaction\Domain\Service\RidiCashAutoChargeSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\Service\RidiSelectSubscriptionOptoutManager;
 use RidiPay\Transaction\Domain\SubscriptionConstant;
@@ -259,6 +260,7 @@ class SubscriptionAppService
             new Buyer($buyer_id, $buyer_name, $buyer_email),
             $invoice_id
         );
+        /** @var BillingPaymentTransactionApprovalResult $billing_payment_transaction_approval_result */
         $billing_payment_transaction_approval_result = $billing_payment_transaction_approval_processor->process();
 
         return new SubscriptionPaymentDto($billing_payment_transaction_approval_result);

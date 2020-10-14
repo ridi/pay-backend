@@ -990,6 +990,7 @@ class BillingPaymentController extends BaseController
      *         "product_name",
      *         "amount",
      *         "subscribed_at",
+     *         "reserved_at",
      *         "approved_at",
      *       },
      *       @OA\Property(
@@ -1011,6 +1012,12 @@ class BillingPaymentController extends BaseController
      *         type="string",
      *         description="구독 등록 일시(ISO 8601 Format)",
      *         example="2018-06-07T01:59:30+09:00"
+     *       ),
+     *       @OA\Property(
+     *         property="reserved_at",
+     *         type="string",
+     *         description="구독 결제 예약 일시(ISO 8601 Format)",
+     *         example="2018-06-07T03:30:30+09:00"
      *       ),
      *       @OA\Property(
      *         property="approved_at",
@@ -1107,6 +1114,7 @@ class BillingPaymentController extends BaseController
                 'product_name' => $result->product_name,
                 'amount' => $result->amount,
                 'subscribed_at' => $result->subscribed_at->format(DATE_ATOM),
+                'reserved_at' => $result->reserved_at->format(DATE_ATOM),
                 'approved_at' => $result->approved_at->format(DATE_ATOM)
             ]);
         } catch (ApiSecretValidationException | UnauthorizedPartnerException $e) {

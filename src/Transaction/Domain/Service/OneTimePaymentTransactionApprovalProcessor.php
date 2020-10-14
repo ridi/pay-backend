@@ -5,7 +5,7 @@ namespace RidiPay\Transaction\Domain\Service;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Kernel;
-use RidiPay\Library\IdempotentRequestProcessor;
+use RidiPay\Transaction\Domain\Service\IdempotentTransactionApprovalProcessor;
 use RidiPay\Pg\Application\Dto\PgDto;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
@@ -21,7 +21,7 @@ use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
-class OneTimePaymentTransactionApprovalProcessor extends IdempotentRequestProcessor
+class OneTimePaymentTransactionApprovalProcessor extends IdempotentTransactionApprovalProcessor
 {
     use TransactionApprovalTrait;
 
@@ -67,36 +67,30 @@ class OneTimePaymentTransactionApprovalProcessor extends IdempotentRequestProces
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    protected function run(): OneTimePaymentTransactionApprovalResult
+    protected function run(): TransactionApprovalResult
     {
         $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($this->transaction->getPaymentMethodId());
         $transaction = self::approveTransaction($this->transaction, $this->pg_handler, $pg_bill_key, $this->buyer);
 
-        return new OneTimePaymentTransactionApprovalResult(
-            $transaction->getUuid()->toString(),
-            $transaction->getPartnerTransactionId(),
-            $transaction->getProductName(),
-            $transaction->getAmount(),
-            $transaction->getReservedAt(),
-            $transaction->getApprovedAt()
-        );
+        return new OneTimePaymentTransactionApprovalResult($transaction);
     }
 
     /**
      * @return OneTimePaymentTransactionApprovalResult
+     * @throws NotFoundTransactionException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      */
-    protected function getResult(): OneTimePaymentTransactionApprovalResult
+    protected function getResult(): TransactionApprovalResult
     {
         $content = json_decode($this->getSerializedResult());
 
-        return new OneTimePaymentTransactionApprovalResult(
-            $content->transaction_id,
-            $content->partner_transaction_id,
-            $content->product_name,
-            (int) $content->amount,
-            \DateTime::createFromFormat(DATE_ATOM, $content->reserved_at),
-            \DateTime::createFromFormat(DATE_ATOM, $content->approved_at)
-        );
+        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($content->transaction_id));
+        if ($transaction === null) {
+            throw new NotFoundTransactionException();
+        }
+
+        return new OneTimePaymentTransactionApprovalResult($transaction);
     }
 
     /**

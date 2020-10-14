@@ -27,6 +27,7 @@ use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Exception\NotReservedTransactionException;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Transaction\Domain\Service\OneTimePaymentTransactionApprovalProcessor;
+use RidiPay\Transaction\Domain\Service\OneTimePaymentTransactionApprovalResult;
 use RidiPay\Transaction\Domain\Service\TransactionCancellationProcessor;
 use RidiPay\Transaction\Domain\Service\TransactionCancellationResult;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
@@ -155,6 +156,7 @@ class TransactionAppService
             $transaction_uuid,
             new Buyer($buyer_id, $buyer_name, $buyer_email)
         );
+        /** @var OneTimePaymentTransactionApprovalResult $one_time_payment_transaction_approval_result */
         $one_time_payment_transaction_approval_result = $one_time_payment_transaction_approval_processor->process();
 
         return new TransactionApprovalDto($one_time_payment_transaction_approval_result);
