@@ -26,6 +26,9 @@ class SubscriptionPaymentDto
     public $subscribed_at;
 
     /** @var \DateTime */
+    public $reserved_at;
+
+    /** @var \DateTime */
     public $approved_at;
 
     /**
@@ -39,6 +42,7 @@ class SubscriptionPaymentDto
         $this->product_name = $billing_payment_transaction_approval_result->product_name;
         $this->amount = $billing_payment_transaction_approval_result->amount;
         $this->subscribed_at = $billing_payment_transaction_approval_result->subscribed_at;
+        $this->reserved_at = $billing_payment_transaction_approval_result->reserved_at;
         $this->approved_at = $billing_payment_transaction_approval_result->approved_at;
     }
 }

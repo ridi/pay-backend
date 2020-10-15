@@ -5,7 +5,7 @@ namespace RidiPay\Transaction\Domain\Service;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Kernel;
-use RidiPay\Library\IdempotentRequestProcessor;
+use RidiPay\Transaction\Domain\Service\IdempotentTransactionApprovalProcessor;
 use RidiPay\Pg\Application\Dto\PgDto;
 use RidiPay\Pg\Application\Service\PgAppService;
 use RidiPay\Pg\Domain\Exception\TransactionApprovalException;
@@ -16,13 +16,14 @@ use RidiPay\Pg\Domain\Service\PgHandlerInterface;
 use RidiPay\Transaction\Domain\Entity\SubscriptionEntity;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\Transaction\Domain\Exception\NotFoundSubscriptionException;
+use RidiPay\Transaction\Domain\Exception\NotFoundTransactionException;
 use RidiPay\Transaction\Domain\Repository\SubscriptionRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
 
-class BillingPaymentTransactionApprovalProcessor extends IdempotentRequestProcessor
+class BillingPaymentTransactionApprovalProcessor extends IdempotentTransactionApprovalProcessor
 {
     use TransactionApprovalTrait;
 
@@ -96,39 +97,31 @@ class BillingPaymentTransactionApprovalProcessor extends IdempotentRequestProces
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    protected function run(): BillingPaymentTransactionApprovalResult
+    protected function run(): TransactionApprovalResult
     {
         $transaction = $this->createTransaction();
         $pg_bill_key = PaymentMethodAppService::getBillingPaymentPgBillKey($transaction->getPaymentMethodId());
         $transaction = self::approveTransaction($transaction, $this->pg_handler, $pg_bill_key, $this->buyer);
 
-        return new BillingPaymentTransactionApprovalResult(
-            $this->subscription->getUuid()->toString(),
-            $transaction->getUuid()->toString(),
-            $transaction->getPartnerTransactionId(),
-            $transaction->getProductName(),
-            $transaction->getAmount(),
-            $this->subscription->getSubscribedAt(),
-            $transaction->getApprovedAt()
-        );
+        return new BillingPaymentTransactionApprovalResult($this->subscription, $transaction);
     }
 
     /**
      * @return BillingPaymentTransactionApprovalResult
+     * @throws NotFoundTransactionException
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
      */
-    protected function getResult(): BillingPaymentTransactionApprovalResult
+    protected function getResult(): TransactionApprovalResult
     {
         $content = json_decode($this->getSerializedResult());
 
-        return new BillingPaymentTransactionApprovalResult(
-            $content->subscription_id,
-            $content->transaction_id,
-            $content->partner_transaction_id,
-            $content->product_name,
-            (int) $content->amount,
-            \DateTime::createFromFormat(DATE_ATOM, $content->subscribed_at),
-            \DateTime::createFromFormat(DATE_ATOM, $content->approved_at)
-        );
+        $transaction = TransactionRepository::getRepository()->findOneByUuid(Uuid::fromString($content->transaction_id));
+        if ($transaction === null) {
+            throw new NotFoundTransactionException();
+        }
+
+        return new BillingPaymentTransactionApprovalResult($this->subscription, $transaction);
     }
 
     /**

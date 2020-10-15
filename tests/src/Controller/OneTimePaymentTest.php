@@ -181,14 +181,14 @@ class OneTimePaymentTest extends ControllerTestCase
             $amount
         );
 
-        // 결제 승인
+        // 결제 승인(결제 발생 O)
         $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
         
         $pg_transaction_id = TransactionRepository::getRepository()->findOneByUuid(
             Uuid::fromString(self::$transaction_id)
         )->getPgTransactionId();
 
-        // 결제 승인 retry
+        // 결제 승인 retry(결제 발생 X)
         $this->assertApprovePaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
         $this->assertSame(
             $pg_transaction_id,
@@ -197,7 +197,7 @@ class OneTimePaymentTest extends ControllerTestCase
             )->getPgTransactionId()
         );
 
-        // 결제 취소
+        // 가맹점 오류로 인한 결제 취소
         $this->assertCancelPaymentSuccessfully(self::$transaction_id, $partner_transaction_id, $product_name, $amount);
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame(self::$transaction_id, $response->transaction_id);

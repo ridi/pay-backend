@@ -291,7 +291,7 @@ class BillingPaymentTest extends ControllerTestCase
         $subscription_payment_url = "/payments/subscriptions/{$subscription_id}/pay";
         $invoice_id = Uuid::uuid4()->toString();
 
-        // 동일한 invoice_id로 결제 승인
+        // 동일한 invoice_id로 결제 승인(결제 발생 O)
         $body = json_encode([
             'partner_transaction_id' => Uuid::uuid4()->toString(),
             'amount' => $amount,
@@ -310,7 +310,41 @@ class BillingPaymentTest extends ControllerTestCase
             Uuid::fromString($transaction_id)
         )->getPgTransactionId();
 
-        // 동일한 invoice_id로 결제 승인 retry
+        // 가맹점 오류로 인한 결제 취소
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($transaction_id, $response->transaction_id);
+        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+
+        // 동일한 invoice_id로 결제 승인 retry(결제 발생 O)
+        $body = json_encode([
+            'partner_transaction_id' => Uuid::uuid4()->toString(),
+            'amount' => $amount,
+            'buyer_id' => TestUtil::U_ID,
+            'buyer_name' => '테스트',
+            'buyer_email' => 'payment-test@ridi.com',
+            'invoice_id' => $invoice_id
+        ]);
+        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $this->assertNotSame($transaction_id, $response_content->transaction_id);
+        $this->assertNotSame($partner_transaction_id, $response_content->partner_transaction_id);
+        $this->assertNotSame(
+            $pg_transaction_id,
+            TransactionRepository::getRepository()->findOneByUuid(
+                Uuid::fromString($response_content->transaction_id)
+            )->getPgTransactionId()
+        );
+
+        $transaction_id = $response_content->transaction_id;
+        $partner_transaction_id = $response_content->partner_transaction_id;
+        $pg_transaction_id = TransactionRepository::getRepository()->findOneByUuid(
+            Uuid::fromString($transaction_id)
+        )->getPgTransactionId();
+
+        // 동일한 invoice_id로 결제 승인 retry(결제 발생 X)
         $body = json_encode([
             'partner_transaction_id' => Uuid::uuid4()->toString(),
             'amount' => $amount,
@@ -342,7 +376,7 @@ class BillingPaymentTest extends ControllerTestCase
         self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
-        // 다른 invoice id로 결제 승인
+        // 다른 invoice id로 결제 승인(결제 발생 O)
         $body = json_encode([
             'partner_transaction_id' => Uuid::uuid4()->toString(),
             'amount' => $amount,
@@ -356,6 +390,12 @@ class BillingPaymentTest extends ControllerTestCase
         $response_content = json_decode(self::$client->getResponse()->getContent());
         $this->assertNotSame($transaction_id, $response_content->transaction_id);
         $this->assertNotSame($partner_transaction_id, $response_content->partner_transaction_id);
+        $this->assertNotSame(
+            $pg_transaction_id,
+            TransactionRepository::getRepository()->findOneByUuid(
+                Uuid::fromString($response_content->transaction_id)
+            )->getPgTransactionId()
+        );
 
         $transaction_id = $response_content->transaction_id;
         $partner_transaction_id = $response_content->partner_transaction_id;

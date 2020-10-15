@@ -153,5 +153,7 @@ class TransactionCancellationProcessor
 
             throw $t;
         }
+
+        IdempotentTransactionApprovalProcessor::deleteResultIfExist($this->transaction->getUuid()->toString());
     }
 }
