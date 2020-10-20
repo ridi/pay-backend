@@ -5,6 +5,7 @@ import { createConnection } from 'typeorm';
 import Sentry from '@sentry/node';
 import { HealthCheckController } from 'src/controllers/HealthCheckController';
 import { ready } from 'libsodium-wrappers';
+import morgan from 'morgan';
 
 export enum Environment {
   PROD = 'prod',
@@ -27,6 +28,7 @@ export class App {
 
     const app: Application = express();
     app.use(bodyParser.json());
+    app.use(morgan('combined'));
 
     app.get('/health-check', HealthCheckController.handle);
 
