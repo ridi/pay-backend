@@ -19,10 +19,9 @@ export class Transaction {
 
   @Column({
     name: 'uuid',
-    type: 'string',
     comment: 'id 값 유추 방지를 위한 uuid',
   })
-  uuid: string;
+  uuid!: string;
 
   @Column({
     name: 'u_idx',
@@ -30,7 +29,7 @@ export class Transaction {
     unsigned: true,
     comment: 'user.u_idx',
   })
-  uIdx: number;
+  uIdx!: number;
 
   @Column({
     name: 'payment_method_id',
@@ -38,7 +37,7 @@ export class Transaction {
     unsigned: true,
     comment: 'payment_method.id',
   })
-  paymentMethodId: number;
+  paymentMethodId!: number;
 
   @Column({
     name: 'partner_id',
@@ -46,7 +45,7 @@ export class Transaction {
     unsigned: true,
     comment: 'partner.id',
   })
-  partnerId: number;
+  partnerId!: number;
 
   @Column({
     name: 'pg_id',
@@ -54,32 +53,32 @@ export class Transaction {
     unsigned: true,
     comment: 'pg.id',
   })
-  pgId: number;
+  pgId!: number;
 
   @Column({
     name: 'partner_transaction_id',
-    type: 'string',
+    type: 'varchar',
     length: 64,
     comment: '가맹점 Transaction ID',
   })
-  partnerTransactionId;
+  partnerTransactionId!: string;
 
   @Column({
     name: 'pg_transaction_id',
-    type: 'string',
+    type: 'varchar',
     length: 64,
     nullable: true,
     comment: 'PG사 Transaction ID',
   })
-  pgTransactionId: string | null;
+  pgTransactionId?: string | null;
 
   @Column({
     name: 'product_name',
-    type: 'string',
+    type: 'varchar',
     length: 32,
     comment: '상품명',
   })
-  productName: string;
+  productName!: string;
 
   @Column({
     name: 'amount',
@@ -95,7 +94,7 @@ export class Transaction {
     default: TransactionStatus.RESERVED,
     comment: 'Transaction 상태',
   })
-  status: TransactionStatus;
+  status!: TransactionStatus;
 
   @Column({
     name: 'created_at',
@@ -103,7 +102,7 @@ export class Transaction {
     default: 'CURRENT_TIMESTAMP',
     comment: 'Transaction 예약 시각',
   })
-  reservedAt: Date;
+  reservedAt!: Date;
 
   @Column({
     name: 'approved_at',
@@ -111,7 +110,7 @@ export class Transaction {
     nullable: true,
     comment: 'Transaction 승인 시각',
   })
-  approvedAt: Date | null;
+  approvedAt?: Date | null;
 
   @Column({
     name: 'approved_at',
@@ -119,9 +118,9 @@ export class Transaction {
     nullable: true,
     comment: 'Transaction 취소 시각',
   })
-  canceledAt: Date | null;
+  canceledAt?: Date | null;
 
-  public constructor(
+  public static create(
     uIdx: number,
     paymentMethodId: number,
     pgId: number,
@@ -131,18 +130,21 @@ export class Transaction {
     amount: number,
     reservedAt: Date,
   ) {
-    this.uuid = v4();
-    this.uIdx = uIdx;
-    this.paymentMethodId = paymentMethodId;
-    this.pgId = pgId;
-    this.partnerId = partnerId;
-    this.partnerTransactionId = partnerTransactionId;
-    this.pgTransactionId = null;
-    this.productName = productName;
-    this.amount = amount;
-    this.status = TransactionStatus.RESERVED;
-    this.reservedAt = reservedAt;
-    this.approvedAt = null;
-    this.canceledAt = null;
+    const transaction = new Transaction();
+    transaction.uuid = v4();
+    transaction.uIdx = uIdx;
+    transaction.paymentMethodId = paymentMethodId;
+    transaction.pgId = pgId;
+    transaction.partnerId = partnerId;
+    transaction.partnerTransactionId = partnerTransactionId;
+    transaction.pgTransactionId = null;
+    transaction.productName = productName;
+    transaction.amount = amount;
+    transaction.status = TransactionStatus.RESERVED;
+    transaction.reservedAt = reservedAt;
+    transaction.approvedAt = null;
+    transaction.canceledAt = null;
+
+    return transaction;
   }
 }

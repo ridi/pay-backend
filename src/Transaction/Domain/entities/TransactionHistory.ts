@@ -17,7 +17,7 @@ export class TransactionHistory {
   id!: number;
 
   @ManyToOne((type) => Transaction)
-  transaction: Transaction;
+  transaction!: Transaction;
 
   @Column({
     name: 'action',
@@ -26,50 +26,53 @@ export class TransactionHistory {
     default: TransactionAction.APPROVE,
     comment: 'APPROVE: 승인, CANCEL: 취소',
   })
-  action: TransactionAction;
+  action!: TransactionAction;
 
   @Column({
     name: 'is_success',
     type: 'boolean',
     comment: '결제 성공 여부',
   })
-  isSuccess: boolean;
+  isSuccess!: boolean;
 
   @Column({
     name: 'pg_response_code',
-    type: 'string',
-    length: 16,
+    type: 'varchar',
+    length: 64,
     comment: 'PG사 결제 응답 코드',
   })
-  pgResponseCode: string;
+  pgResponseCode!: string;
 
   @Column({
     name: 'pg_response_message',
-    type: 'string',
+    type: 'varchar',
     length: 64,
     comment: 'PG사 결제 응답 메시지',
   })
-  pgResponseMessage: string;
+  pgResponseMessage!: string;
 
   @Column({
     name: 'created_at',
     type: 'datetime',
     default: 'CURRENT_TIMESTAMP',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
-  public constructor(
+  public static create(
     transaction: Transaction,
     action: TransactionAction,
     isSuccess: boolean,
     pgResponseCode: string,
     pgResponseMessage: string,
   ) {
-    this.transaction = transaction;
-    this.action = action;
-    this.isSuccess = isSuccess;
-    this.pgResponseCode = pgResponseCode;
-    this.pgResponseMessage = pgResponseMessage;
-    this.createdAt = new Date();
+    const transactionHistory = new TransactionHistory();
+    transactionHistory.transaction = transaction;
+    transactionHistory.action = action;
+    transactionHistory.isSuccess = isSuccess;
+    transactionHistory.pgResponseCode = pgResponseCode;
+    transactionHistory.pgResponseMessage = pgResponseMessage;
+    transactionHistory.createdAt = new Date();
+
+    return transactionHistory;
   }
 }

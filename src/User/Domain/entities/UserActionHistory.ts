@@ -12,26 +12,29 @@ export class UserActionHistory {
   id!: number;
 
   @ManyToOne((type) => User)
-  user: User;
+  user!: User;
 
   @Column({
     name: 'action',
-    type: 'string',
+    type: 'varchar',
     length: 32,
     comment: 'RIDI PAY 사용자 액션',
   })
-  action: string;
+  action!: string;
 
   @Column({
     name: 'created_at',
     type: 'datetime',
     default: 'CURRENT_TIMESTAMP',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
-  public constructor(user: User, action: string) {
-    this.user = user;
-    this.action = action;
-    this.createdAt = new Date();
+  public static create(user: User, action: string) {
+    const userActionHistory = new UserActionHistory();
+    userActionHistory.user = user;
+    userActionHistory.action = action;
+    userActionHistory.createdAt = new Date();
+
+    return userActionHistory;
   }
 }

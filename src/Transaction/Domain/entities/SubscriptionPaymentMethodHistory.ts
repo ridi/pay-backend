@@ -13,21 +13,24 @@ export class SubscriptionPaymentMethodHistory {
   id!: number;
 
   @ManyToOne((type) => Subscription)
-  subscription: Subscription;
+  subscription!: Subscription;
 
   @ManyToOne((type) => PaymentMethod)
-  paymentMethod: PaymentMethod;
+  paymentMethod!: PaymentMethod;
 
   @Column({
     name: 'created_at',
     type: 'datetime',
     default: 'CURRENT_TIMESTAMP',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
-  public constructor(subscription: Subscription, paymentMethod: PaymentMethod) {
-    this.subscription = subscription;
-    this.paymentMethod = paymentMethod;
-    this.createdAt = new Date();
+  public static create(subscription: Subscription, paymentMethod: PaymentMethod) {
+    const subscriptionPaymentMethodHistory = new SubscriptionPaymentMethodHistory();
+    subscriptionPaymentMethodHistory.subscription = subscription;
+    subscriptionPaymentMethodHistory.paymentMethod = paymentMethod;
+    subscriptionPaymentMethodHistory.createdAt = new Date();
+
+    return subscriptionPaymentMethodHistory;
   }
 }

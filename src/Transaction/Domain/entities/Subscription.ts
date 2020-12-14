@@ -13,10 +13,9 @@ export class Subscription {
 
   @Column({
     name: 'uuid',
-    type: 'string',
     comment: 'id 값 유추 방지를 위한 uuid',
   })
-  uuid: string;
+  uuid!: string;
 
   @Column({
     name: 'payment_method_id',
@@ -24,7 +23,7 @@ export class Subscription {
     unsigned: true,
     comment: 'payment_method.id',
   })
-  paymentMethodId: number;
+  paymentMethodId!: number;
 
   @Column({
     name: 'partner_id',
@@ -32,36 +31,43 @@ export class Subscription {
     unsigned: true,
     comment: 'partner.id',
   })
-  partnerId: number;
+  partnerId!: number;
 
   @Column({
     name: 'product_name',
-    type: 'string',
+    type: 'varchar',
     length: 32,
     comment: '구독 상품',
   })
-  productName: string;
+  productName!: string;
 
   @Column({
     name: 'subscribed_at',
     type: 'datetime',
     default: 'CURRENT_TIMESTAMP',
   })
-  subscribedAt: Date;
+  subscribedAt!: Date;
 
   @Column({
     name: 'unsubscribed_at',
     type: 'datetime',
     nullable: true,
   })
-  unsubscribedAt: Date | null;
+  unsubscribedAt?: Date | null;
 
-  public constructor(paymentMethodId: number, partnerId: number, productName: string) {
-    this.uuid = v4();
-    this.paymentMethodId = paymentMethodId;
-    this.partnerId = partnerId;
-    this.productName = productName;
-    this.subscribedAt = new Date();
-    this.unsubscribedAt = null;
+  public static create(
+    paymentMethodId: number,
+    partnerId: number,
+    productName: string,
+  ) {
+    const subscription = new Subscription();
+    subscription.uuid = v4();
+    subscription.paymentMethodId = paymentMethodId;
+    subscription.partnerId = partnerId;
+    subscription.productName = productName;
+    subscription.subscribedAt = new Date();
+    subscription.unsubscribedAt = null;
+
+    return subscription;
   }
 }

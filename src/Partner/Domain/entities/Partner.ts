@@ -15,30 +15,29 @@ export class Partner {
 
   @Column({
     name: 'name',
-    type: 'string',
+    type: 'varchar',
     length: 32,
     comment: '가맹점 관리자 로그인 Username',
   })
-  name: string;
+  name!: string;
 
   @Column({
     name: 'password',
-    type: 'string',
+    type: 'varchar',
     length: 255,
     comment: '가맹점 관리자 로그인 Password',
   })
-  password: string;
+  password!: string;
 
   @Column({
     name: 'api_key',
-    type: 'string',
     comment: 'API 연동 Key',
   })
-  apiKey: string;
+  apiKey!: string;
 
   @Column({
     name: 'secret_key',
-    type: 'string',
+    type: 'varchar',
     length: 255,
     comment: 'API 연동 Secret Key',
   })
@@ -48,14 +47,14 @@ export class Partner {
     name: 'is_valid',
     type: 'boolean',
   })
-  isValid: boolean;
+  isValid!: boolean;
 
   @Column({
     name: 'is_first_party',
     type: 'boolean',
     comment: 'First Party(RIDI) Partner 여부',
   })
-  isFirstParty: boolean;
+  isFirstParty!: boolean;
 
   @Column({
     name: 'updated_at',
@@ -63,25 +62,23 @@ export class Partner {
     default: 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   public static async create(
     name: string,
     password: string,
     isFirstParty: boolean,
   ) {
-    const hashedPassword = await hash(password, 10);
-    return new Partner(name, hashedPassword, isFirstParty);
-  }
+    const partner = new Partner();
+    partner.name = name;
+    partner.password = await hash(password, 10);
+    partner.apiKey = v4();
+    partner.setEncryptedSecretKey();
+    partner.isValid = true;
+    partner.isFirstParty = isFirstParty;
+    partner.updatedAt = new Date();
 
-  private constructor(name: string, hashedPassword: string, isFirstParty: boolean) {
-    this.name = name;
-    this.password = hashedPassword;
-    this.apiKey = v4();
-    this.setEncryptedSecretKey();
-    this.isValid = true;
-    this.isFirstParty = isFirstParty;
-    this.updatedAt = new Date();
+    return partner;
   }
 
   private setEncryptedSecretKey() {
