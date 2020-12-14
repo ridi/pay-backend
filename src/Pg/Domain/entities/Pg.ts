@@ -22,11 +22,11 @@ export class Pg {
 
   @Column({
     name: 'name',
-    type: 'string',
+    type: 'varchar',
     length: 16,
     comment: 'PG사 이름',
   })
-  name: PgName;
+  name!: PgName;
 
   @Column({
     name: 'status',
@@ -35,7 +35,7 @@ export class Pg {
     default: PgStatus.ACTIVE,
     comment: 'ACTIVE: 사용, INACTIVE: 미사용, KEPT: 기존 유저는 사용, 신규 유저는 미사용',
   })
-  status: PgStatus;
+  status!: PgStatus;
 
   @Column({
     name: 'updated_at',
@@ -43,11 +43,22 @@ export class Pg {
     default: 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updatedAt: Date;
+  updatedAt!: Date;
 
-  public constructor(name: PgName) {
-    this.name = name;
-    this.status = PgStatus.ACTIVE;
-    this.updatedAt = new Date();
+  public static create(name: PgName) {
+    const pg = new Pg();
+    pg.name = name;
+    pg.status = PgStatus.ACTIVE;
+    pg.updatedAt = new Date();
+
+    return pg;
+  }
+
+  public getId(): number {
+    return this.id;
+  }
+
+  public getName(): string {
+    return this.name;
   }
 }

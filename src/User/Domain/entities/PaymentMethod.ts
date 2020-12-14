@@ -18,10 +18,9 @@ export class PaymentMethod {
 
   @Column({
     name: 'uuid',
-    type: 'string',
     comment: 'id 값 유추 방지를 위한 uuid',
   })
-  uuid: string;
+  uuid!: string;
 
   @Column({
     name: 'u_idx',
@@ -29,16 +28,16 @@ export class PaymentMethod {
     unsigned: true,
     comment: 'user.u_idx',
   })
-  uIdx: number;
+  uIdx!: number;
 
   @Column({
-    name: 'name',
+    name: 'type',
     type: 'enum',
     enum: PaymentMethodType,
     default: PaymentMethodType.CARD,
     comment: '결제 수단',
   })
-  type: PaymentMethodType;
+  type!: PaymentMethodType;
 
   @Column({
     name: 'created_at',
@@ -46,27 +45,34 @@ export class PaymentMethod {
     default: 'CURRENT_TIMESTAMP',
     comment: '결제 수단 등록 시각',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
   @Column({
-    name: 'leaved_at',
+    name: 'deleted_at',
     type: 'datetime',
     comment: '결제 수단 삭제 시각',
   })
-  deletedAt: Date | null;
+  deletedAt?: Date | null;
 
   @OneToMany(type => Card, card => card.paymentMethod)
-  cards: Card[];
+  cards!: Card[];
 
-  public constructor(
+  public static create(
     uIdx: number,
     type: PaymentMethodType,
   ) {
-    this.uuid = v4();
-    this.uIdx = uIdx;
-    this.type = type;
-    this.createdAt = new Date();
-    this.deletedAt = null;
-    this.cards = [];
+    const paymentMethod = new PaymentMethod();
+    paymentMethod.uuid = v4();
+    paymentMethod.uIdx = uIdx;
+    paymentMethod.type = type;
+    paymentMethod.createdAt = new Date();
+    paymentMethod.deletedAt = null;
+    paymentMethod.cards = [];
+
+    return paymentMethod;
+  }
+
+  public delete() {
+    this.deletedAt = new Date();
   }
 }

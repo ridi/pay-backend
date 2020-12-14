@@ -15,51 +15,54 @@ export class CardIssuer {
     type: 'int',
     comment: 'pg.id',
   })
-  pgId: number;
+  pgId!: number;
 
   @Column({
     name: 'code',
-    type: 'string',
+    type: 'varchar',
     length: 32,
     comment: '카드 발급사 코드',
   })
-  code: string;
+  code!: string;
 
   @Column({
     name: 'name',
-    type: 'string',
+    type: 'varchar',
     length: 32,
     comment: '카드 발급사 이름',
   })
-  name: string;
+  name!: string;
 
   @Column({
     name: 'color',
-    type: 'string',
+    type: 'varchar',
     length: 7,
     comment: '카드 발급사 색상',
   })
-  color: string;
+  color!: string;
 
   @Column({
     name: 'logo_image_url',
-    type: 'string',
+    type: 'varchar',
     length: 128,
     comment: '카드 발급사 로고 이미지 URL',
   })
-  logoImageUrl: string;
+  logoImageUrl!: string;
 
-  public constructor(
+  public static create(
     pgId: number,
     code: string,
     name: string,
     color: string,
-    logoImageUrl: string
+    logoImageUrl: string,
   ) {
-    this.pgId = pgId;
-    this.code = code;
-    this.name = name;
-    this.color = color;
-    this.logoImageUrl = logoImageUrl;
+    const cardIssuer = new CardIssuer();
+    cardIssuer.pgId = pgId;
+    cardIssuer.code = code;
+    cardIssuer.name = name;
+    cardIssuer.color = color;
+    cardIssuer.logoImageUrl = logoImageUrl;
+
+    return cardIssuer;
   }
 }

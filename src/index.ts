@@ -4,5 +4,6 @@ import { App } from 'src/App';
 
 (async () => {
   const app = new App();
-  await app.start();
+  await app.init();
+  app.start();
 })();

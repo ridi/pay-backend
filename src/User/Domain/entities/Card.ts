@@ -20,28 +20,28 @@ export class Card {
   id!: number;
 
   @ManyToOne((type) => PaymentMethod, (paymentMethod) => paymentMethod.cards)
-  paymentMethod: PaymentMethod;
+  paymentMethod!: PaymentMethod;
 
   @ManyToOne((type) => CardIssuer)
-  cardIssuer: CardIssuer;
+  cardIssuer!: CardIssuer;
 
   @Column({
     name: 'pg_id',
     type: 'int',
     comment: 'pg.id',
   })
-  pgId: number;
+  pgId!: number;
 
   @Column({
     name: 'pg_bill_key',
-    type: 'string',
+    type: 'varchar',
     comment: 'PG사에서 발급한 bill key',
   })
   pgBillKey!: string;
 
   @Column({
     name: 'iin',
-    type: 'string',
+    type: 'char',
     length: 6,
     comment: 'Issuer Identification Number(카드 번호 앞 6자리)',
   })
@@ -54,9 +54,9 @@ export class Card {
     default: CardPurpose.ONE_TIME,
     comment: '용도(ONE_TIME: 소득 공제 불가능 단건 결제, ONE_TIME_TAX_DEDUCTION: 소득 공제 가능 단건 결제, BILLING: 정기 결제)',
   })
-  purpose: CardPurpose;
-
-  public constructor(
+  purpose!: CardPurpose;
+  
+  public static create(
     paymentMethod: PaymentMethod,
     cardIssuer: CardIssuer,
     pgId: number,
@@ -64,12 +64,15 @@ export class Card {
     cardNumber: string,
     purpose: CardPurpose,
   ) {
-    this.paymentMethod = paymentMethod;
-    this.cardIssuer = cardIssuer;
-    this.pgId = pgId;
-    this.setEncryptedPgBillKey(pgBillKey);
-    this.setIin(cardNumber);
-    this.purpose = purpose;
+    const card = new Card();
+    card.paymentMethod = paymentMethod;
+    card.cardIssuer = cardIssuer;
+    card.pgId = pgId;
+    card.setEncryptedPgBillKey(pgBillKey);
+    card.setIin(cardNumber);
+    card.purpose = purpose;
+
+    return card;
   }
 
   private setEncryptedPgBillKey(pgBillKey: string) {
