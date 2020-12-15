@@ -57,14 +57,7 @@ class ValidatePinTest extends ControllerTestCase
     public function testPinEntryBlocked()
     {
         $u_idx = TestUtil::getRandomUidx();
-        TestUtil::registerCard(
-            $u_idx,
-            self::VALID_PIN,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        TestUtil::registerCard($u_idx, self::VALID_PIN);
 
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
         $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
@@ -118,33 +111,12 @@ class ValidatePinTest extends ControllerTestCase
             $user_indices[] = TestUtil::getRandomUidx();
         }
 
-        TestUtil::registerCard(
-            $user_indices[0],
-            self::VALID_PIN,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        TestUtil::registerCard($user_indices[0], self::VALID_PIN);
 
-        TestUtil::registerCard(
-            $user_indices[1],
-            self::VALID_PIN,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        TestUtil::registerCard($user_indices[1], self::VALID_PIN);
         UserAppService::deleteUser($user_indices[1]);
 
-        TestUtil::registerCard(
-            $user_indices[3],
-            self::VALID_PIN,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        TestUtil::registerCard($user_indices[3], self::VALID_PIN);
 
         return [
             [$user_indices[0], self::VALID_PIN, Response::HTTP_OK, null],

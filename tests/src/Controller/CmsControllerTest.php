@@ -33,14 +33,7 @@ class CmsControllerTest extends ControllerTestCase
     {
         $u_idx = TestUtil::getRandomUidx();
 
-        $payment_method_uuid = TestUtil::registerCard(
-            $u_idx,
-            '123456',
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        $payment_method_uuid = TestUtil::registerCard($u_idx, '123456');
         CardAppService::deleteCard(
             new User(json_encode([
                 'result' => [
@@ -71,14 +64,7 @@ class CmsControllerTest extends ControllerTestCase
     {
         $u_idx = TestUtil::getRandomUidx();
 
-        TestUtil::registerCard(
-            $u_idx,
-            '123456',
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        TestUtil::registerCard($u_idx, '123456');
         UserAppService::updatePin(
             new User(json_encode([
                 'result' => [

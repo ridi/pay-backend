@@ -10,10 +10,13 @@ use Ridibooks\OAuth2\Authorization\Token\JwtToken;
 use Ridibooks\OAuth2\Authorization\Validator\JwtTokenValidator;
 use Ridibooks\OAuth2\Symfony\Provider\DefaultUserProvider;
 use Ridibooks\OAuth2\Symfony\Provider\User;
+use RidiPay\Library\Pg\Kcp\BatchKeyResponse;
+use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Company;
 use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Jwt\JwtAuthorizationMiddleware;
+use RidiPay\Library\Pg\Kcp\Response as KcpResponse;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Entity\PgEntity;
@@ -31,9 +34,9 @@ class TestUtil
 {
     public const U_ID = 'ridipay';
 
-    // 신한카드
+    // KB국민카드
     public const CARD = [
-        'CARD_NUMBER' => '4499140000000000',
+        'CARD_NUMBER' => '5164530000000000',
         'CARD_EXPIRATION_DATE' => '2511',
         'CARD_PASSWORD' => '12'
     ];
@@ -139,10 +142,6 @@ class TestUtil
     /**
      * @param int $u_idx
      * @param string $pin
-     * @param string $card_number
-     * @param string $card_expiration_date
-     * @param string $card_password
-     * @param string $tax_id
      * @return string
      * @throws CardRegistrationException
      * @throws LeavedUserException
@@ -155,14 +154,8 @@ class TestUtil
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function registerCard(
-        int $u_idx,
-        string $pin,
-        string $card_number,
-        string $card_expiration_date,
-        string $card_password,
-        string $tax_id
-    ) {
+    public static function registerCard(int $u_idx, string $pin)
+    {
         $oauth2_user = new User(json_encode([
             'result' => [
                 'id' => self::U_ID,
@@ -174,15 +167,30 @@ class TestUtil
         ]));
 
         // 1단계: 카드 정보 등록
+        $client = Test::double(
+            Client::class,
+            [
+                'requestBatchKey' => new BatchKeyResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'card_code' => Company::KOOKMIN,
+                    'card_name' => Company::getKoreanName(Company::KOOKMIN),
+                    'batch_key' => 'abcdefghijklmnopqrstuvwxyz'
+                ]),
+            ]
+        );
         CardAppService::registerCard(
             $oauth2_user->getUidx(),
-            $card_number,
-            $card_expiration_date,
-            $card_password,
-            $tax_id
+            self::CARD['CARD_NUMBER'],
+            self::CARD['CARD_EXPIRATION_DATE'],
+            self::CARD['CARD_PASSWORD'],
+            self::TAX_ID
         );
+        Test::clean($client);
+
         // 2단계: 결제 비밀번호 정보 등록
         UserAppService::createPin($oauth2_user->getUidx(), $pin);
+
         // 3단계: 1 ~ 2단계의 등록 정보 저장
         CardAppService::finishCardRegistration($oauth2_user);
 

@@ -3,13 +3,15 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
+use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\Pg\Kcp\BatchOrderResponse;
 use RidiPay\Library\Pg\Kcp\CancelTransactionResponse;
+use RidiPay\Library\Pg\Kcp\Client as KcpClient;
+use RidiPay\Library\Pg\Kcp\Response as KcpResponse;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
-use RidiPay\Transaction\Domain\Entity\TransactionHistoryEntity;
-use RidiPay\Transaction\Domain\Repository\TransactionHistoryRepository;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\UserAppService;
 use Symfony\Bundle\FrameworkBundle\Client;
@@ -41,14 +43,7 @@ class BillingPaymentTest extends ControllerTestCase
     public static function setUpBeforeClass()
     {
         self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(
-            self::$u_idx,
-            self::PIN,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, self::PIN);
         self::$partner = PartnerAppService::registerPartner('billing-payment-test', 'test@12345', true);
 
         self::$client = self::createClient(
@@ -119,7 +114,8 @@ class BillingPaymentTest extends ControllerTestCase
             $subscription_id,
             $partner_transaction_id,
             $product_name,
-            $amount
+            $amount,
+            Uuid::uuid4()->toString()
         );
 
         // 구독 해지
@@ -136,7 +132,8 @@ class BillingPaymentTest extends ControllerTestCase
             $subscription_id,
             $partner_transaction_id,
             $product_name,
-            $amount
+            $amount,
+            Uuid::uuid4()->toString()
         );
     }
 
@@ -213,6 +210,19 @@ class BillingPaymentTest extends ControllerTestCase
         $this->assertSame(Response::HTTP_UNAUTHORIZED, $unauthorized_client->getResponse()->getStatusCode());
 
         // Authorized subscription payment
+        $kcp_client = Test::double(
+            KcpClient::class,
+            [
+                'batchOrder' => new BatchOrderResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'tno' => uniqid(),
+                    'order_no' => $partner_transaction_id,
+                    'amount' => $amount,
+                    'approval_time' => (new \DateTime())->format('YmdHis'),
+                ]),
+            ]
+        );
         self::$client->request(
             Request::METHOD_POST,
             '/payments/subscriptions/' . self::$subscription_id . '/pay',
@@ -221,6 +231,7 @@ class BillingPaymentTest extends ControllerTestCase
             [],
             $subscription_payment_body
         );
+        Test::clean($kcp_client);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
 
         // Unauthorized unsubscription
@@ -288,22 +299,15 @@ class BillingPaymentTest extends ControllerTestCase
         parse_str(parse_url($return_url)['query'], $query_strings);
         $subscription_id = $query_strings['subscription_id'];
 
-        $subscription_payment_url = "/payments/subscriptions/{$subscription_id}/pay";
+        // 결제 승인(결제 발생 O)
         $invoice_id = Uuid::uuid4()->toString();
-
-        // 동일한 invoice_id로 결제 승인(결제 발생 O)
-        $body = json_encode([
-            'partner_transaction_id' => Uuid::uuid4()->toString(),
-            'amount' => $amount,
-            'buyer_id' => TestUtil::U_ID,
-            'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com',
-            'invoice_id' => $invoice_id
-        ]);
-        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-
-        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $response_content = $this->assertPaySubscriptionSuccessfully(
+            $subscription_id,
+            Uuid::uuid4()->toString(),
+            $product_name,
+            $amount,
+            $invoice_id
+        );
         $transaction_id = $response_content->transaction_id;
         $partner_transaction_id = $response_content->partner_transaction_id;
         $pg_transaction_id = TransactionRepository::getRepository()->findOneByUuid(
@@ -311,24 +315,16 @@ class BillingPaymentTest extends ControllerTestCase
         )->getPgTransactionId();
 
         // 가맹점 오류로 인한 결제 취소
-        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $response = json_decode(self::$client->getResponse()->getContent());
-        $this->assertSame($transaction_id, $response->transaction_id);
-        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        $this->assertTransactionCancellationSuccessfully($transaction_id, $partner_transaction_id, $amount);
 
         // 동일한 invoice_id로 결제 승인 retry(결제 발생 O)
-        $body = json_encode([
-            'partner_transaction_id' => Uuid::uuid4()->toString(),
-            'amount' => $amount,
-            'buyer_id' => TestUtil::U_ID,
-            'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com',
-            'invoice_id' => $invoice_id
-        ]);
-        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $response_content = $this->assertPaySubscriptionSuccessfully(
+            $subscription_id,
+            Uuid::uuid4()->toString(),
+            $product_name,
+            $amount,
+            $invoice_id
+        );
         $this->assertNotSame($transaction_id, $response_content->transaction_id);
         $this->assertNotSame($partner_transaction_id, $response_content->partner_transaction_id);
         $this->assertNotSame(
@@ -337,7 +333,6 @@ class BillingPaymentTest extends ControllerTestCase
                 Uuid::fromString($response_content->transaction_id)
             )->getPgTransactionId()
         );
-
         $transaction_id = $response_content->transaction_id;
         $partner_transaction_id = $response_content->partner_transaction_id;
         $pg_transaction_id = TransactionRepository::getRepository()->findOneByUuid(
@@ -353,7 +348,7 @@ class BillingPaymentTest extends ControllerTestCase
             'buyer_email' => 'payment-test@ridi.com',
             'invoice_id' => $invoice_id
         ]);
-        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
+        self::$client->request(Request::METHOD_POST, "/payments/subscriptions/{$subscription_id}/pay", [], [], [], $body);
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
         $response_content = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response_content->transaction_id);
@@ -366,28 +361,19 @@ class BillingPaymentTest extends ControllerTestCase
         );
 
         // 결제 취소
-        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $response = json_decode(self::$client->getResponse()->getContent());
-        $this->assertSame($transaction_id, $response->transaction_id);
-        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        $this->assertTransactionCancellationSuccessfully($transaction_id, $partner_transaction_id, $amount);
 
         // 결제 취소 retry
-        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $this->assertTransactionCancellationSuccessfully($transaction_id, $partner_transaction_id, $amount);
 
         // 다른 invoice id로 결제 승인(결제 발생 O)
-        $body = json_encode([
-            'partner_transaction_id' => Uuid::uuid4()->toString(),
-            'amount' => $amount,
-            'buyer_id' => TestUtil::U_ID,
-            'buyer_name' => '테스트',
-            'buyer_email' => 'payment-test@ridi.com',
-            'invoice_id' => Uuid::uuid4()->toString()
-        ]);
-        self::$client->request(Request::METHOD_POST, $subscription_payment_url, [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $response_content = json_decode(self::$client->getResponse()->getContent());
+        $response_content = $this->assertPaySubscriptionSuccessfully(
+            $subscription_id,
+            Uuid::uuid4()->toString(),
+            $product_name,
+            $amount,
+            Uuid::uuid4()->toString()
+        );
         $this->assertNotSame($transaction_id, $response_content->transaction_id);
         $this->assertNotSame($partner_transaction_id, $response_content->partner_transaction_id);
         $this->assertNotSame(
@@ -401,15 +387,10 @@ class BillingPaymentTest extends ControllerTestCase
         $partner_transaction_id = $response_content->partner_transaction_id;
 
         // 결제 취소
-        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
-        $response = json_decode(self::$client->getResponse()->getContent());
-        $this->assertSame($transaction_id, $response->transaction_id);
-        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        $this->assertTransactionCancellationSuccessfully($transaction_id, $partner_transaction_id, $amount);
 
         // 결제 취소 retry
-        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
-        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $this->assertTransactionCancellationSuccessfully($transaction_id, $partner_transaction_id, $amount);
     }
 
     /**
@@ -454,21 +435,37 @@ class BillingPaymentTest extends ControllerTestCase
      * @param string $partner_transaction_id
      * @param string $product_name
      * @param int $amount
+     * @param string $invoice_id
+     * @return \stdClass
      * @throws \Exception
      */
     private function assertPaySubscriptionSuccessfully(
         string $subscription_id,
         string $partner_transaction_id,
         string $product_name,
-        int $amount
-    ) {
+        int $amount,
+        string $invoice_id
+    ): \stdClass {
+        $client = Test::double(
+            KcpClient::class,
+            [
+                'batchOrder' => new BatchOrderResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'tno' => uniqid(),
+                    'order_no' => $partner_transaction_id,
+                    'amount' => $amount,
+                    'approval_time' => (new \DateTime())->format('YmdHis'),
+                ]),
+            ]
+        );
         $body = json_encode([
             'partner_transaction_id' => $partner_transaction_id,
             'amount' => $amount,
             'buyer_id' => TestUtil::U_ID,
             'buyer_name' => '테스트',
             'buyer_email' => 'payment-test@ridi.com',
-            'invoice_id' => Uuid::uuid4()->toString()
+            'invoice_id' => $invoice_id
         ]);
         self::$client->request(
             Request::METHOD_POST,
@@ -483,5 +480,40 @@ class BillingPaymentTest extends ControllerTestCase
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
+        Test::clean($client);
+
+        return $response;
+    }
+
+    /**
+     * @param string $transaction_id
+     * @param string $partner_transaction_id
+     * @param int $amount
+     * @throws \Exception
+     */
+    private function assertTransactionCancellationSuccessfully(
+        string $transaction_id,
+        string $partner_transaction_id,
+        int $amount
+    ) {
+        $client = Test::double(
+            KcpClient::class,
+            [
+                'cancelTransaction' => new CancelTransactionResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'tno' => uniqid(),
+                    'order_no' => $partner_transaction_id,
+                    'amount' => $amount,
+                    'cancel_time' => (new \DateTime())->format('YmdHis'),
+                ]),
+            ]
+        );
+        self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
+        $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
+        $response = json_decode(self::$client->getResponse()->getContent());
+        $this->assertSame($transaction_id, $response->transaction_id);
+        $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
+        Test::clean($client);
     }
 }

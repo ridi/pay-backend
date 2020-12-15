@@ -46,7 +46,7 @@ class UserInformationInquiryTest extends ControllerTestCase
                     'cards' => [
                         [
                             'iin' => substr(TestUtil::CARD['CARD_NUMBER'], 0, 6),
-                            'issuer_name' => '신한카드',
+                            'issuer_name' => 'KB국민카드',
                             'color' => '#000000',
                             'logo_image_url' => '',
                             'subscriptions' => [],
@@ -80,14 +80,7 @@ class UserInformationInquiryTest extends ControllerTestCase
     {
         $user_indices = [TestUtil::getRandomUidx(), TestUtil::getRandomUidx(), TestUtil::getRandomUidx()];
 
-        $payment_method_id = TestUtil::registerCard(
-            $user_indices[0],
-            '123456',
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        $payment_method_id = TestUtil::registerCard($user_indices[0], '123456');
 
         UserAppService::createUser($user_indices[1]);
         UserAppService::deleteUser($user_indices[1]);

@@ -3,18 +3,24 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Pg\Kcp;
 
+use AspectMock\Test;
+use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\Pg\Kcp\CancelTransactionResponse;
 use RidiPay\Library\Pg\Kcp\Card;
 use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Library\Pg\Kcp\Company;
 use RidiPay\Library\Pg\Kcp\Order;
+use RidiPay\Library\Pg\Kcp\Response as KcpResponse;
 use RidiPay\Library\Pg\Kcp\UnderMinimumPaymentAmountException;
 use RidiPay\Library\Pg\Kcp\Util;
 
 class KcpClientTest extends TestCase
 {
-    private const DUMMY_CARD_NUMBER_SHINHAN_CARD = '4499140000000000';
+    private const DUMMY_CARD_COMPANY = Company::KOOKMIN;
+    private const DUMMY_CARD_NUMBER_KOOKMIN_CARD = '5164530000000000';
     private const DUMMY_CARD_EXPIRY_MAX = '7912';
     private const DUMMY_CARD_PASSWORD = '00';
     private const DUMMY_CARD_TAX_ID = '000101';
@@ -35,13 +41,60 @@ class KcpClientTest extends TestCase
     {
         $client = Client::create();
 
-        $card_company = Company::SHINHAN;
-
+        $guzzle_client = Test::double(
+            GuzzleClient::class,
+            [
+                'request' => new Response(
+                    200,
+                    [],
+                    json_encode([
+                        'code' => KcpResponse::OK,
+                        'message' => '',
+                        'card_code' => self::DUMMY_CARD_COMPANY,
+                        'card_name' => Company::getKoreanName(self::DUMMY_CARD_COMPANY),
+                        'batch_key' => 'abcdefghijklmnopqrstuvwxyz'
+                    ])
+                )
+            ]
+        );
         $auth_res = $client->requestBatchKey($card);
         $this->assertTrue($auth_res->isSuccess());
-        $this->assertSame($card_company, $auth_res->getCardCd());
+        $this->assertSame(self::DUMMY_CARD_COMPANY, $auth_res->getCardCd());
         $this->assertSame(Company::getKoreanName($auth_res->getCardCd()), $auth_res->getCardName());
+        Test::clean($guzzle_client);
 
+        $guzzle_client = Test::double(
+            GuzzleClient::class,
+            [
+                'request' => new Response(
+                    200,
+                    [],
+                    json_encode([
+                        'code' => KcpResponse::OK,
+                        'message' => '',
+                        'tno' => uniqid(),
+                        'order_no' => $order->getId(),
+                        'ca_order_id' => $order->getId(),
+                        'amount' => $order->getGoodPrice(),
+                        'card_amount' => $order->getGoodPrice(),
+                        'coupon_amount' => 0,
+                        'quota' => 0,
+                        'tax_amount' => 90,
+                        'tax_free_amount' => 0,
+                        'vat_amount' => 10,
+                        'is_interest_free' => false,
+                        'escw_yn' => false,
+                        'is_escrow' => false,
+                        'card_code' => self::DUMMY_CARD_COMPANY,
+                        'card_name' => Company::getKoreanName(self::DUMMY_CARD_COMPANY),
+                        'acquirer_code' => Company::getAcquirerFromIssuer(self::DUMMY_CARD_COMPANY),
+                        'acquirer_name' => Company::getKoreanName(Company::getAcquirerFromIssuer(self::DUMMY_CARD_COMPANY)),
+                        'card_no' => self::DUMMY_CARD_NUMBER_KOOKMIN_CARD,
+                        'approval_time' => (new \DateTime())->format('YmdHis'),
+                    ])
+                )
+            ]
+        );
         $order_res = $client->batchOrder($auth_res->getBatchKey(), $order);
         $this->assertTrue($order_res->isSuccess());
         $this->assertSame($order->getId(), $order_res->getOrderNo());
@@ -55,13 +108,43 @@ class KcpClientTest extends TestCase
         $this->assertSame(0, $order_res->getResFreeMny());
         $this->assertFalse($order_res->isNoinf());
         $this->assertFalse($order_res->isEscwYn());
-        $this->assertSame($card_company, $order_res->getCardCd());
+        $this->assertSame(self::DUMMY_CARD_COMPANY, $order_res->getCardCd());
         $this->assertSame(Company::getKoreanName($order_res->getCardCd()), $order_res->getCardName());
-        $this->assertSame(Company::getAcquirerFromIssuer($card_company), $order_res->getAcquCd());
+        $this->assertSame(Company::getAcquirerFromIssuer(self::DUMMY_CARD_COMPANY), $order_res->getAcquCd());
         $this->assertSame(Company::getKoreanName($order_res->getAcquCd()), $order_res->getAcquName());
-        $this->assertSame(self::DUMMY_CARD_NUMBER_SHINHAN_CARD, $order_res->getCardNo());
+        $this->assertSame(self::DUMMY_CARD_NUMBER_KOOKMIN_CARD, $order_res->getCardNo());
+        Test::clean($guzzle_client);
 
         $kcp_tno = $order_res->getTno();
+        $guzzle_client = Test::double(
+            GuzzleClient::class,
+            [
+                'request' => new Response(
+                    200,
+                    [],
+                    json_encode([
+                        'code' => KcpResponse::OK,
+                        'message' => '',
+                        'tno' => $kcp_tno,
+                        'order_no' => $order->getId(),
+                        'ca_order_id' => $order->getId(),
+                        'amount' => $order->getGoodPrice(),
+                        'card_amount' => $order->getGoodPrice(),
+                        'coupon_amount' => 0,
+                        'quota' => 0,
+                        'is_interest_free' => false,
+                        'escw_yn' => false,
+                        'is_escrow' => false,
+                        'card_code' => self::DUMMY_CARD_COMPANY,
+                        'card_name' => Company::getKoreanName(self::DUMMY_CARD_COMPANY),
+                        'acquirer_code' => Company::getAcquirerFromIssuer(self::DUMMY_CARD_COMPANY),
+                        'acquirer_name' => Company::getKoreanName(Company::getAcquirerFromIssuer(self::DUMMY_CARD_COMPANY)),
+                        'card_no' => self::DUMMY_CARD_NUMBER_KOOKMIN_CARD,
+                        'cancel_time' => (new \DateTime())->format('YmdHis'),
+                    ])
+                )
+            ]
+        );
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
         $this->assertTrue($cancel_res->isSuccess());
         $this->assertSame($order->getId(), $cancel_res->getOrderNo());
@@ -73,14 +156,30 @@ class KcpClientTest extends TestCase
         $this->assertSame(0, $cancel_res->getQuota());
         $this->assertFalse($cancel_res->isNoinf());
         $this->assertFalse($cancel_res->isEscwYn());
-        $this->assertSame($card_company, $cancel_res->getCardCd());
+        $this->assertSame(self::DUMMY_CARD_COMPANY, $cancel_res->getCardCd());
         $this->assertSame(Company::getKoreanName($cancel_res->getCardCd()), $cancel_res->getCardName());
-        $this->assertSame(Company::getAcquirerFromIssuer($card_company), $cancel_res->getAcquCd());
+        $this->assertSame(Company::getAcquirerFromIssuer(self::DUMMY_CARD_COMPANY), $cancel_res->getAcquCd());
         $this->assertSame(Company::getKoreanName($cancel_res->getAcquCd()), $cancel_res->getAcquName());
+        Test::clean($guzzle_client);
 
+        $kcp_tno = $order_res->getTno();
+        $guzzle_client = Test::double(
+            GuzzleClient::class,
+            [
+                'request' => new Response(
+                    200,
+                    [],
+                    json_encode([
+                        'code' => CancelTransactionResponse::ALREADY_CANCELLED,
+                        'message' => '',
+                    ])
+                )
+            ]
+        );
         $cancel_res = $client->cancelTransaction($kcp_tno, 'test');
         $this->assertFalse($cancel_res->isSuccess());
         $this->assertTrue($cancel_res->isAlreadyCancelled());
+        Test::clean($guzzle_client);
     }
 
     public function testBuildReceiptUrl()
@@ -127,7 +226,7 @@ class KcpClientTest extends TestCase
         return [
             [
                 new Card(
-                    self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
+                    self::DUMMY_CARD_NUMBER_KOOKMIN_CARD,
                     self::DUMMY_CARD_EXPIRY_MAX,
                     self::DUMMY_CARD_PASSWORD,
                     self::DUMMY_CARD_TAX_ID
@@ -144,7 +243,7 @@ class KcpClientTest extends TestCase
             ],
             [
                 new Card(
-                    self::DUMMY_CARD_NUMBER_SHINHAN_CARD,
+                    self::DUMMY_CARD_NUMBER_KOOKMIN_CARD,
                     self::DUMMY_CARD_EXPIRY_MAX,
                     self::DUMMY_CARD_PASSWORD,
                     self::DUMMY_CARD_TAX_ID

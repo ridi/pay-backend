@@ -3,7 +3,12 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
+use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\Pg\Kcp\BatchOrderResponse;
+use RidiPay\Library\Pg\Kcp\CancelTransactionResponse;
+use RidiPay\Library\Pg\Kcp\Client as KcpClient;
+use RidiPay\Library\Pg\Kcp\Response as KcpResponse;
 use RidiPay\Partner\Application\Dto\PartnerRegistrationDto;
 use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
@@ -72,14 +77,7 @@ class OneTimePaymentTest extends ControllerTestCase
     {
         $pin = '123456';
         self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(
-            self::$u_idx,
-            $pin,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, $pin);
         TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
 
         // 결제 수단 조회
@@ -136,14 +134,7 @@ class OneTimePaymentTest extends ControllerTestCase
     {
         $pin = '123456';
         self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(
-            self::$u_idx,
-            $pin,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, $pin);
         TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
 
         $partner_transaction_id = Uuid::uuid4()->toString();
@@ -221,14 +212,7 @@ class OneTimePaymentTest extends ControllerTestCase
 
         $pin = '123456';
         self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(
-            self::$u_idx,
-            $pin,
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, $pin);
         TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
 
         $partner_transaction_id = Uuid::uuid4()->toString();
@@ -299,7 +283,7 @@ class OneTimePaymentTest extends ControllerTestCase
             'cards' => [
                 [
                     'iin' => substr(TestUtil::CARD['CARD_NUMBER'], 0, 6),
-                    'issuer_name' => '신한카드',
+                    'issuer_name' => 'KB국민카드',
                     'color' => '#000000',
                     'logo_image_url' => '',
                     'subscriptions' => [],
@@ -388,6 +372,19 @@ class OneTimePaymentTest extends ControllerTestCase
         string $product_name,
         int $amount
     ): void {
+        $client = Test::double(
+            KcpClient::class,
+            [
+                'batchOrder' => new BatchOrderResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'tno' => uniqid(),
+                    'order_no' => $partner_transaction_id,
+                    'amount' => $amount,
+                    'approval_time' => (new \DateTime())->format('YmdHis'),
+                ]),
+            ]
+        );
         // 결제 승인
         $body = json_encode([
             'buyer_id' => TestUtil::U_ID,
@@ -401,6 +398,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
+        Test::clean($client);
 
         // 결제 상태 확인
         self::$client->request(Request::METHOD_GET, "/payments/{$transaction_id}/status");
@@ -428,6 +426,19 @@ class OneTimePaymentTest extends ControllerTestCase
         string $product_name,
         int $amount
     ): void {
+        $client = Test::double(
+            KcpClient::class,
+            [
+                'cancelTransaction' => new CancelTransactionResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'tno' => uniqid(),
+                    'order_no' => $partner_transaction_id,
+                    'amount' => $amount,
+                    'cancel_time' => (new \DateTime())->format('YmdHis'),
+                ]),
+            ]
+        );
         // 결제 취소
         self::$client->request(Request::METHOD_POST, "/payments/{$transaction_id}/cancel");
         $this->assertSame(Response::HTTP_OK, self::$client->getResponse()->getStatusCode());
@@ -436,6 +447,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
         $this->assertSame($product_name, $response->product_name);
         $this->assertSame($amount, $response->amount);
+        Test::clean($client);
 
         // 결제 상태 확인
         self::$client->request(Request::METHOD_GET, "/payments/{$transaction_id}/status");

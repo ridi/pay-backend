@@ -7,6 +7,10 @@ use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
+use RidiPay\Library\Pg\Kcp\BatchKeyResponse;
+use RidiPay\Library\Pg\Kcp\Client;
+use RidiPay\Library\Pg\Kcp\Company;
+use RidiPay\Library\Pg\Kcp\Response as KcpResponse;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Partner\Domain\Repository\PartnerRepository;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
@@ -29,18 +33,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ManageCardTest extends ControllerTestCase
 {
-    private const CARD_A = [
-        'CARD_NUMBER' => '5164531234567890',
-        'CARD_EXPIRATION_DATE' => '2511',
-        'CARD_PASSWORD' => '12'
-    ];
-    private const CARD_B = [
-        'CARD_NUMBER' => '5107371234567890',
-        'CARD_EXPIRATION_DATE' => '2511',
-        'CARD_PASSWORD' => '12'
-    ];
-    private const TAX_ID = '940101'; // 개인: 생년월일(YYMMDD) / 법인: 사업자 등록 번호 10자리
-
     private const PIN = '123456';
 
     /**
@@ -70,16 +62,29 @@ class ManageCardTest extends ControllerTestCase
         $u_idx = TestUtil::getRandomUidx();
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
+        $kcp_client = Test::double(
+            Client::class,
+            [
+                'requestBatchKey' => new BatchKeyResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'card_code' => Company::KOOKMIN,
+                    'card_name' => Company::getKoreanName(Company::KOOKMIN),
+                    'batch_key' => 'abcdefghijklmnopqrstuvwxyz'
+                ]),
+            ]
+        );
         $body = json_encode([
-            'card_number' => self::CARD_A['CARD_NUMBER'],
-            'card_expiration_date' => self::CARD_A['CARD_EXPIRATION_DATE'],
-            'card_password' => self::CARD_A['CARD_PASSWORD'],
-            'tax_id' => self::TAX_ID
+            'card_number' => TestUtil::CARD['CARD_NUMBER'],
+            'card_expiration_date' => TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            'card_password' => TestUtil::CARD['CARD_PASSWORD'],
+            'tax_id' => TestUtil::TAX_ID
         ]);
         $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_POST, '/me/cards', [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        Test::clean($kcp_client);
 
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $response_content = json_decode($client->getResponse()->getContent());
         $body = json_encode([
             'pin' => self::PIN,
@@ -168,16 +173,29 @@ class ManageCardTest extends ControllerTestCase
     ) {
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
+        $kcp_client = Test::double(
+            Client::class,
+            [
+                'requestBatchKey' => new BatchKeyResponse([
+                    'code' => KcpResponse::OK,
+                    'message' => '',
+                    'card_code' => Company::KOOKMIN,
+                    'card_name' => Company::getKoreanName(Company::KOOKMIN),
+                    'batch_key' => 'abcdefghijklmnopqrstuvwxyz'
+                ]),
+            ]
+        );
         $body = json_encode([
-            'card_number' => self::CARD_B['CARD_NUMBER'],
-            'card_expiration_date' => self::CARD_B['CARD_EXPIRATION_DATE'],
-            'card_password' => self::CARD_B['CARD_PASSWORD'],
-            'tax_id' => self::TAX_ID
+            'card_number' => TestUtil::CARD['CARD_NUMBER'],
+            'card_expiration_date' => TestUtil::CARD['CARD_EXPIRATION_DATE'],
+            'card_password' => TestUtil::CARD['CARD_PASSWORD'],
+            'tax_id' => TestUtil::TAX_ID
         ]);
         $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
         $client->request(Request::METHOD_POST, '/me/cards', [], [], [], $body);
-        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
+        Test::clean($kcp_client);
 
+        $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $response_content = json_decode($client->getResponse()->getContent());
         $body = json_encode([
             'pin' => self::PIN,
@@ -256,22 +274,11 @@ class ManageCardTest extends ControllerTestCase
         }
         $partner = PartnerAppService::registerPartner('delete-card', 'test@12345', true);
 
-        $payment_method_id_of_normal_user = TestUtil::registerCard(
-            $user_indices[0],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
-        );
+        $payment_method_id_of_normal_user = TestUtil::registerCard($user_indices[0], '123456');
 
         $payment_method_id_of_normal_user_with_ridi_cash_auto_charge = TestUtil::registerCard(
             $user_indices[1],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
         $subscription = new SubscriptionEntity(
             PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_of_normal_user_with_ridi_cash_auto_charge),
@@ -282,11 +289,7 @@ class ManageCardTest extends ControllerTestCase
 
         $payment_method_id_of_normal_user_with_ridiselect = TestUtil::registerCard(
             $user_indices[2],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
         $subscription = new SubscriptionEntity(
             PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_of_normal_user_with_ridiselect),
@@ -297,11 +300,7 @@ class ManageCardTest extends ControllerTestCase
 
         $payment_method_id_of_leaved_user = TestUtil::registerCard(
             $user_indices[3],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
         UserAppService::deleteUser($user_indices[3]);
 
@@ -309,11 +308,7 @@ class ManageCardTest extends ControllerTestCase
 
         $payment_method_id_of_other_user = TestUtil::registerCard(
             $user_indices[5],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
 
         return [
@@ -384,11 +379,7 @@ class ManageCardTest extends ControllerTestCase
 
         $payment_method_id = TestUtil::registerCard(
             $user_indices[0],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
         $cases[] = [
             $user_indices[0],
@@ -398,11 +389,7 @@ class ManageCardTest extends ControllerTestCase
 
         $payment_method_id_with_ridi_cash_auto_charge_subscription = TestUtil::registerCard(
             $user_indices[1],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
         $subscription = new SubscriptionEntity(
             PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_with_ridi_cash_auto_charge_subscription),
@@ -418,11 +405,7 @@ class ManageCardTest extends ControllerTestCase
 
         $payment_method_id_with_ridiselect_subscription = TestUtil::registerCard(
             $user_indices[2],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
         $subscription = new SubscriptionEntity(
             PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_with_ridiselect_subscription),
@@ -438,11 +421,7 @@ class ManageCardTest extends ControllerTestCase
 
         $payment_method_id_with_multiple_subscriptions = TestUtil::registerCard(
             $user_indices[3],
-            '123456',
-            self::CARD_A['CARD_NUMBER'],
-            self::CARD_A['CARD_EXPIRATION_DATE'],
-            self::CARD_A['CARD_PASSWORD'],
-            self::TAX_ID
+            '123456'
         );
         $ridi_cash_auto_charge_subscription = new SubscriptionEntity(
             PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_with_multiple_subscriptions),

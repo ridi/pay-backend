@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests;
 
+use AspectMock\Test;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
+use RidiPay\Library\Pg\Kcp\BatchOrderResponse;
+use RidiPay\Library\Pg\Kcp\Client;
 use RidiPay\Partner\Domain\Entity\PartnerEntity;
 use RidiPay\Partner\Domain\Repository\PartnerRepository;
 use RidiPay\Pg\Application\Service\PgAppService;
@@ -48,14 +51,7 @@ class TransactionApprovalTest extends TestCase
         $pg = PgAppService::getActivePg();
 
         $u_idx = TestUtil::getRandomUidx();
-        $payment_method_uuid = TestUtil::registerCard(
-            $u_idx,
-            '123456',
-            TestUtil::CARD['CARD_NUMBER'],
-            TestUtil::CARD['CARD_EXPIRATION_DATE'],
-            TestUtil::CARD['CARD_PASSWORD'],
-            TestUtil::TAX_ID
-        );
+        $payment_method_uuid = TestUtil::registerCard($u_idx, '123456');
         $payment_method = PaymentMethodRepository::getRepository()->findOneByUuid(
             Uuid::fromString($payment_method_uuid)
         );
@@ -72,6 +68,17 @@ class TransactionApprovalTest extends TestCase
         );
         TransactionRepository::getRepository()->save($transaction);
 
+        $kcp_error_code = '8824';
+        $kcp_error_message = 'FORMAT ERROR(지불정보|배치결제|배치키)';
+        $client = Test::double(
+            Client::class,
+            [
+                'batchOrder' => new BatchOrderResponse([
+                    'code' => $kcp_error_code,
+                    'message' => $kcp_error_message,
+                ]),
+            ]
+        );
         try {
             self::approveTransaction(
                 $transaction,
@@ -87,8 +94,9 @@ class TransactionApprovalTest extends TestCase
             );
             $this->assertNotEmpty($transaction_history);
             $this->assertFalse($transaction_history[0]->isSuccess());
-            $this->assertSame('8824', $transaction_history[0]->getPgResponseCode());
-            $this->assertSame('FORMAT ERROR(지불정보|배치결제|배치키)', $transaction_history[0]->getPgResponseMessage());
+            $this->assertSame($kcp_error_code, $transaction_history[0]->getPgResponseCode());
+            $this->assertSame($kcp_error_message, $transaction_history[0]->getPgResponseMessage());
         }
+        Test::clean($client);
     }
 }

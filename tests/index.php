@@ -13,7 +13,8 @@ $aspect_mock_kernel->init([
     'debug' => true,
     'includePaths' => [
         __DIR__ . '/../src',
-        __DIR__ . '/../vendor/ridibooks/oauth2/lib'
+        __DIR__ . '/../vendor/guzzlehttp',
+        __DIR__ . '/../vendor/ridibooks/oauth2/lib',
     ]
 ]);
 
