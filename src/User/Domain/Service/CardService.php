@@ -12,8 +12,11 @@ use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Repository\PgRepository;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\User\Domain\Entity\CardEntity;
+use RidiPay\User\Domain\Entity\CardPaymentKeyEntity;
+use RidiPay\User\Domain\Entity\NewCardEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Repository\CardIssuerRepository;
+use RidiPay\User\Domain\Repository\CardPaymentKeyRepository;
 use RidiPay\User\Domain\Repository\CardRepository;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 
@@ -100,6 +103,7 @@ class CardService
         $card_registration = $redis->hgetall($card_registration_key);
 
         $pg_id = intval($card_registration['pg_id']);
+        $pg = PgRepository::getRepository()->findOneById($pg_id);
         $card_issuer = CardIssuerRepository::getRepository()->findOneByPgIdAndCode(
             $pg_id,
             $card_registration['card_issuer_code']
@@ -147,6 +151,34 @@ class CardService
 
             $payment_method->setCards($cards);
             PaymentMethodRepository::getRepository()->save($payment_method);
+
+            $new_card = new NewCardEntity($payment_method->getId(), $card_issuer, $card_registration['iin']);
+            $em->persist($new_card);
+            $em->flush();
+
+            $card_payment_keys = [
+                CardPaymentKeyEntity::createForOneTimePayment(
+                    $new_card,
+                    $pg,
+                    $card_registration['pg_bill_key']
+                ),
+                CardPaymentKeyEntity::createForOneTimeTaxDeductionPayment(
+                    $new_card,
+                    $pg,
+                    $card_registration['pg_tax_deduction_bill_key']
+                ),
+                CardPaymentKeyEntity::createForBillingPayment(
+                    $new_card,
+                    $pg,
+                    $card_registration['pg_bill_key']
+                ),
+            ];
+            foreach ($card_payment_keys as $card_payment_key) {
+                CardPaymentKeyRepository::getRepository()->save($card_payment_key);
+            }
+            $new_card->setPaymentKeys($card_payment_keys);
+            $em->persist($new_card);
+            $em->flush();
 
             $em->commit();
         } catch (\Throwable $t) {

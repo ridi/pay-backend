@@ -27,6 +27,8 @@ task_definition:
           name: PARTNER_SECRET_KEY_SECRET
         - value_from: "/ridi-pay/${APP_ENV}/PG_BILL_KEY_SECRET"
           name: PG_BILL_KEY_SECRET
+        - value_from: "/ridi-pay/${APP_ENV}/PAYMENT_KEY_SECRET"
+          name: PAYMENT_KEY_SECRET
         - value_from: "/ridi-pay/${APP_ENV}/REDIS_HOST"
           name: REDIS_HOST
         - value_from: "/ridi-pay/${APP_ENV}/RIDIBOOKS_SERVER_HOST"
