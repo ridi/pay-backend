@@ -121,7 +121,7 @@ class CardPaymentKeyEntity
     {
         $this->card = $card;
         $this->pg = $pg;
-        $this->setEncryptedPaymentKey($payment_key);
+        $this->payment_key = $payment_key;
         $this->purpose = $purpose;
     }
 

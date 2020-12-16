@@ -215,6 +215,14 @@ class CardEntity
     }
 
     /**
+     * @return string
+     */
+    public function getEncryptedPgBillKey(): string
+    {
+        return $this->pg_bill_key;
+    }
+
+    /**
      * @param string $pg_bill_key
      * @throws \Exception
      */

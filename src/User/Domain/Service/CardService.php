@@ -160,17 +160,17 @@ class CardService
                 CardPaymentKeyEntity::createForOneTimePayment(
                     $new_card,
                     $pg,
-                    $card_registration['pg_bill_key']
+                    $card_for_one_time_payment->getEncryptedPgBillKey()
                 ),
                 CardPaymentKeyEntity::createForOneTimeTaxDeductionPayment(
                     $new_card,
                     $pg,
-                    $card_registration['pg_tax_deduction_bill_key']
+                    $card_for_one_time_payment_with_tax_deduction->getEncryptedPgBillKey()
                 ),
                 CardPaymentKeyEntity::createForBillingPayment(
                     $new_card,
                     $pg,
-                    $card_registration['pg_bill_key']
+                    $card_for_billing_payment->getEncryptedPgBillKey()
                 ),
             ];
             foreach ($card_payment_keys as $card_payment_key) {
