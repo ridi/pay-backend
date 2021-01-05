@@ -46,11 +46,12 @@ class DeleteUserTest extends ControllerTestCase
     }
 
     /**
-     * @return array
+     * @return array[]
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
+     * @throws \Throwable
      */
     public function userProvider(): array
     {

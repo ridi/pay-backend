@@ -11,7 +11,7 @@ class CardRegistrationResponse extends PgResponse
     private const KCP_RESPONSE_CODE_FORBIDDEN_CARD = 'CC69'; // 인증오류 3회초과(당일거래 불가)
 
     /** @var null|string */
-    private $pg_bill_key;
+    private $payment_key;
     
     /** @var null|string */
     private $card_issuer_code;
@@ -20,28 +20,28 @@ class CardRegistrationResponse extends PgResponse
      * @param bool $is_success
      * @param string $response_code
      * @param string $response_message
-     * @param null|string $pg_bill_key
+     * @param null|string $payment_key
      * @param null|string $card_issuer_code
      */
     public function __construct(
         bool $is_success,
         string $response_code,
         string $response_message,
-        ?string $pg_bill_key,
+        ?string $payment_key,
         ?string $card_issuer_code
     ) {
         parent::__construct($is_success, $response_code, $response_message);
 
-        $this->pg_bill_key = $pg_bill_key;
+        $this->payment_key = $payment_key;
         $this->card_issuer_code = $card_issuer_code;
     }
 
     /**
      * @return string
      */
-    public function getPgBillKey(): string
+    public function getPaymentKey(): string
     {
-        return $this->pg_bill_key;
+        return $this->payment_key;
     }
 
     /**

@@ -15,6 +15,7 @@ use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\Transaction\Domain\TransactionStatusConstant;
 use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\PaymentMethodConstant;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,6 +23,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OneTimePaymentTest extends ControllerTestCase
 {
+    private const PIN = '123456';
+
     /** @var Client */
     private static $client;
 
@@ -31,8 +34,8 @@ class OneTimePaymentTest extends ControllerTestCase
     /** @var int */
     private static $u_idx;
 
-    /** @var string */
-    private static $payment_method_id;
+    /** @var CardEntity */
+    private static $card;
 
     /** @var string */
     private static $reservation_id;
@@ -43,7 +46,6 @@ class OneTimePaymentTest extends ControllerTestCase
     public static function setUpBeforeClass()
     {
         self::$partner = PartnerAppService::registerPartner('one-time-payment', 'test@12345', true);
-
         self::$client = self::createClient(
             [],
             [
@@ -60,26 +62,15 @@ class OneTimePaymentTest extends ControllerTestCase
         TestUtil::tearDownJwtDoubles();
     }
 
-    /**
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \RidiPay\Pg\Domain\Exception\CardRegistrationException
-     * @throws \RidiPay\Pg\Domain\Exception\UnsupportedPgException
-     * @throws \RidiPay\User\Domain\Exception\LeavedUserException
-     * @throws \RidiPay\User\Domain\Exception\NotFoundUserException
-     * @throws \RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException
-     * @throws \RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException
-     * @throws \RidiPay\User\Domain\Exception\WrongFormattedPinException
-     * @throws \Ridibooks\OAuth2\Authorization\Exception\AuthorizationException
-     * @throws \Throwable
-     */
+    protected function setUp()
+    {
+        self::$u_idx = TestUtil::getRandomUidx();
+        self::$card = TestUtil::registerCard(self::$u_idx, self::PIN);
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
+    }
+
     public function testOneTimePaymentLifeCycle()
     {
-        $pin = '123456';
-        self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, $pin);
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-
         // 결제 수단 조회
         $this->assertGetPaymentMethodsSuccessfully();
 
@@ -90,7 +81,7 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 결제 예약
         $this->assertReservePaymentSuccessfully(
-            self::$payment_method_id,
+            self::$card->getUuid()->toString(),
             $partner_transaction_id,
             $product_name,
             $amount,
@@ -103,7 +94,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // 결제 비밀번호 확인
-        $pin_validation_body = json_encode(['pin' => $pin]);
+        $pin_validation_body = json_encode(['pin' => self::PIN]);
         $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $pin_validation_response = json_decode($client->getResponse()->getContent());
@@ -132,11 +123,6 @@ class OneTimePaymentTest extends ControllerTestCase
      */
     public function testPaymentIdempotency()
     {
-        $pin = '123456';
-        self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, $pin);
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-
         $partner_transaction_id = Uuid::uuid4()->toString();
         $product_name = 'mock';
         $amount = 10000;
@@ -144,7 +130,7 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // 결제 예약
         $this->assertReservePaymentSuccessfully(
-            self::$payment_method_id,
+            self::$card->getUuid()->toString(),
             $partner_transaction_id,
             $product_name,
             $amount,
@@ -157,7 +143,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
 
         // 결제 비밀번호 확인
-        $pin_validation_body = json_encode(['pin' => $pin]);
+        $pin_validation_body = json_encode(['pin' => self::PIN]);
         $client->request(Request::METHOD_POST, '/me/pin/validate', [], [], [], $pin_validation_body);
         $this->assertSame(Response::HTTP_OK, $client->getResponse()->getStatusCode());
         $pin_validation_response = json_decode($client->getResponse()->getContent());
@@ -210,11 +196,6 @@ class OneTimePaymentTest extends ControllerTestCase
             ]
         );
 
-        $pin = '123456';
-        self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, $pin);
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-
         $partner_transaction_id = Uuid::uuid4()->toString();
         $product_name = 'mock';
         $amount = 10000;
@@ -222,7 +203,7 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // Unauthorized payment reservation
         $body = json_encode([
-            'payment_method_id' => self::$payment_method_id,
+            'payment_method_id' => self::$card->getUuid()->toString(),
             'partner_transaction_id' => $partner_transaction_id,
             'product_name' => $product_name,
             'amount' => $amount,
@@ -233,7 +214,7 @@ class OneTimePaymentTest extends ControllerTestCase
 
         // Authorized payment reservation
         $this->assertReservePaymentSuccessfully(
-            self::$payment_method_id,
+            self::$card->getUuid()->toString(),
             $partner_transaction_id,
             $product_name,
             $amount,
@@ -282,12 +263,12 @@ class OneTimePaymentTest extends ControllerTestCase
         $expected_response = json_encode([
             'cards' => [
                 [
+                    'payment_method_id' => self::$card->getUuid()->toString(),
                     'iin' => substr(TestUtil::CARD['CARD_NUMBER'], 0, 6),
                     'issuer_name' => 'KB국민카드',
                     'color' => '#000000',
                     'logo_image_url' => '',
-                    'subscriptions' => [],
-                    'payment_method_id' => self::$payment_method_id
+                    'subscriptions' => []
                 ]
             ]
         ]);
@@ -353,7 +334,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame(self::$transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
-        $this->assertSame(self::$payment_method_id, $response->payment_method_id);
+        $this->assertSame(self::$card->getUuid()->toString(), $response->payment_method_id);
         $this->assertSame(PaymentMethodConstant::TYPE_CARD, $response->payment_method_type);
         $this->assertSame(TransactionStatusConstant::RESERVED, $response->status);
         $this->assertSame($product_name, $response->product_name);
@@ -406,7 +387,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
-        $this->assertSame(self::$payment_method_id, $response->payment_method_id);
+        $this->assertSame(self::$card->getUuid()->toString(), $response->payment_method_id);
         $this->assertSame(PaymentMethodConstant::TYPE_CARD, $response->payment_method_type);
         $this->assertSame(TransactionStatusConstant::APPROVED, $response->status);
         $this->assertSame($product_name, $response->product_name);
@@ -455,7 +436,7 @@ class OneTimePaymentTest extends ControllerTestCase
         $response = json_decode(self::$client->getResponse()->getContent());
         $this->assertSame($transaction_id, $response->transaction_id);
         $this->assertSame($partner_transaction_id, $response->partner_transaction_id);
-        $this->assertSame(self::$payment_method_id, $response->payment_method_id);
+        $this->assertSame(self::$card->getUuid()->toString(), $response->payment_method_id);
         $this->assertSame(PaymentMethodConstant::TYPE_CARD, $response->payment_method_type);
         $this->assertSame(TransactionStatusConstant::CANCELED, $response->status);
         $this->assertSame($product_name, $response->product_name);

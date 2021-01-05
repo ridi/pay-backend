@@ -109,4 +109,12 @@ class PgEntity
 
         $this->name = $name;
     }
+
+    /**
+     * @return bool
+     */
+    public function isPayable(): bool
+    {
+        return \in_array($this->status, PgConstant::PAYABLE_STATUSES, true);
+    }
 }

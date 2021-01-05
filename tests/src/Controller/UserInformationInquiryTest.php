@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
-use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
@@ -19,14 +19,13 @@ class UserInformationInquiryTest extends ControllerTestCase
      * @dataProvider userProvider
      *
      * @param int $u_idx
-     * @param null|string $payment_method_id
+     * @param CardEntity|null $card
      * @param int $http_status_code
-     * @param null|string $error_code
-     * @throws AuthorizationException
+     * @param string|null $error_code
      */
     public function testUserInformationInquiry(
         int $u_idx,
-        ?string $payment_method_id,
+        ?CardEntity $card,
         int $http_status_code,
         ?string $error_code
     ) {
@@ -45,18 +44,18 @@ class UserInformationInquiryTest extends ControllerTestCase
                 'payment_methods' => [
                     'cards' => [
                         [
+                            'payment_method_id' => $card->getUuid()->toString(),
                             'iin' => substr(TestUtil::CARD['CARD_NUMBER'], 0, 6),
                             'issuer_name' => 'KB국민카드',
                             'color' => '#000000',
                             'logo_image_url' => '',
                             'subscriptions' => [],
-                            'payment_method_id' => $payment_method_id
                         ]
                     ]
                 ],
                 'has_pin' => true
             ]);
-            $this->assertSame($expected_response, $response_content);
+            $this->assertEquals($expected_response, $response_content);
         }
 
         $decoded_response_content = json_decode($response_content);
@@ -80,13 +79,13 @@ class UserInformationInquiryTest extends ControllerTestCase
     {
         $user_indices = [TestUtil::getRandomUidx(), TestUtil::getRandomUidx(), TestUtil::getRandomUidx()];
 
-        $payment_method_id = TestUtil::registerCard($user_indices[0], '123456');
+        $card = TestUtil::registerCard($user_indices[0], '123456');
 
         UserAppService::createUser($user_indices[1]);
         UserAppService::deleteUser($user_indices[1]);
 
         return [
-            [$user_indices[0], $payment_method_id, Response::HTTP_OK, null],
+            [$user_indices[0], $card, Response::HTTP_OK, null],
             [$user_indices[1], null, Response::HTTP_FORBIDDEN, UserErrorCodeConstant::LEAVED_USER],
             [$user_indices[2], null, Response::HTTP_OK, UserErrorCodeConstant::NOT_FOUND_USER]
         ];

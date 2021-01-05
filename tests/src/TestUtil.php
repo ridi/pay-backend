@@ -17,17 +17,16 @@ use RidiPay\Library\ConnectionProvider;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\Jwt\JwtAuthorizationMiddleware;
 use RidiPay\Library\Pg\Kcp\Response as KcpResponse;
+use RidiPay\Pg\Domain\Entity\PgEntity;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
-use RidiPay\Pg\Domain\Entity\PgEntity;
 use RidiPay\User\Application\Service\CardAppService;
-use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\CardIssuerEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnauthorizedCardRegistrationException;
-use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 
 class TestUtil
@@ -142,19 +141,22 @@ class TestUtil
     /**
      * @param int $u_idx
      * @param string $pin
-     * @return string
+     * @return CardEntity
+     * @throws AuthorizationException
      * @throws CardRegistrationException
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws UnauthorizedCardRegistrationException
-     * @throws UnsupportedPaymentMethodException
      * @throws UnsupportedPgException
      * @throws WrongFormattedPinException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public static function registerCard(int $u_idx, string $pin)
+    public static function registerCard(int $u_idx, string $pin): CardEntity
     {
         $oauth2_user = new User(json_encode([
             'result' => [
@@ -192,10 +194,6 @@ class TestUtil
         UserAppService::createPin($oauth2_user->getUidx(), $pin);
 
         // 3단계: 1 ~ 2단계의 등록 정보 저장
-        CardAppService::finishCardRegistration($oauth2_user);
-
-        $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-
-        return $payment_methods->cards[0]->payment_method_id;
+        return CardAppService::finishCardRegistration($oauth2_user);
     }
 }

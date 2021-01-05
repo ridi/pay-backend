@@ -13,7 +13,11 @@ use RidiPay\Library\Jwt\Annotation\JwtAuth;
 use RidiPay\Library\SentryHelper;
 use RidiPay\Library\Validation\Annotation\ParamValidator;
 use RidiPay\Library\ValidationTokenManager;
+use RidiPay\Transaction\Application\Dto\SubscriptionDto;
+use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\User\Application\Service\CardAppService;
+use RidiPay\User\Domain\Entity\CardEntity;
+use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\PaymentMethodChangeDeclinedException;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -150,7 +154,15 @@ class UserController extends BaseController
      *   @OA\Response(
      *     response="200",
      *     description="Success",
-     *     @OA\JsonContent(ref="#/components/schemas/AvailablePaymentMethodsDto")
+     *     @OA\JsonContent(
+     *       type="object",
+     *       required={"cards"},
+     *       @OA\Property(
+     *         property="cards",
+     *         type="array",
+     *         @OA\Items(ref="#/components/schemas/CardInformation")
+     *       )
+     *     )
      *   ),
      *   @OA\Response(
      *     response="401",
@@ -182,8 +194,23 @@ class UserController extends BaseController
 
         try {
             $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
+            $cards = array_filter(
+                $payment_methods,
+                function (PaymentMethodEntity $payment_method) {
+                    return $payment_method instanceof CardEntity;
+                }
+            );
 
-            $response = self::createSuccessResponse(['cards' => $payment_methods->cards]);
+            $response = self::createSuccessResponse(
+                [
+                    'cards' => array_map(
+                        function (CardEntity $card) {
+                            return self::buildCardInformation($card);
+                        },
+                        $cards
+                    )
+                ]
+            );
         } catch (\Throwable $t) {
             SentryHelper::captureException($t);
 
@@ -232,7 +259,13 @@ class UserController extends BaseController
      *       ),
      *       @OA\Property(
      *         property="payment_methods",
-     *         ref="#/components/schemas/AvailablePaymentMethodsDto"
+     *         type="object",
+     *         required={"cards"},
+     *         @OA\Property(
+     *           property="cards",
+     *           type="array",
+     *           @OA\Items(ref="#/components/schemas/CardInformation")
+     *         )
      *       ),
      *       @OA\Property(
      *         property="has_pin",
@@ -290,13 +323,27 @@ class UserController extends BaseController
         ControllerAccessLogger::logRequest($request, $context);
 
         try {
-            $user_information = UserAppService::getUserInformation($this->getUidx());
+            $user = UserAppService::getUser($this->getUidx());
+            $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx());
+            $cards = array_filter(
+                $payment_methods,
+                function (PaymentMethodEntity $payment_method) {
+                    return $payment_method instanceof CardEntity;
+                }
+            );
 
             $response = self::createSuccessResponse(
                 [
                     'user_id' => $this->getUid(),
-                    'payment_methods' => $user_information->payment_methods,
-                    'has_pin' => $user_information->has_pin
+                    'payment_methods' => [
+                        'cards' => array_map(
+                            function (CardEntity $card) {
+                                return self::buildCardInformation($card);
+                            },
+                            $cards
+                        )
+                    ],
+                    'has_pin' => $user->hasPin()
                 ]
             );
         } catch (LeavedUserException $e) {
@@ -450,7 +497,7 @@ class UserController extends BaseController
 
             UserAppService::createPin($this->getUidx(), $body->pin);
 
-            if (empty(PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx())->cards)) {
+            if (empty(PaymentMethodAppService::getAvailablePaymentMethods($this->getUidx()))) {
                 $card = CardAppService::finishCardRegistration($this->getOAuth2User());
             } else {
                 $card = CardAppService::changeCard($this->getOAuth2User());
@@ -458,7 +505,7 @@ class UserController extends BaseController
 
             ValidationTokenManager::invalidate($card_registration_key);
 
-            $response = self::createSuccessResponse(['payment_method_id' => $card->payment_method_id]);
+            $response = self::createSuccessResponse(['payment_method_id' => $card->getUuid()->toString()]);
         } catch (PaymentMethodChangeDeclinedException $e) {
             $response = self::createErrorResponse(
                 UserErrorCodeConstant::class,
@@ -798,5 +845,51 @@ class UserController extends BaseController
         ControllerAccessLogger::logResponse($request, $response, $context);
 
         return $response;
+    }
+
+    /**
+     * @OA\Schema(
+     *   schema="CardInformation",
+     *   type="object",
+     *   required={
+     *     "payment_method_id",
+     *     "iin",
+     *     "issuer_name",
+     *     "color",
+     *     "logo_image_url",
+     *     "subscriptions"
+     *   },
+     *   @OA\Property(property="payment_method_id", type="string", example="550E8400-E29B-41D4-A716-446655440000"),
+     *   @OA\Property(property="iin", type="string", example="449914"),
+     *   @OA\Property(property="issuer_name", type="string", example="신한카드"),
+     *   @OA\Property(property="color", type="string", example="#FFFFFF"),
+     *   @OA\Property(property="logo_image_url", type="string"),
+     *   @OA\Property(
+     *     property="subscriptions",
+     *     type="array",
+     *     @OA\Items(type="string")
+     *   )
+     * )
+     *
+     * @param CardEntity $card
+     * @return array
+     * @throws \Doctrine\DBAL\DBALException
+     * @throws \Doctrine\ORM\ORMException
+     */
+    private function buildCardInformation(CardEntity $card): array
+    {
+        return [
+            'payment_method_id' => $card->getUuid()->toString(),
+            'iin' => $card->getIin(),
+            'issuer_name' => $card->getCardIssuer()->getName(),
+            'color' => $card->getCardIssuer()->getColor(),
+            'logo_image_url' => $card->getCardIssuer()->getLogoImageUrl(),
+            'subscriptions' => array_unique(array_map(
+                function (SubscriptionDto $subscription) {
+                    return $subscription->product_name;
+                },
+                SubscriptionAppService::getSubscriptionByPaymentMethodId($card->getId())
+            )),
+        ];
     }
 }

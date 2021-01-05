@@ -65,7 +65,10 @@ class TransactionAppService
             $partner_api_secret->getApiKey(),
             $partner_api_secret->getSecretKey()
         );
-        $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
+        $payment_method = PaymentMethodAppService::getPaymentMethodByUuid($payment_method_uuid);
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
         if ($amount < Order::GOOD_PRICE_KRW_MIN) {
             throw new UnderMinimumPaymentAmountException();
         }
@@ -77,7 +80,7 @@ class TransactionAppService
         $redis->hmset(
             $reservation_key,
             [
-                'payment_method_id' => $payment_method_id,
+                'payment_method_id' => $payment_method->getId(),
                 'partner_id' => $partner_id,
                 'partner_transaction_id' => $partner_transaction_id,
                 'product_name' => $product_name,
@@ -228,9 +231,15 @@ class TransactionAppService
 
         $redis = self::getRedisClient();
         $reserved_transaction = $redis->hgetall($reservation_key);
-        if (empty($reserved_transaction)
-            || (PaymentMethodAppService::getUidxById(intval($reserved_transaction['payment_method_id'])) !== $u_idx)
-        ) {
+        if (empty($reserved_transaction)) {
+            throw new NotReservedTransactionException();
+        }
+
+        $payment_method = PaymentMethodAppService::getPaymentMethod(intval($reserved_transaction['payment_method_id']));
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
+        if ($payment_method->getUidx() !== $u_idx) {
             throw new NotReservedTransactionException();
         }
 

@@ -12,6 +12,7 @@ use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\Table;
 use RidiPay\Library\Crypto;
 use RidiPay\Pg\Domain\Entity\PgEntity;
+use RidiPay\User\Domain\PaymentMethodConstant;
 
 /**
  * @Table(
@@ -21,16 +22,6 @@ use RidiPay\Pg\Domain\Entity\PgEntity;
  */
 class CardPaymentKeyEntity
 {
-    private const PURPOSE_ONE_TIME = 'ONE_TIME'; // 소득 공제 불가능 단건 결제
-    private const PURPOSE_ONE_TIME_TAX_DEDUCTION = 'ONE_TIME_TAX_DEDUCTION'; // 소득 공제 가능 단건 결제
-    private const PURPOSE_BILLING = 'BILLING'; // 정기 결제
-
-    private const PURPOSES = [
-        self::PURPOSE_ONE_TIME,
-        self::PURPOSE_ONE_TIME_TAX_DEDUCTION,
-        self::PURPOSE_BILLING
-    ];
-
     /**
      * @var int
      *
@@ -41,9 +32,9 @@ class CardPaymentKeyEntity
     private $id;
 
     /**
-     * @var NewCardEntity
+     * @var CardEntity
      *
-     * @ManyToOne(targetEntity="RidiPay\User\Domain\Entity\NewCardEntity", inversedBy="payment_keys")
+     * @ManyToOne(targetEntity="CardEntity", inversedBy="payment_keys", fetch="EAGER")
      * @JoinColumn(name="card_id", referencedColumnName="id", nullable=false)
      */
     private $card;
@@ -51,7 +42,7 @@ class CardPaymentKeyEntity
     /**
      * @var PgEntity
      *
-     * @ManyToOne(targetEntity="RidiPay\Pg\Domain\Entity\PgEntity", inversedBy="payment_keys")
+     * @ManyToOne(targetEntity="RidiPay\Pg\Domain\Entity\PgEntity", fetch="EAGER")
      * @JoinColumn(name="pg_id", referencedColumnName="id", nullable=false)
      */
     private $pg;
@@ -87,48 +78,85 @@ class CardPaymentKeyEntity
      */
     private $purpose;
 
+    /**
+     * @param CardEntity $card
+     * @param PgEntity $pg
+     * @param string $payment_key
+     * @return CardPaymentKeyEntity
+     * @throws \Exception
+     */
     public static function createForOneTimePayment(
-        NewCardEntity $card,
+        CardEntity $card,
         PgEntity $pg,
         string $payment_key
     ) {
-        return new CardPaymentKeyEntity($card, $pg, $payment_key, self::PURPOSE_ONE_TIME);
-    }
-
-    public static function createForOneTimeTaxDeductionPayment(
-        NewCardEntity $card,
-        PgEntity $pg,
-        string $payment_key
-    ) {
-        return new CardPaymentKeyEntity($card, $pg, $payment_key, self::PURPOSE_ONE_TIME_TAX_DEDUCTION);
-    }
-
-    public static function createForBillingPayment(
-        NewCardEntity $card,
-        PgEntity $pg,
-        string $payment_key
-    ) {
-        return new CardPaymentKeyEntity($card, $pg, $payment_key, self::PURPOSE_BILLING);
+        return new CardPaymentKeyEntity(
+            $card,
+            $pg,
+            $payment_key,
+            PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_ONE_TIME
+        );
     }
 
     /**
-     * @param NewCardEntity $card
+     * @param CardEntity $card
+     * @param PgEntity $pg
+     * @param string $payment_key
+     * @return CardPaymentKeyEntity
+     * @throws \Exception
+     */
+    public static function createForOneTimeTaxDeductionPayment(
+        CardEntity $card,
+        PgEntity $pg,
+        string $payment_key
+    ) {
+        return new CardPaymentKeyEntity(
+            $card,
+            $pg,
+            $payment_key,
+            PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_ONE_TIME_TAX_DEDUCTION
+        );
+    }
+
+    /**
+     * @param CardEntity $card
+     * @param PgEntity $pg
+     * @param string $payment_key
+     * @return CardPaymentKeyEntity
+     * @throws \Exception
+     */
+    public static function createForBillingPayment(
+        CardEntity $card,
+        PgEntity $pg,
+        string $payment_key
+    ) {
+        return new CardPaymentKeyEntity(
+            $card,
+            $pg,
+            $payment_key,
+            PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_BILLING
+        );
+    }
+
+    /**
+     * @param CardEntity $card
      * @param PgEntity $pg
      * @param string $payment_key
      * @param string $purpose
+     * @throws \Exception
      */
-    private function __construct(NewCardEntity $card, PgEntity $pg, string $payment_key, string $purpose)
+    private function __construct(CardEntity $card, PgEntity $pg, string $payment_key, string $purpose)
     {
         $this->card = $card;
         $this->pg = $pg;
-        $this->payment_key = $payment_key;
+        $this->setEncryptedPaymentKey($payment_key);
         $this->purpose = $purpose;
     }
 
     /**
-     * @return NewCardEntity
+     * @return CardEntity
      */
-    public function getCard(): NewCardEntity
+    public function getCard(): CardEntity
     {
         return $this->card;
     }
@@ -150,6 +178,10 @@ class CardPaymentKeyEntity
         return Crypto::decrypt($this->payment_key, self::getPaymentKeySecret());
     }
 
+    /**
+     * @param string $payment_key
+     * @throws \Exception
+     */
     private function setEncryptedPaymentKey(string $payment_key)
     {
         $this->payment_key = Crypto::encrypt($payment_key, self::getPaymentKeySecret());
@@ -161,29 +193,5 @@ class CardPaymentKeyEntity
     private static function getPaymentKeySecret(): string
     {
         return base64_decode(getenv('PAYMENT_KEY_SECRET', true));
-    }
-
-    /**
-     * @return bool
-     */
-    public function isOneTimePaymentPurpose(): bool
-    {
-        return $this->purpose === self::PURPOSE_ONE_TIME;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isOneTimeTaxDeductionPaymentPurpose(): bool
-    {
-        return $this->purpose === self::PURPOSE_ONE_TIME_TAX_DEDUCTION;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isBillingPaymentPurpose(): bool
-    {
-        return $this->purpose === self::PURPOSE_BILLING;
     }
 }

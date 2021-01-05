@@ -69,8 +69,8 @@ class OneTimePaymentTransactionApprovalProcessor extends IdempotentTransactionAp
      */
     protected function run(): TransactionApprovalResult
     {
-        $pg_bill_key = PaymentMethodAppService::getOneTimePaymentPgBillKey($this->transaction->getPaymentMethodId());
-        $transaction = self::approveTransaction($this->transaction, $this->pg_handler, $pg_bill_key, $this->buyer);
+        $payment_key = PaymentMethodAppService::getOneTimePaymentKey($this->transaction->getPaymentMethodId());
+        $transaction = self::approveTransaction($this->transaction, $this->pg_handler, $payment_key, $this->buyer);
 
         return new OneTimePaymentTransactionApprovalResult($transaction);
     }

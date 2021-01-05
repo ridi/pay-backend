@@ -5,7 +5,6 @@ namespace RidiPay\Tests\Controller;
 
 use AspectMock\Test;
 use Ramsey\Uuid\Uuid;
-use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Library\Pg\Kcp\BatchKeyResponse;
 use RidiPay\Library\Pg\Kcp\Client;
@@ -24,9 +23,11 @@ use RidiPay\Transaction\Domain\SubscriptionConstant;
 use RidiPay\User\Application\Service\EmailSender;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
 use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
-use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
+use RidiPay\User\Domain\PaymentMethodConstant;
+use RidiPay\User\Domain\Repository\CardPaymentKeyRepository;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,12 +51,6 @@ class ManageCardTest extends ControllerTestCase
 
     /**
      * 결제 수단 등록 테스트
-     *
-     * @throws AuthorizationException
-     * @throws UnsupportedPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     * @throws \Doctrine\ORM\ORMException
      */
     public function testRegisterCard()
     {
@@ -93,15 +88,26 @@ class ManageCardTest extends ControllerTestCase
         $client->request(Request::METHOD_POST, '/me/pin', [], [], [], $body);
 
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-        $this->assertCount(1, $payment_methods->cards);
-
-        $card = $payment_methods->cards[0];
-        $payment_method = PaymentMethodRepository::getRepository()
-            ->findOneByUuid(Uuid::fromString($card->payment_method_id));
-        $card_for_one_time_payment = $payment_method->getCardForOneTimePayment();
-        $this->assertNotNull($card_for_one_time_payment);
-        $card_for_billing_payment = $payment_method->getCardForBillingPayment();
-        $this->assertNotNull($card_for_billing_payment);
+        $this->assertCount(1, $payment_methods);
+        $card = $payment_methods[0];
+        $this->assertNotNull(
+            CardPaymentKeyRepository::getRepository()->findOneByCardIdAndPurpose(
+                $card->getId(),
+                PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_ONE_TIME
+            )
+        );
+        $this->assertNotNull(
+            CardPaymentKeyRepository::getRepository()->findOneByCardIdAndPurpose(
+                $card->getId(),
+                PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_ONE_TIME_TAX_DEDUCTION
+            )
+        );
+        $this->assertNotNull(
+            CardPaymentKeyRepository::getRepository()->findOneByCardIdAndPurpose(
+                $card->getId(),
+                PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_BILLING
+            )
+        );
 
         TestUtil::tearDownOAuth2Doubles();
     }
@@ -112,19 +118,13 @@ class ManageCardTest extends ControllerTestCase
      * @dataProvider deleteCardDataProvider
      *
      * @param int $u_idx
-     * @param string $payment_method_id
+     * @param string $payment_method_uuid
      * @param int $http_status_code
      * @param null|string $error_code
-     * @throws AuthorizationException
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws UnsupportedPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
      */
     public function testDeleteCard(
         int $u_idx,
-        string $payment_method_id,
+        string $payment_method_uuid,
         int $http_status_code,
         ?string $error_code
     ) {
@@ -134,16 +134,15 @@ class ManageCardTest extends ControllerTestCase
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
 
         $client = self::createClientWithOAuth2AccessToken([], ['CONTENT_TYPE' => 'application/json']);
-        $client->request(Request::METHOD_DELETE, "/me/cards/{$payment_method_id}");
+        $client->request(Request::METHOD_DELETE, "/me/cards/{$payment_method_uuid}");
         $this->assertSame($http_status_code, $client->getResponse()->getStatusCode());
 
         $response_content = json_decode($client->getResponse()->getContent());
         if (isset($response_content->code)) {
             $this->assertSame($error_code, $response_content->code);
         } else {
-            $user = UserAppService::getUserInformation($u_idx);
-            $this->assertEmpty($user->payment_methods->cards);
-            $this->assertFalse($user->has_pin);
+            $this->assertEmpty(PaymentMethodAppService::getAvailablePaymentMethods($u_idx));
+            $this->assertFalse(UserAppService::getUser($u_idx)->hasPin());
         }
 
         TestUtil::tearDownOAuth2Doubles();
@@ -158,17 +157,12 @@ class ManageCardTest extends ControllerTestCase
      * @dataProvider changeCardDataProvider
      *
      * @param int $u_idx
-     * @param string $payment_method_id
+     * @param string $previous_payment_method_uuid
      * @param string[] $expected_subscription_ids
-     * @throws AuthorizationException
-     * @throws UnsupportedPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\NonUniqueResultException
-     * @throws \Doctrine\ORM\ORMException
      */
     public function testChangeCard(
         int $u_idx,
-        string $payment_method_id,
+        string $previous_payment_method_uuid,
         array $expected_subscription_ids
     ) {
         TestUtil::setUpOAuth2Doubles($u_idx, TestUtil::U_ID);
@@ -204,43 +198,54 @@ class ManageCardTest extends ControllerTestCase
         $client->request(Request::METHOD_POST, '/me/pin', [], [], [], $body);
 
         // 기존 결제 수단 삭제 여부 확인
-        $previous_payment_method = PaymentMethodRepository::getRepository()
-            ->findOneByUuid(Uuid::fromString($payment_method_id));
-        $this->assertTrue($previous_payment_method->isDeleted());
+        $this->assertTrue(
+            PaymentMethodRepository::getRepository()->findOneByUuid(
+                Uuid::fromString($previous_payment_method_uuid)
+            )->isDeleted()
+        );
 
         // 신규 결제 수단 등록 여부 확인
         $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-        $this->assertCount(1, $payment_methods->cards);
+        $this->assertCount(1, $payment_methods);
 
-        $card = $payment_methods->cards[0];
-        $payment_method = PaymentMethodRepository::getRepository()
-            ->findOneByUuid(Uuid::fromString($card->payment_method_id));
-        $card_for_one_time_payment = $payment_method->getCardForOneTimePayment();
-        $this->assertNotNull($card_for_one_time_payment);
-        $card_for_billing_payment = $payment_method->getCardForBillingPayment();
-        $this->assertNotNull($card_for_billing_payment);
+        $card = $payment_methods[0];
+        $this->assertNotNull(
+            CardPaymentKeyRepository::getRepository()->findOneByCardIdAndPurpose(
+                $card->getId(),
+                PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_ONE_TIME
+            )
+        );
+        $this->assertNotNull(
+            CardPaymentKeyRepository::getRepository()->findOneByCardIdAndPurpose(
+                $card->getId(),
+                PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_ONE_TIME_TAX_DEDUCTION
+            )
+        );
+        $this->assertNotNull(
+            CardPaymentKeyRepository::getRepository()->findOneByCardIdAndPurpose(
+                $card->getId(),
+                PaymentMethodConstant::CARD_PAYMENT_KEY_PURPOSE_BILLING
+            )
+        );
 
         // 기존 카드로부터 신규 카드로 구독 이전 여부 확인
-        $this->assertMigrateSubscriptionSuccessfully($expected_subscription_ids, $card->payment_method_id);
+        $this->assertMigrateSubscriptionSuccessfully($expected_subscription_ids, $card);
 
         TestUtil::tearDownOAuth2Doubles();
     }
 
     /**
      * @param int[] $expected_subscription_ids
-     * @param string $new_payment_method_id
+     * @param PaymentMethodEntity $new_payment_method
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
     private function assertMigrateSubscriptionSuccessfully(
         array $expected_subscription_ids,
-        string $new_payment_method_id
+        PaymentMethodEntity $new_payment_method
     ) {
-        $subscriptions_of_new_payment_method = SubscriptionRepository::getRepository()->findActiveOnesByPaymentMethodId(
-            PaymentMethodRepository::getRepository()->findOneByUuid(
-                Uuid::fromString($new_payment_method_id)
-            )->getId()
-        );
+        $subscriptions_of_new_payment_method = SubscriptionRepository::getRepository()
+            ->findActiveOnesByPaymentMethodId($new_payment_method->getId());
         usort($subscriptions_of_new_payment_method, function (SubscriptionEntity $a, SubscriptionEntity $b) {
             return $a->getId() > $b->getId();
         });
@@ -274,31 +279,31 @@ class ManageCardTest extends ControllerTestCase
         }
         $partner = PartnerAppService::registerPartner('delete-card', 'test@12345', true);
 
-        $payment_method_id_of_normal_user = TestUtil::registerCard($user_indices[0], '123456');
+        $card_of_normal_user = TestUtil::registerCard($user_indices[0], '123456');
 
-        $payment_method_id_of_normal_user_with_ridi_cash_auto_charge = TestUtil::registerCard(
+        $card_of_normal_user_with_ridi_cash_auto_charge = TestUtil::registerCard(
             $user_indices[1],
             '123456'
         );
         $subscription = new SubscriptionEntity(
-            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_of_normal_user_with_ridi_cash_auto_charge),
+            $card_of_normal_user_with_ridi_cash_auto_charge->getId(),
             PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE
         );
         SubscriptionRepository::getRepository()->save($subscription);
 
-        $payment_method_id_of_normal_user_with_ridiselect = TestUtil::registerCard(
+        $card_of_normal_user_with_ridiselect = TestUtil::registerCard(
             $user_indices[2],
             '123456'
         );
         $subscription = new SubscriptionEntity(
-            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_of_normal_user_with_ridiselect),
+            $card_of_normal_user_with_ridiselect->getId(),
             PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDISELECT
         );
         SubscriptionRepository::getRepository()->save($subscription);
 
-        $payment_method_id_of_leaved_user = TestUtil::registerCard(
+        $card_of_leaved_user = TestUtil::registerCard(
             $user_indices[3],
             '123456'
         );
@@ -306,7 +311,7 @@ class ManageCardTest extends ControllerTestCase
 
         // $user_indices[4]: NOT_FOUND_USER
 
-        $payment_method_id_of_other_user = TestUtil::registerCard(
+        $card_of_other_user = TestUtil::registerCard(
             $user_indices[5],
             '123456'
         );
@@ -314,25 +319,25 @@ class ManageCardTest extends ControllerTestCase
         return [
             [
                 $user_indices[0],
-                $payment_method_id_of_normal_user,
+                $card_of_normal_user->getUuid()->toString(),
                 Response::HTTP_OK,
                 null
             ],
             [
                 $user_indices[1],
-                $payment_method_id_of_normal_user_with_ridi_cash_auto_charge,
+                $card_of_normal_user_with_ridi_cash_auto_charge->getUuid()->toString(),
                 Response::HTTP_OK,
                 null
             ],
             [
                 $user_indices[2],
-                $payment_method_id_of_normal_user_with_ridiselect,
+                $card_of_normal_user_with_ridiselect->getUuid()->toString(),
                 Response::HTTP_OK,
                 null
             ],
             [
                 $user_indices[3],
-                $payment_method_id_of_leaved_user,
+                $card_of_leaved_user->getUuid()->toString(),
                 Response::HTTP_FORBIDDEN,
                 UserErrorCodeConstant::LEAVED_USER
             ],
@@ -350,7 +355,7 @@ class ManageCardTest extends ControllerTestCase
             ],
             [
                 $user_indices[0],
-                $payment_method_id_of_other_user,
+                $card_of_other_user->getUuid()->toString(),
                 Response::HTTP_NOT_FOUND,
                 UserErrorCodeConstant::UNREGISTERED_PAYMENT_METHOD
             ]
@@ -377,67 +382,67 @@ class ManageCardTest extends ControllerTestCase
         }
         $partner = PartnerAppService::registerPartner('change-card', 'test@12345', true);
 
-        $payment_method_id = TestUtil::registerCard(
+        $card = TestUtil::registerCard(
             $user_indices[0],
             '123456'
         );
         $cases[] = [
             $user_indices[0],
-            $payment_method_id,
+            $card->getUuid()->toString(),
             []
         ];
 
-        $payment_method_id_with_ridi_cash_auto_charge_subscription = TestUtil::registerCard(
+        $card_with_ridi_cash_auto_charge_subscription = TestUtil::registerCard(
             $user_indices[1],
             '123456'
         );
         $subscription = new SubscriptionEntity(
-            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_with_ridi_cash_auto_charge_subscription),
+            $card_with_ridi_cash_auto_charge_subscription->getId(),
             PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE
         );
         SubscriptionRepository::getRepository()->save($subscription);
         $cases[] = [
             $user_indices[1],
-            $payment_method_id_with_ridi_cash_auto_charge_subscription,
+            $card_with_ridi_cash_auto_charge_subscription->getUuid()->toString(),
             [$subscription->getId()]
         ];
 
-        $payment_method_id_with_ridiselect_subscription = TestUtil::registerCard(
+        $card_with_ridiselect_subscription = TestUtil::registerCard(
             $user_indices[2],
             '123456'
         );
         $subscription = new SubscriptionEntity(
-            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_with_ridiselect_subscription),
+            $card_with_ridiselect_subscription->getId(),
             PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDISELECT
         );
         SubscriptionRepository::getRepository()->save($subscription);
         $cases[] = [
             $user_indices[2],
-            $payment_method_id_with_ridiselect_subscription,
+            $card_with_ridiselect_subscription->getUuid()->toString(),
             [$subscription->getId()]
         ];
 
-        $payment_method_id_with_multiple_subscriptions = TestUtil::registerCard(
+        $card_with_multiple_subscriptions = TestUtil::registerCard(
             $user_indices[3],
             '123456'
         );
         $ridi_cash_auto_charge_subscription = new SubscriptionEntity(
-            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_with_multiple_subscriptions),
+            $card_with_multiple_subscriptions->getId(),
             PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDI_CASH_AUTO_CHARGE
         );
         SubscriptionRepository::getRepository()->save($ridi_cash_auto_charge_subscription);
         $ridiselect_subscription = new SubscriptionEntity(
-            PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_id_with_multiple_subscriptions),
+            $card_with_multiple_subscriptions->getId(),
             PartnerRepository::getRepository()->findOneByApiKey(Uuid::fromString($partner->api_key))->getId(),
             SubscriptionConstant::PRODUCT_RIDISELECT
         );
         SubscriptionRepository::getRepository()->save($ridiselect_subscription);
         $cases[] = [
             $user_indices[3],
-            $payment_method_id_with_multiple_subscriptions,
+            $card_with_multiple_subscriptions->getUuid()->toString(),
             [
                 $ridi_cash_auto_charge_subscription->getId(),
                 $ridiselect_subscription->getId()

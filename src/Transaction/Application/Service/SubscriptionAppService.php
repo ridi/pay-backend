@@ -64,7 +64,10 @@ class SubscriptionAppService
             $partner_api_secret->getApiKey(),
             $partner_api_secret->getSecretKey()
         );
-        $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
+        $payment_method = PaymentMethodAppService::getPaymentMethodByUuid($payment_method_uuid);
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
 
         $reservation_id = Uuid::uuid4()->toString();
         $reservation_key = self::getSubscriptionReservationKey($reservation_id);
@@ -73,7 +76,7 @@ class SubscriptionAppService
         $redis->hmset(
             $reservation_key,
             [
-                'payment_method_id' => $payment_method_id,
+                'payment_method_id' => $payment_method->getId(),
                 'partner_id' => $partner_id,
                 'product_name' => $product_name,
                 'return_url' => $return_url,
@@ -101,9 +104,15 @@ class SubscriptionAppService
 
         $redis = self::getRedisClient();
         $reserved_subscription = $redis->hgetall($subscription_reservation_key);
-        if (empty($reserved_subscription)
-            || (PaymentMethodAppService::getUidxById(intval($reserved_subscription['payment_method_id'])) !== $u_idx)
-        ) {
+        if (empty($reserved_subscription)) {
+            throw new NotReservedSubscriptionException();
+        }
+
+        $payment_method = PaymentMethodAppService::getPaymentMethod(intval($reserved_subscription['payment_method_id']));
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
+        if ($payment_method->getUidx() !== $u_idx) {
             throw new NotReservedSubscriptionException();
         }
 
@@ -207,7 +216,10 @@ class SubscriptionAppService
             throw new NotFoundSubscriptionException();
         }
 
-        PaymentMethodAppService::validatePaymentMethod($subscription->getPaymentMethodId());
+        $payment_method = PaymentMethodAppService::getPaymentMethod($subscription->getPaymentMethodId());
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
 
         $subscription->resumeSubscription();
         $subscription_repo->save($subscription);

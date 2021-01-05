@@ -9,8 +9,8 @@ use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
 use RidiPay\Transaction\Domain\Entity\TransactionEntity;
 use RidiPay\User\Application\Service\PaymentMethodAppService;
+use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
-use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 
 class TransactionStatusDto
 {
@@ -50,7 +50,6 @@ class TransactionStatusDto
     /**
      * @param TransactionEntity $transaction
      * @throws UnregisteredPaymentMethodException
-     * @throws UnsupportedPaymentMethodException
      * @throws UnsupportedPgException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
@@ -62,7 +61,7 @@ class TransactionStatusDto
 
         $payment_method_id = $transaction->getPaymentMethodId();
         $payment_method = PaymentMethodAppService::getPaymentMethod($payment_method_id);
-        $this->payment_method_id = $payment_method->payment_method_id;
+        $this->payment_method_id = $payment_method->getUuid()->toString();
         $this->payment_method_type = $payment_method->getType();
 
         $this->status = $transaction->getStatus();
@@ -72,7 +71,7 @@ class TransactionStatusDto
         $this->approved_at = $transaction->getApprovedAt();
         $this->canceled_at = $transaction->getCanceledAt();
 
-        if ($payment_method->isCard() && !$transaction->isReserved()) {
+        if ($payment_method instanceof CardEntity && !$transaction->isReserved()) {
             $pg = PgAppService::getPgById($transaction->getPgId());
             $pg_handler = Kernel::isDev() ? PgHandlerFactory::createWithTest($pg->name) : PgHandlerFactory::create($pg->name);
             $this->card_receipt_url = $pg_handler->getCardReceiptUrl($transaction);

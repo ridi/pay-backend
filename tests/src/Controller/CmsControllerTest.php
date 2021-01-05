@@ -33,7 +33,7 @@ class CmsControllerTest extends ControllerTestCase
     {
         $u_idx = TestUtil::getRandomUidx();
 
-        $payment_method_uuid = TestUtil::registerCard($u_idx, '123456');
+        $card = TestUtil::registerCard($u_idx, '123456');
         CardAppService::deleteCard(
             new User(json_encode([
                 'result' => [
@@ -44,7 +44,7 @@ class CmsControllerTest extends ControllerTestCase
                 ],
                 'message' => '정상적으로 완료되었습니다.'
             ])),
-            $payment_method_uuid
+            $card->getUuid()->toString()
         );
 
         $client = self::createClient();
@@ -53,10 +53,10 @@ class CmsControllerTest extends ControllerTestCase
         $history = json_decode($client->getResponse()->getContent());
         $this->assertSame(2, count($history));
 
-        $this->assertSame($payment_method_uuid, $history[0]->payment_method_id);
+        $this->assertSame($card->getUuid()->toString(), $history[0]->payment_method_id);
         $this->assertSame(PaymentMethodHistoryItemDtoFactory::ACTION_DELETION, $history[0]->action);
 
-        $this->assertSame($payment_method_uuid, $history[1]->payment_method_id);
+        $this->assertSame($card->getUuid()->toString(), $history[1]->payment_method_id);
         $this->assertSame(PaymentMethodHistoryItemDtoFactory::ACTION_REGISTRATION, $history[1]->action);
     }
 

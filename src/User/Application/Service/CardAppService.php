@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Application\Service;
 
+use Ramsey\Uuid\Uuid;
 use Ridibooks\OAuth2\Symfony\Provider\User;
 use RidiPay\Library\EntityManagerProvider;
 use RidiPay\Library\MailRenderer;
@@ -10,10 +11,11 @@ use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
+use RidiPay\Transaction\Application\Dto\SubscriptionDto;
 use RidiPay\Transaction\Application\Service\SubscriptionAppService;
 use RidiPay\Transaction\Domain\Exception\AlreadyCancelledSubscriptionException;
 use RidiPay\Transaction\Domain\Service\TransactionApprovalTrait;
-use RidiPay\User\Application\Dto\CardDto;
+use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
@@ -67,36 +69,40 @@ class CardAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public static function deleteCard(User $oauth2_user, string $payment_method_uuid)
     {
         $u_idx = $oauth2_user->getUidx();
         UserAppService::validateUser($u_idx);
 
-        $payment_method_id = PaymentMethodAppService::getPaymentMethodIdByUuid($payment_method_uuid);
-        if ($u_idx !== PaymentMethodAppService::getUidxById($payment_method_id)) {
+        $card = PaymentMethodRepository::getRepository()->findOneByUuid(Uuid::fromString($payment_method_uuid));
+        if ($card === null || $card->getUidx() !== $u_idx) {
             throw new UnregisteredPaymentMethodException();
+        }
+        if ($card->isDeleted()) {
+            throw new DeletedPaymentMethodException();
         }
 
         $em = EntityManagerProvider::getEntityManager();
         $em->beginTransaction();
 
         try {
-            $payment_method_repo = PaymentMethodRepository::getRepository();
-            $payment_method = $payment_method_repo->findOneById($payment_method_id);
-            $payment_method->delete();
-            $payment_method_repo->save($payment_method);
-
-            UserActionHistoryService::logDeleteCard($u_idx);
+            $card->delete();
+            PaymentMethodRepository::getRepository()->save($card);
 
             $available_payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-            if (empty($available_payment_methods->cards)) {
+            if (empty($available_payment_methods)) {
                 UserAppService::initializePinEntryHistory($u_idx);
                 UserAppService::deletePin($u_idx);
                 UserAppService::deleteOnetouchPay($u_idx);
             }
 
-            SubscriptionAppService::optoutSubscriptions($u_idx, $payment_method_id);
+            SubscriptionAppService::optoutSubscriptions($u_idx, $card->getId());
+
+            UserActionHistoryService::logDeleteCard($u_idx);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -106,10 +112,9 @@ class CardAppService
             throw $t;
         }
 
-        $card = new CardDto($payment_method->getCardForOneTimePayment());
         $data = [
-            'card_issuer_name' => $card->issuer_name,
-            'iin' => $card->iin
+            'card_issuer_name' => $card->getCardIssuer()->getName(),
+            'iin' => $card->getIin()
         ];
         $email_body = (new MailRenderer())->render('card_deletion_alert.twig', $data);
         EmailSender::send(
@@ -121,15 +126,18 @@ class CardAppService
 
     /**
      * @param User $oauth2_user
-     * @return CardDto
+     * @return CardEntity
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws UnauthorizedCardRegistrationException
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public static function finishCardRegistration(User $oauth2_user): CardDto
+    public static function finishCardRegistration(User $oauth2_user): CardEntity
     {
         $u_idx = $oauth2_user->getUidx();
 
@@ -147,7 +155,7 @@ class CardAppService
                 UserAppService::createUser($u_idx);
             }
 
-            $payment_method = CardService::useRegisteredCard($u_idx);
+            $card = CardService::useRegisteredCard($u_idx);
             UserActionHistoryService::logRegisterCard($u_idx);
 
             UserAppService::useCreatedPin($u_idx);
@@ -160,10 +168,9 @@ class CardAppService
             throw $t;
         }
 
-        $card = new CardDto($payment_method->getCardForOneTimePayment());
         $data = [
-            'card_issuer_name' => $card->issuer_name,
-            'iin' => $card->iin
+            'card_issuer_name' => $card->getCardIssuer()->getName(),
+            'iin' => $card->getIin()
         ];
         $email_body = (new MailRenderer())->render('card_registration_alert.twig', $data);
         EmailSender::send(
@@ -177,7 +184,7 @@ class CardAppService
 
     /**
      * @param User $oauth2_user
-     * @return CardDto
+     * @return CardEntity
      * @throws LeavedUserException
      * @throws NotFoundUserException
      * @throws PaymentMethodChangeDeclinedException
@@ -185,11 +192,11 @@ class CardAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
-     * @throws \Twig_Error_Loader
-     * @throws \Twig_Error_Runtime
-     * @throws \Twig_Error_Syntax
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public static function changeCard(User $oauth2_user): CardDto
+    public static function changeCard(User $oauth2_user): CardEntity
     {
         UserAppService::validateUser($oauth2_user->getUidx());
         if (!CardService::isCardRegistrationInProgress($oauth2_user->getUidx())) {
@@ -200,37 +207,40 @@ class CardAppService
         }
 
         $em = EntityManagerProvider::getEntityManager();
-        $new_payment_method = $em->transactional(function () use ($oauth2_user) {
-            // 기존 카드 삭제
-            $payment_method_repo = PaymentMethodRepository::getRepository();
-            $previous_payment_methods = $payment_method_repo->getAvailablePaymentMethods($oauth2_user->getUidx());
+        /** @var CardEntity $new_card */
+        $new_card = $em->transactional(function () use ($oauth2_user) {
+            // 기존 카드 조회
+            $previous_payment_methods = PaymentMethodRepository::getRepository()
+                ->getAvailablePaymentMethods($oauth2_user->getUidx());
+
+            // 신규 카드 등록
+            $new_card = CardService::useRegisteredCard($oauth2_user->getUidx());
+            UserAppService::useCreatedPin($oauth2_user->getUidx());
+
+            // 기존 카드로부터 신규 카드로 구독 이전, 기존 카드 제거
             foreach ($previous_payment_methods as $previous_payment_method) {
+                SubscriptionAppService::changePaymentMethod(
+                    $previous_payment_method->getId(),
+                    $new_card->getId()
+                );
                 $previous_payment_method->delete();
-                $payment_method_repo->save($previous_payment_method, true);
+                PaymentMethodRepository::getRepository()->save($previous_payment_method);
             }
 
             UserActionHistoryService::logChangeCard($oauth2_user->getUidx());
 
-            // 신규 카드 등록
-            $new_payment_method = CardService::useRegisteredCard($oauth2_user->getUidx());
-            UserAppService::useCreatedPin($oauth2_user->getUidx());
-
-            // 기존 카드로부터 신규 카드로 구독 이전
-            foreach ($previous_payment_methods as $previous_payment_method) {
-                SubscriptionAppService::changePaymentMethod(
-                    $previous_payment_method->getId(),
-                    $new_payment_method->getId()
-                );
-            }
-
-            return $new_payment_method;
+            return $new_card;
         });
 
-        $card = new CardDto($new_payment_method->getCardForOneTimePayment());
         $data = [
-            'card_issuer_name' => $card->issuer_name,
-            'iin' => $card->iin,
-            'subscriptions' => $card->subscriptions
+            'card_issuer_name' => $new_card->getCardIssuer()->getName(),
+            'iin' => $new_card->getIin(),
+            'subscriptions' => array_unique(array_map(
+                function (SubscriptionDto $subscription) {
+                    return $subscription->product_name;
+                },
+                SubscriptionAppService::getSubscriptionByPaymentMethodId($new_card->getId())
+            )),
         ];
         $email_body = (new MailRenderer())->render('card_change_alert.twig', $data);
         EmailSender::send(
@@ -239,7 +249,7 @@ class CardAppService
             $email_body
         );
 
-        return $card;
+        return $new_card;
     }
 
     /**

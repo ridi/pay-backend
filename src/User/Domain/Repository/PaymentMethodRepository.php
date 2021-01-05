@@ -3,22 +3,16 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Repository;
 
-use Doctrine\DBAL\Connection;
-use Doctrine\ORM\Query\Expr;
-use Ramsey\Uuid\Doctrine\UuidBinaryType;
 use Ramsey\Uuid\UuidInterface;
 use RidiPay\Library\BaseEntityRepository;
-use RidiPay\Pg\Application\Dto\PgDto;
-use RidiPay\Pg\Application\Service\PgAppService;
+use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
-use Doctrine\DBAL\Types\Type;
-use RidiPay\User\Domain\PaymentMethodConstant;
 
 class PaymentMethodRepository extends BaseEntityRepository
 {
     /**
      * @param int $id
-     * @return null|PaymentMethodEntity
+     * @return PaymentMethodEntity|null
      */
     public function findOneById(int $id): ?PaymentMethodEntity
     {
@@ -27,69 +21,40 @@ class PaymentMethodRepository extends BaseEntityRepository
 
     /**
      * @param UuidInterface $uuid
-     * @return null|PaymentMethodEntity
-     * @throws \Doctrine\ORM\NonUniqueResultException
+     * @return PaymentMethodEntity|null
      */
     public function findOneByUuid(UuidInterface $uuid): ?PaymentMethodEntity
     {
-        $qb = $this->createQueryBuilder('pm')
-            ->addSelect('c')
-            ->leftJoin('pm.cards', 'c')
-            ->where('pm.uuid = :uuid')
-            ->setParameter('uuid', $uuid, UuidBinaryType::NAME);
-
-        return $qb->getQuery()->getOneOrNullResult();
+        return $this->findOneBy(['uuid' => $uuid]);
     }
 
     /**
      * @param int $u_idx
      * @return PaymentMethodEntity[]
      */
-    public function findCardsByUidx(int $u_idx): array
+    public function getAvailablePaymentMethods(int $u_idx): array
     {
-        $qb = $this->createQueryBuilder('pm')
-            ->addSelect('c')
-            ->join('pm.cards', 'c')
-            ->where('pm.u_idx = :u_idx')
-            ->andWhere('pm.type = :card_type')
-            ->setParameter('u_idx', $u_idx, Type::INTEGER)
-            ->setParameter('card_type', PaymentMethodConstant::TYPE_CARD, Type::STRING);
+        $payment_methods = $this->findBy(['u_idx' => $u_idx, 'deleted_at' => null]);
+        return array_filter(
+            $payment_methods,
+            function (PaymentMethodEntity $payment_method) {
+                if (!($payment_method instanceof CardEntity)) {
+                    return false;
+                }
 
-        return $qb->getQuery()->getResult();
-    }
+                foreach ($payment_method->getPaymentKeys() as $payment_key) {
+                    if (!$payment_key->getPg()->isPayable()) {
+                        return false;
+                    }
+                }
 
-    /**
-     * @param int $u_idx
-     * @return PaymentMethodEntity[]
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public function getAvailablePaymentMethods(int $u_idx)
-    {
-        $pgs = PgAppService::getPayablePgs();
-        $pg_ids = array_map(
-            function (PgDto $pg) {
-                return $pg->id;
-            },
-            $pgs
+                return true;
+            }
         );
-
-        $qb = $this->createQueryBuilder('pm')
-            ->addSelect('c')
-            ->leftJoin('pm.cards', 'c', Expr\Join::WITH, 'c.pg_id IN (:pg_ids)')
-            ->setParameter('pg_ids', $pg_ids, Connection::PARAM_INT_ARRAY)
-            ->join('c.card_issuer', 'ci')
-            ->where('pm.u_idx = :u_idx')
-            ->andWhere('pm.deleted_at IS NULL')
-            ->setParameter('u_idx', $u_idx, Type::INTEGER);
-
-        return $qb->getQuery()->getResult();
     }
 
     /**
-     * @return PaymentMethodRepository
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
+     * @return static
      */
     public static function getRepository(): self
     {

@@ -33,21 +33,4 @@ class PgAppService
 
         return new PgDto($pg);
     }
-
-    /**
-     * @return PgDto[]
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function getPayablePgs(): array
-    {
-        $pgs = PgRepository::getRepository()->findPayablePgs();
-
-        return array_map(
-            function (PgEntity $pg) {
-                return new PgDto($pg);
-            },
-            $pgs
-        );
-    }
 }
