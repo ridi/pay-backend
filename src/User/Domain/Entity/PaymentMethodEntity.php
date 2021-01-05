@@ -3,11 +3,16 @@ declare(strict_types=1);
 
 namespace RidiPay\User\Domain\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping\Column;
+use Doctrine\ORM\Mapping\DiscriminatorColumn;
+use Doctrine\ORM\Mapping\DiscriminatorMap;
+use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
+use Doctrine\ORM\Mapping\Id;
+use Doctrine\ORM\Mapping\InheritanceType;
+use Doctrine\ORM\Mapping\Table;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use RidiPay\User\Domain\PaymentMethodConstant;
 
 /**
  * @Table(
@@ -20,8 +25,11 @@ use RidiPay\User\Domain\PaymentMethodConstant;
  *   }
  * )
  * @Entity(repositoryClass="RidiPay\User\Domain\Repository\PaymentMethodRepository")
+ * @InheritanceType("JOINED")
+ * @DiscriminatorColumn(name="type", type="string", columnDefinition="ENUM('CARD')")
+ * @DiscriminatorMap({"CARD" = "CardEntity"})
  */
-class PaymentMethodEntity
+abstract class PaymentMethodEntity
 {
     /**
      * @var int
@@ -30,38 +38,21 @@ class PaymentMethodEntity
      * @Id
      * @GeneratedValue(strategy="IDENTITY")
      */
-    private $id;
+    protected $id;
 
     /**
      * @var UuidInterface
      *
      * @Column(name="uuid", type="uuid_binary", nullable=false, options={"comment"="id 값 유추 방지를 위한 uuid"})
      */
-    private $uuid;
+    protected $uuid;
 
     /**
      * @var int
      *
      * @Column(name="u_idx", type="integer", nullable=false, options={"comment"="user.u_idx"})
      */
-    private $u_idx;
-
-    /**
-     * @var string
-     *
-     * @Column(
-     *   name="type",
-     *   type="string",
-     *   length=0,
-     *   nullable=false,
-     *   columnDefinition="ENUM('CARD')",
-     *   options={
-     *     "default"="CARD",
-     *     "comment"="결제 수단"
-     *   }
-     * )
-     */
-    private $type;
+    protected $u_idx;
 
     /**
      * @var \DateTime
@@ -76,45 +67,25 @@ class PaymentMethodEntity
      *   }
      * )
      */
-    private $created_at;
+    protected $created_at;
 
     /**
      * @var \DateTime|null
      *
      * @Column(name="deleted_at", type="datetime", nullable=true, options={"comment"="결제 수단 삭제 시각"})
      */
-    private $deleted_at;
-
-    /**
-     * @var Collection
-     *
-     * @OneToMany(targetEntity="RidiPay\User\Domain\Entity\CardEntity", mappedBy="payment_method")
-     */
-    private $cards;
+    protected $deleted_at;
 
     /**
      * @param int $u_idx
-     * @return PaymentMethodEntity
      * @throws \Exception
      */
-    public static function createForCard(int $u_idx): PaymentMethodEntity
-    {
-        return new self($u_idx, PaymentMethodConstant::TYPE_CARD);
-    }
-
-    /**
-     * @param int $u_idx
-     * @param string $type
-     * @throws \Exception
-     */
-    private function __construct(int $u_idx, string $type)
+    protected function __construct(int $u_idx)
     {
         $this->uuid = Uuid::uuid4();
         $this->u_idx = $u_idx;
-        $this->type = $type;
         $this->created_at = new \DateTime();
         $this->deleted_at = null;
-        $this->cards = new ArrayCollection();
     }
 
     /**
@@ -142,20 +113,9 @@ class PaymentMethodEntity
     }
 
     /**
-     * @return bool
-     */
-    public function isCard(): bool
-    {
-        return $this->type === PaymentMethodConstant::TYPE_CARD;
-    }
-
-    /**
      * @return string
      */
-    public function getType(): string
-    {
-        return $this->type;
-    }
+    abstract public function getType(): string;
 
     /**
      * @return \DateTime
@@ -187,53 +147,5 @@ class PaymentMethodEntity
     public function delete(): void
     {
         $this->deleted_at = new \DateTime();
-    }
-
-    /**
-     * @return CardEntity[]
-     */
-    public function getCards()
-    {
-        if (!$this->isCard()) {
-            return [];
-        }
-
-        return $this->cards->toArray();
-    }
-
-    /**
-     * @return null|CardEntity
-     */
-    public function getCardForOneTimePayment(): ?CardEntity
-    {
-        foreach ($this->getCards() as $card) {
-            if ($card->isAvailableOnOneTimePayment()) {
-                return $card;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @return null|CardEntity
-     */
-    public function getCardForBillingPayment(): ?CardEntity
-    {
-        foreach ($this->getCards() as $card) {
-            if ($card->isAvailableOnBillingPayment()) {
-                return $card;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param CardEntity[] $cards
-     */
-    public function setCards(array $cards): void
-    {
-        $this->cards = new ArrayCollection($cards);
     }
 }

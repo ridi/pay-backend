@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace RidiPay\User\Application\Dto;
 
 use OpenApi\Annotations as OA;
-use RidiPay\User\Domain\Entity\PaymentMethodEntity;
+use RidiPay\User\Domain\Entity\CardEntity;
 
 /**
  * @OA\Schema()
@@ -19,16 +19,16 @@ class CardHistoryItemDto extends PaymentMethodHistoryItemDto
     public $iin;
 
     /**
-     * @param PaymentMethodEntity $payment_method
+     * @param CardEntity $payment_method
      * @param string $action
      * @param \DateTime $processed_at
      * @throws \Exception
      */
-    public function __construct(PaymentMethodEntity $payment_method, string $action, \DateTime $processed_at)
+    public function __construct(CardEntity $payment_method, string $action, \DateTime $processed_at)
     {
         parent::__construct($payment_method, $action, $processed_at);
 
-        $this->iin = $payment_method->getCardForOneTimePayment()->getIin();
+        $this->iin = $payment_method->getIin();
     }
 
     /**

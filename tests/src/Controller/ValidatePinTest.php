@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace RidiPay\Tests\Controller;
 
-use Ridibooks\OAuth2\Authorization\Exception\AuthorizationException;
 use RidiPay\Controller\Response\UserErrorCodeConstant;
 use RidiPay\Tests\TestUtil;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -26,7 +25,6 @@ class ValidatePinTest extends ControllerTestCase
      * @param string $pin
      * @param int $http_status_code
      * @param null|string $error_code
-     * @throws AuthorizationException
      */
     public function testValidatePin(int $u_idx, string $pin, int $http_status_code, ?string $error_code)
     {
@@ -45,15 +43,6 @@ class ValidatePinTest extends ControllerTestCase
         TestUtil::tearDownOAuth2Doubles();
     }
 
-    /**
-     * @throws AuthorizationException
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws WrongFormattedPinException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     * @throws \Throwable
-     */
     public function testPinEntryBlocked()
     {
         $u_idx = TestUtil::getRandomUidx();

@@ -14,6 +14,7 @@ use RidiPay\Tests\TestUtil;
 use RidiPay\Partner\Application\Service\PartnerAppService;
 use RidiPay\Transaction\Domain\Repository\TransactionRepository;
 use RidiPay\User\Application\Service\UserAppService;
+use RidiPay\User\Domain\Entity\CardEntity;
 use Symfony\Bundle\FrameworkBundle\Client;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,8 +32,8 @@ class BillingPaymentTest extends ControllerTestCase
     /** @var int */
     private static $u_idx;
 
-    /** @var string */
-    private static $payment_method_id;
+    /** @var CardEntity */
+    private static $card;
 
     /** @var string */
     private static $reservation_id;
@@ -42,10 +43,7 @@ class BillingPaymentTest extends ControllerTestCase
 
     public static function setUpBeforeClass()
     {
-        self::$u_idx = TestUtil::getRandomUidx();
-        self::$payment_method_id = TestUtil::registerCard(self::$u_idx, self::PIN);
         self::$partner = PartnerAppService::registerPartner('billing-payment-test', 'test@12345', true);
-
         self::$client = self::createClient(
             [],
             [
@@ -56,17 +54,27 @@ class BillingPaymentTest extends ControllerTestCase
         );
     }
 
+    protected function setUp()
+    {
+        self::$u_idx = TestUtil::getRandomUidx();
+        self::$card = TestUtil::registerCard(self::$u_idx, self::PIN);
+        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
+    }
+
+    public function tearDown(): void
+    {
+        TestUtil::tearDownOAuth2Doubles();
+    }
+
     public function testBillingPaymentLifeCycle()
     {
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-
         $product_name = 'mock';
         $amount = 10000;
         $return_url = 'https://mock.net';
 
         // 구독 예약
         $this->assertReserveSubscriptionSuccessfully(
-            self::$payment_method_id,
+            self::$card->getUuid()->toString(),
             $product_name,
             $return_url
         );
@@ -106,7 +114,7 @@ class BillingPaymentTest extends ControllerTestCase
         $this->assertSame($subscription_id, $subscription_status_response->subscription_id);
         $this->assertSame(self::$u_idx, $subscription_status_response->u_idx);
         $this->assertSame($product_name, $subscription_status_response->product_name);
-        $this->assertSame(self::$payment_method_id, $subscription_status_response->payment_method_id);
+        $this->assertSame(self::$card->getUuid()->toString(), $subscription_status_response->payment_method_id);
 
         // 구독 결제 승인
         $partner_transaction_id = Uuid::uuid4()->toString();
@@ -139,8 +147,6 @@ class BillingPaymentTest extends ControllerTestCase
 
     public function testExceptionHandlingInCaseOfUnauthorizedPartner()
     {
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-
         $unauthorized_client = self::createClient(
             [],
             [
@@ -157,7 +163,7 @@ class BillingPaymentTest extends ControllerTestCase
 
         // Unauthorized subscription reservation
         $body = json_encode([
-            'payment_method_id' => self::$payment_method_id,
+            'payment_method_id' => self::$card->getUuid()->toString(),
             'product_name' => $product_name,
             'return_url' => $return_url
         ]);
@@ -166,7 +172,7 @@ class BillingPaymentTest extends ControllerTestCase
 
         // Authorized subscription reservation
         $this->assertReserveSubscriptionSuccessfully(
-            self::$payment_method_id,
+            self::$card->getUuid()->toString(),
             $product_name,
             $return_url
         );
@@ -253,19 +259,16 @@ class BillingPaymentTest extends ControllerTestCase
 
     /**
      * 동일한 invoice_id에 대해서 중복 결제 승인이 발생하지 않는지 확인
-     * @throws \Exception
      */
     public function testPaymentIdempotency()
     {
-        TestUtil::setUpOAuth2Doubles(self::$u_idx, TestUtil::U_ID);
-
         $product_name = 'mock';
         $amount = 10000;
         $return_url = 'https://mock.net';
 
         // 구독 예약
         $body = json_encode([
-            'payment_method_id' => self::$payment_method_id,
+            'payment_method_id' => self::$card->getUuid()->toString(),
             'product_name' => $product_name,
             'return_url' => $return_url
         ]);

@@ -22,7 +22,7 @@ trait TransactionApprovalTrait
     /**
      * @param TransactionEntity $transaction
      * @param PgHandlerInterface $pg_handler
-     * @param string $pg_bill_key
+     * @param string $payment_key
      * @param Buyer $buyer
      * @return TransactionEntity
      * @throws TransactionApprovalException
@@ -31,13 +31,13 @@ trait TransactionApprovalTrait
     public static function approveTransaction(
         TransactionEntity $transaction,
         PgHandlerInterface $pg_handler,
-        string $pg_bill_key,
+        string $payment_key,
         Buyer $buyer
     ): TransactionEntity {
         self::startTransactionApproval($transaction->getUidx(), $transaction->getId());
 
         try {
-            $pg_response = $pg_handler->approveTransaction($transaction, $pg_bill_key, $buyer);
+            $pg_response = $pg_handler->approveTransaction($transaction, $payment_key, $buyer);
             if (!$pg_response->isSuccess()) {
                 self::createTransactionHistory($transaction, $pg_response);
 

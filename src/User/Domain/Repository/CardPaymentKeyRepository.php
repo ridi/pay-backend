@@ -9,6 +9,16 @@ use RidiPay\User\Domain\Entity\CardPaymentKeyEntity;
 class CardPaymentKeyRepository extends BaseEntityRepository
 {
     /**
+     * @param int $card_id
+     * @param string $purpose
+     * @return CardPaymentKeyEntity|null
+     */
+    public function findOneByCardIdAndPurpose(int $card_id, string $purpose): ?CardPaymentKeyEntity
+    {
+        return $this->findOneBy(['card' => $card_id, 'purpose' => $purpose]);
+    }
+
+    /**
      * @return CardPaymentKeyRepository
      */
     public static function getRepository(): self

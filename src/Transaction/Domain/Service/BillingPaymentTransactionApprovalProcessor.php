@@ -78,7 +78,11 @@ class BillingPaymentTransactionApprovalProcessor extends IdempotentTransactionAp
         $this->pg_handler = $pg_handler = Kernel::isDev()
             ? PgHandlerFactory::createWithTest($this->pg->name)
             : PgHandlerFactory::create($this->pg->name);
-        $this->u_idx = PaymentMethodAppService::getUidxById($this->subscription->getPaymentMethodId());
+        $payment_method = PaymentMethodAppService::getPaymentMethod($this->subscription->getPaymentMethodId());
+        if ($payment_method->isDeleted()) {
+            throw new DeletedPaymentMethodException();
+        }
+        $this->u_idx = $payment_method->getUidx();
         $this->partner_id = $partner_id;
         $this->partner_transaction_id = $partner_transaction_id;
         $this->amount = $amount;
@@ -100,8 +104,8 @@ class BillingPaymentTransactionApprovalProcessor extends IdempotentTransactionAp
     protected function run(): TransactionApprovalResult
     {
         $transaction = $this->createTransaction();
-        $pg_bill_key = PaymentMethodAppService::getBillingPaymentPgBillKey($transaction->getPaymentMethodId());
-        $transaction = self::approveTransaction($transaction, $this->pg_handler, $pg_bill_key, $this->buyer);
+        $payment_key = PaymentMethodAppService::getBillingPaymentKey($transaction->getPaymentMethodId());
+        $transaction = self::approveTransaction($transaction, $this->pg_handler, $payment_key, $this->buyer);
 
         return new BillingPaymentTransactionApprovalResult($this->subscription, $transaction);
     }

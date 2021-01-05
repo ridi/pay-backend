@@ -79,7 +79,7 @@ class KcpHandler implements PgHandlerInterface
 
     /**
      * @param TransactionEntity $transaction
-     * @param string $pg_bill_key
+     * @param string $payment_key
      * @param Buyer $buyer
      * @return TransactionApprovalResponse
      * @throws GuzzleException
@@ -87,7 +87,7 @@ class KcpHandler implements PgHandlerInterface
      */
     public function approveTransaction(
         TransactionEntity $transaction,
-        string $pg_bill_key,
+        string $payment_key,
         Buyer $buyer
     ): TransactionApprovalResponse {
         $order = new Order(
@@ -99,7 +99,7 @@ class KcpHandler implements PgHandlerInterface
             '',
             ''
         );
-        $response = $this->client->batchOrder($pg_bill_key, $order);
+        $response = $this->client->batchOrder($payment_key, $order);
 
         return new TransactionApprovalResponse(
             $response->isSuccess(),

@@ -10,7 +10,6 @@ use RidiPay\Library\MailRenderer;
 use RidiPay\Library\TimeUnitConstant;
 use RidiPay\Library\ValidationTokenManager;
 use RidiPay\User\Application\Dto\PinUpdateHistoryItemDto;
-use RidiPay\User\Application\Dto\UserInformationDto;
 use RidiPay\User\Domain\Entity\UserActionHistoryEntity;
 use RidiPay\User\Domain\Entity\UserEntity;
 use RidiPay\User\Domain\Exception\LeavedUserException;
@@ -18,7 +17,6 @@ use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\PinEntryBlockedException;
 use RidiPay\User\Domain\Exception\UnchangedPinException;
 use RidiPay\User\Domain\Exception\UnmatchedPinException;
-use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\Exception\WrongFormattedPinException;
 use RidiPay\User\Domain\Repository\UserActionHistoryRepository;
 use RidiPay\User\Domain\Repository\UserRepository;
@@ -29,23 +27,6 @@ use RidiPay\User\Domain\UserActionHistoryConstant;
 
 class UserAppService
 {
-    /**
-     * @param int $u_idx
-     * @return UserInformationDto
-     * @throws LeavedUserException
-     * @throws NotFoundUserException
-     * @throws UnsupportedPaymentMethodException
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
-     */
-    public static function getUserInformation(int $u_idx): UserInformationDto
-    {
-        $payment_methods = PaymentMethodAppService::getAvailablePaymentMethods($u_idx);
-        $user = self::getUser($u_idx);
-
-        return new UserInformationDto($payment_methods, $user);
-    }
-
     /**
      * @param int $u_idx
      * @param string $pin
@@ -307,7 +288,7 @@ class UserAppService
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      */
-    private static function getUser(int $u_idx): UserEntity
+    public static function getUser(int $u_idx): UserEntity
     {
         $user = UserRepository::getRepository()->findOneByUidx($u_idx);
         if (is_null($user)) {

@@ -9,9 +9,16 @@ use RidiPay\User\Domain\Entity\CardEntity;
 class CardRepository extends BaseEntityRepository
 {
     /**
-     * @return CardRepository
-     * @throws \Doctrine\DBAL\DBALException
-     * @throws \Doctrine\ORM\ORMException
+     * @param int $u_idx
+     * @return CardEntity[]
+     */
+    public function findByUidx(int $u_idx): array
+    {
+        return $this->findBy(['u_idx' => $u_idx]);
+    }
+
+    /**
+     * @return static
      */
     public static function getRepository(): self
     {

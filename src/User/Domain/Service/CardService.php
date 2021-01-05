@@ -11,14 +11,11 @@ use RidiPay\Pg\Domain\Exception\CardRegistrationException;
 use RidiPay\Pg\Domain\Exception\UnsupportedPgException;
 use RidiPay\Pg\Domain\Repository\PgRepository;
 use RidiPay\Pg\Domain\Service\PgHandlerFactory;
-use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Entity\CardPaymentKeyEntity;
-use RidiPay\User\Domain\Entity\NewCardEntity;
-use RidiPay\User\Domain\Entity\PaymentMethodEntity;
+use RidiPay\User\Domain\Entity\CardEntity;
 use RidiPay\User\Domain\Repository\CardIssuerRepository;
 use RidiPay\User\Domain\Repository\CardPaymentKeyRepository;
 use RidiPay\User\Domain\Repository\CardRepository;
-use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 
 class CardService
 {
@@ -69,8 +66,8 @@ class CardService
                 'iin' => substr($card_number, 0, 6),
                 'card_issuer_code' => $response->getCardIssuerCode(),
                 'pg_id' => $pg->getId(),
-                'pg_bill_key' => $response->getPgBillKey(),
-                'pg_tax_deduction_bill_key' => $response_with_tax_deduction->getPgBillKey()
+                'pg_bill_key' => $response->getPaymentKey(),
+                'pg_tax_deduction_bill_key' => $response_with_tax_deduction->getPaymentKey()
             ]
         );
         $redis->expire($card_registration_key, TimeUnitConstant::SEC_IN_HOUR);
@@ -91,12 +88,12 @@ class CardService
 
     /**
      * @param int $u_idx
-     * @return PaymentMethodEntity
+     * @return CardEntity
      * @throws \Doctrine\DBAL\DBALException
      * @throws \Doctrine\ORM\ORMException
      * @throws \Throwable
      */
-    public static function useRegisteredCard(int $u_idx): PaymentMethodEntity
+    public static function useRegisteredCard(int $u_idx): CardEntity
     {
         $card_registration_key = self::getCardRegistrationKey($u_idx);
         $redis = self::getRedisClient();
@@ -113,72 +110,31 @@ class CardService
         $em->beginTransaction();
 
         try {
-            $payment_method = PaymentMethodEntity::createForCard($u_idx);
-            PaymentMethodRepository::getRepository()->save($payment_method);
-
-            $card_repo = CardRepository::getRepository();
-            $cards = [];
-
-            $card_for_one_time_payment = CardEntity::createForOneTimePayment(
-                $payment_method,
-                $card_issuer,
-                $pg_id,
-                $card_registration['pg_bill_key'],
-                $card_registration['iin']
-            );
-            $card_repo->save($card_for_one_time_payment);
-            $cards[] = $card_for_one_time_payment;
-
-            $card_for_one_time_payment_with_tax_deduction = CardEntity::createForOneTimePaymentWithTaxDeduction(
-                $payment_method,
-                $card_issuer,
-                $pg_id,
-                $card_registration['pg_tax_deduction_bill_key'],
-                $card_registration['iin']
-            );
-            $card_repo->save($card_for_one_time_payment_with_tax_deduction);
-            $cards[] = $card_for_one_time_payment_with_tax_deduction;
-
-            $card_for_billing_payment = CardEntity::createForBillingPayment(
-                $payment_method,
-                $card_issuer,
-                $pg_id,
-                $card_registration['pg_bill_key'],
-                $card_registration['iin']
-            );
-            $card_repo->save($card_for_billing_payment);
-            $cards[] = $card_for_billing_payment;
-
-            $payment_method->setCards($cards);
-            PaymentMethodRepository::getRepository()->save($payment_method);
-
-            $new_card = new NewCardEntity($payment_method->getId(), $card_issuer, $card_registration['iin']);
-            $em->persist($new_card);
-            $em->flush();
+            $card = new CardEntity($u_idx, $card_issuer, $card_registration['iin']);
+            CardRepository::getRepository()->save($card);
 
             $card_payment_keys = [
                 CardPaymentKeyEntity::createForOneTimePayment(
-                    $new_card,
+                    $card,
                     $pg,
-                    $card_for_one_time_payment->getEncryptedPgBillKey()
+                    $card_registration['pg_bill_key']
                 ),
                 CardPaymentKeyEntity::createForOneTimeTaxDeductionPayment(
-                    $new_card,
+                    $card,
                     $pg,
-                    $card_for_one_time_payment_with_tax_deduction->getEncryptedPgBillKey()
+                    $card_registration['pg_tax_deduction_bill_key']
                 ),
                 CardPaymentKeyEntity::createForBillingPayment(
-                    $new_card,
+                    $card,
                     $pg,
-                    $card_for_billing_payment->getEncryptedPgBillKey()
+                    $card_registration['pg_bill_key']
                 ),
             ];
             foreach ($card_payment_keys as $card_payment_key) {
                 CardPaymentKeyRepository::getRepository()->save($card_payment_key);
             }
-            $new_card->setPaymentKeys($card_payment_keys);
-            $em->persist($new_card);
-            $em->flush();
+            $card->setPaymentKeys($card_payment_keys);
+            CardRepository::getRepository()->save($card);
 
             $em->commit();
         } catch (\Throwable $t) {
@@ -190,7 +146,7 @@ class CardService
 
         $redis->del([$card_registration_key]);
 
-        return $payment_method;
+        return $card;
     }
 
     /**
