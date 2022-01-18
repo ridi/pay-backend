@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b719f003746c85f86d31b140a9bf5f9",
+    "content-hash": "a24f501e7502ea50a92bf24860579d31",
     "packages": [
         {
             "name": "composer/package-versions-deprecated",
@@ -1883,43 +1883,6 @@
                 "uuid"
             ],
             "time": "2018-08-11T21:01:22+00:00"
-        },
-        {
-            "name": "ridibooks/crm",
-            "version": "1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ridi/crm-php.git",
-                "reference": "d3274bcf805b483945d8e444f51e1c8fa0f21771"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ridi/crm-php/zipball/d3274bcf805b483945d8e444f51e1c8fa0f21771",
-                "reference": "d3274bcf805b483945d8e444f51e1c8fa0f21771",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/guzzle": "^6.0",
-                "php": "^7.1||^7.2"
-            },
-            "require-dev": {
-                "php-coveralls/php-coveralls": "^2.1",
-                "phpunit/php-code-coverage": "5.3.2",
-                "phpunit/phpunit": "^6.5",
-                "squizlabs/php_codesniffer": "^3.2"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Ridibooks\\": "src/Ridibooks/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Ridibooks CRM PHP Library",
-            "time": "2018-10-29T03:32:40+00:00"
         },
         {
             "name": "ridibooks/oauth2",
