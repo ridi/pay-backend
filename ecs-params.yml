@@ -49,6 +49,8 @@ task_definition:
           name: STORE_TO_RIDI_PAY_PUBLIC_KEY
         - value_from: "/ridi-pay/${APP_ENV}/VPC_CIDR"
           name: VPC_CIDR
+        - value_from: "/ridi-pay/${APP_ENV}/EMAIL_API_KEY"
+          name: EMAIL_API_KEY
 run_params:
   network_configuration:
     awsvpc_configuration:

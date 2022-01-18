@@ -194,9 +194,6 @@
             "ref": "f7895777cd673fcefbc321a9063077a24e5df646"
         }
     },
-    "ridibooks/crm": {
-        "version": "1.0.0"
-    },
     "ridibooks/oauth2": {
         "version": "v0.1.3"
     },
