@@ -25,14 +25,17 @@ class EmailSender
             } else {
                 $client = new Client(['base_uri' => 'https://ridibooks.com']);
             }
-            $client->post('/api/notification/email', [
-                RequestOptions::HEADERS => ['api-key' => getenv('EMAIL_API_KEY', true)],
-                RequestOptions::JSON => [
-                    'to' => [$recipient],
-                    'from' => EmailAddressConstant::NOREPLY_ADDRESS,
-                    'html' => $body,
-                    'subject' => $title,
-                ]]
+            $client->post(
+                '/api/notification/email',
+                [
+                    RequestOptions::HEADERS => ['api-key' => getenv('EMAIL_API_KEY', true)],
+                    RequestOptions::JSON => [
+                        'to' => [$recipient],
+                        'from' => EmailAddressConstant::NOREPLY_ADDRESS,
+                        'html' => $body,
+                        'subject' => $title,
+                    ]
+                ]
             );
         } catch (\Throwable $t) {
             // 이메일 발송 실패로 인한 exception 발생 시, API 요청 자체에 영향을 주지 않도록 catch
