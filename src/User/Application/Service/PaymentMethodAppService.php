@@ -5,17 +5,13 @@ namespace RidiPay\User\Application\Service;
 
 use Ramsey\Uuid\Uuid;
 use RidiPay\Library\EntityManagerProvider;
-use RidiPay\User\Application\Dto\PaymentMethodHistoryItemDto;
-use RidiPay\User\Application\Dto\PaymentMethodHistoryItemDtoFactory;
 use RidiPay\User\Domain\Entity\PaymentMethodEntity;
 use RidiPay\User\Domain\Exception\DeletedPaymentMethodException;
 use RidiPay\User\Domain\Exception\LeavedUserException;
 use RidiPay\User\Domain\Exception\NotFoundUserException;
 use RidiPay\User\Domain\Exception\UnregisteredPaymentMethodException;
-use RidiPay\User\Domain\Exception\UnsupportedPaymentMethodException;
 use RidiPay\User\Domain\PaymentMethodConstant;
 use RidiPay\User\Domain\Repository\CardPaymentKeyRepository;
-use RidiPay\User\Domain\Repository\CardRepository;
 use RidiPay\User\Domain\Repository\PaymentMethodRepository;
 
 class PaymentMethodAppService
@@ -139,41 +135,5 @@ class PaymentMethodAppService
 
             throw $t;
         }
-    }
-
-    /**
-     * @param int $u_idx
-     * @return PaymentMethodHistoryItemDto[]
-     * @throws UnsupportedPaymentMethodException
-     */
-    public static function getCardsHistory(int $u_idx): array
-    {
-        $cards = CardRepository::getRepository()->findByUidx($u_idx);
-
-        return self::getPaymentMethodsHistory($cards);
-    }
-
-    /**
-     * @param PaymentMethodEntity[] $payment_methods
-     * @return PaymentMethodHistoryItemDto[]
-     * @throws UnsupportedPaymentMethodException
-     */
-    private static function getPaymentMethodsHistory(array $payment_methods): array
-    {
-        $history = [];
-
-        foreach ($payment_methods as $payment_method) {
-            $history[] = PaymentMethodHistoryItemDtoFactory::createWithRegistration($payment_method);
-            if ($payment_method->isDeleted()) {
-                $history[] = PaymentMethodHistoryItemDtoFactory::createWithDeletion($payment_method);
-            }
-        }
-
-        // 최신 순 정렬
-        usort($history, function (PaymentMethodHistoryItemDto $a, PaymentMethodHistoryItemDto $b) {
-            return $a->processed_at < $b->processed_at;
-        });
-
-        return $history;
     }
 }
